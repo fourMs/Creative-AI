@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 320" role="img" aria-label="Multiple ways to condition a single generative model">
+  <style>
+    .box { fill: #f4f1fa; stroke: #5a2a7a; stroke-width: 2; rx: 10; ry: 10; }
+    .core { fill: #5a2a7a; stroke: #5a2a7a; rx: 14; ry: 14; }
+    .label { font: 600 15px Helvetica, Arial, sans-serif; fill: #1f2545; }
+    .core-label { font: 700 18px Helvetica, Arial, sans-serif; fill: #fff; }
+    .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+    </marker>
+  </defs>
+  <rect class="box" x="40"  y="40"  width="180" height="50"/>
+  <text class="label" x="130" y="71" text-anchor="middle">Text prompt</text>
+  <rect class="box" x="40"  y="105" width="180" height="50"/>
+  <text class="label" x="130" y="136" text-anchor="middle">Reference image</text>
+  <rect class="box" x="40"  y="170" width="180" height="50"/>
+  <text class="label" x="130" y="201" text-anchor="middle">Mask</text>
+  <rect class="box" x="40"  y="235" width="180" height="50"/>
+  <text class="label" x="130" y="266" text-anchor="middle">Control signal</text>
+
+  <rect class="core" x="360" y="120" width="180" height="80"/>
+  <text class="core-label" x="450" y="155" text-anchor="middle">Generative</text>
+  <text class="core-label" x="450" y="180" text-anchor="middle">model</text>
+
+  <rect class="box" x="620" y="120" width="160" height="80" fill="#fff0f3" stroke="#e8556d"/>
+  <text class="label" x="700" y="155" text-anchor="middle">Image / sound</text>
+  <text class="label" x="700" y="180" text-anchor="middle">video / text</text>
+
+  <path class="arrow" d="M 220 65  L 360 145"/>
+  <path class="arrow" d="M 220 130 L 360 155"/>
+  <path class="arrow" d="M 220 195 L 360 175"/>
+  <path class="arrow" d="M 220 260 L 360 185"/>
+  <path class="arrow" d="M 540 160 L 620 160"/>
+</svg>

@@ -1,0 +1,38 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+
+version: 1
+project:
+  id: 7d3b6f1c-3c8a-4f2c-9a4d-creative-ai-uio
+  title: Creative AI
+  description: "An open undergraduate textbook on Creative AI: generative models, hands-on practice, and critical reflection. Written for a 12-week bachelor-level course at the University of Oslo open to students from all faculties."
+  keywords: [creative AI, generative AI, machine learning, art, design, music, text, image, video, ethics]
+  authors:
+    - name: Alexander Refsum Jensenius (ed.)
+      affiliations:
+        - University of Oslo
+  github: https://github.com/fourMs/Creative-AI
+  license: CC-BY-4.0
+  open_access: true
+  bibliography:
+    - references.bib
+  toc:
+    - file: intro.ipynb
+    - file: introduction.ipynb
+    - file: foundations.ipynb
+    - file: generative-ai.ipynb
+    - file: ai-language.ipynb
+    - file: ai-images.ipynb
+    - file: ai-sound.ipynb
+    - file: ai-video.ipynb
+    - file: ai-code.ipynb
+    - file: ai-3d-games.ipynb
+    - file: multimodal-agents.ipynb
+    - file: ethics.ipynb
+    - file: futures.ipynb
+
+site:
+  template: book-theme
+  options:
+    logo: figures/cover/creative-ai-strip.svg
+    show_myst_footer: false
+    show_myst_banner: false

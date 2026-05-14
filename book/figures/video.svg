@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" role="img" aria-label="Stack of video frames with temporal consistency arrows">
+  <style>
+    .frame { fill: #f4f1fa; stroke: #5a2a7a; stroke-width: 2; }
+    .label { font: 600 13px Helvetica, Arial, sans-serif; fill: #1f2545; }
+    .arrow { fill: none; stroke: #e8556d; stroke-width: 2; marker-end: url(#a); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
+    </marker>
+  </defs>
+  <g>
+    <rect class="frame" x="40"  y="60" width="110" height="80"/>
+    <rect class="frame" x="190" y="60" width="110" height="80"/>
+    <rect class="frame" x="340" y="60" width="110" height="80"/>
+    <rect class="frame" x="490" y="60" width="110" height="80"/>
+    <rect class="frame" x="640" y="60" width="110" height="80"/>
+  </g>
+  <g>
+    <circle cx="80"  cy="100" r="10" fill="#1f2545"/>
+    <circle cx="240" cy="100" r="10" fill="#1f2545"/>
+    <circle cx="395" cy="100" r="10" fill="#1f2545"/>
+    <circle cx="555" cy="100" r="10" fill="#1f2545"/>
+    <circle cx="710" cy="100" r="10" fill="#1f2545"/>
+  </g>
+  <path class="arrow" d="M 150 100 L 190 100"/>
+  <path class="arrow" d="M 300 100 L 340 100"/>
+  <path class="arrow" d="M 450 100 L 490 100"/>
+  <path class="arrow" d="M 600 100 L 640 100"/>
+  <text class="label" x="95" y="165" text-anchor="middle">frame t</text>
+  <text class="label" x="245" y="165" text-anchor="middle">t+1</text>
+  <text class="label" x="395" y="165" text-anchor="middle">t+2</text>
+  <text class="label" x="545" y="165" text-anchor="middle">t+3</text>
+  <text class="label" x="695" y="165" text-anchor="middle">t+4</text>
+  <text class="label" x="400" y="220" text-anchor="middle" fill="#e8556d">temporal consistency between frames</text>
+  <text class="label" x="400" y="245" text-anchor="middle">time ’</text>
+</svg>

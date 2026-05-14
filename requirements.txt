@@ -1,0 +1,9 @@
+jupyter-book
+mystmd
+matplotlib
+numpy
+pandas
+scipy
+pillow
+ipywidgets
+requests

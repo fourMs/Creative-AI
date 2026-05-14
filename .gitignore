@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[codz]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Unit test / coverage reports
+.cache
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+
+# MyST / Jupyter Book build output
+_build/
+book/_build/
+book/.jupyter_cache/
+book/*.pdf
+book/*.tex
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Cursor
+.cursorignore
+.cursorindexingignore

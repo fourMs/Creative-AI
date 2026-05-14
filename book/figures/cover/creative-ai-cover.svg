@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" role="img" aria-label="Creative AI textbook cover">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f2545"/>
+      <stop offset="55%" stop-color="#5a2a7a"/>
+      <stop offset="100%" stop-color="#e8556d"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#fff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#bg)"/>
+  <rect width="600" height="800" fill="url(#glow)"/>
+
+  <!-- abstract neural network -->
+  <g stroke="#ffffff" stroke-opacity="0.25" stroke-width="1.2" fill="none">
+    <line x1="120" y1="220" x2="260" y2="170"/>
+    <line x1="120" y1="220" x2="260" y2="270"/>
+    <line x1="120" y1="220" x2="260" y2="370"/>
+    <line x1="120" y1="320" x2="260" y2="170"/>
+    <line x1="120" y1="320" x2="260" y2="270"/>
+    <line x1="120" y1="320" x2="260" y2="370"/>
+    <line x1="120" y1="420" x2="260" y2="270"/>
+    <line x1="120" y1="420" x2="260" y2="370"/>
+    <line x1="260" y1="170" x2="420" y2="220"/>
+    <line x1="260" y1="170" x2="420" y2="320"/>
+    <line x1="260" y1="270" x2="420" y2="220"/>
+    <line x1="260" y1="270" x2="420" y2="320"/>
+    <line x1="260" y1="370" x2="420" y2="320"/>
+    <line x1="260" y1="370" x2="420" y2="420"/>
+    <line x1="420" y1="220" x2="540" y2="320"/>
+    <line x1="420" y1="320" x2="540" y2="320"/>
+    <line x1="420" y1="420" x2="540" y2="320"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="120" cy="220" r="9"/>
+    <circle cx="120" cy="320" r="9"/>
+    <circle cx="120" cy="420" r="9"/>
+    <circle cx="260" cy="170" r="9"/>
+    <circle cx="260" cy="270" r="9"/>
+    <circle cx="260" cy="370" r="9"/>
+    <circle cx="420" cy="220" r="9"/>
+    <circle cx="420" cy="320" r="9"/>
+    <circle cx="420" cy="420" r="9"/>
+    <circle cx="540" cy="320" r="11"/>
+  </g>
+
+  <text x="50" y="640" font-family="Helvetica, Arial, sans-serif" font-size="64" font-weight="700" fill="#ffffff">Creative AI</text>
+  <text x="50" y="690" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#ffffff" fill-opacity="0.85">An open textbook for a bachelor course</text>
+  <text x="50" y="720" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#ffffff" fill-opacity="0.85">at the University of Oslo</text>
+</svg>

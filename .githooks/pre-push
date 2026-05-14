@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Local pre-push hook: build the Jupyter Book exactly as CI does.
+# Skip with: SKIP_BOOK_VERIFY=1 git push
+set -euo pipefail
+
+if [[ "${SKIP_BOOK_VERIFY:-0}" == "1" ]]; then
+  echo "[pre-push] SKIP_BOOK_VERIFY=1 — skipping book build."
+  exit 0
+fi
+
+ROOT="$(git rev-parse --show-toplevel)"
+"$ROOT/scripts/verify-book-build.sh"

@@ -1,0 +1,6 @@
+# Jupyter Book configuration
+# For more options see: https://next.jupyterbook.org/
+title: Creative AI
+author: University of Oslo
+logo: figures/cover/creative-ai-cover.svg
+only_build_toc_files: true
