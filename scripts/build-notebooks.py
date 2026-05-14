@@ -186,7 +186,7 @@ Each weekly cycle follows the same shape:
 
 1. **Before class** — read the week's chapter (≈ 1 hour). The textbook is meant to be read *before* the lecture, not in place of it.
 2. **Lecture (1 h)** — short talk, demos, class discussion. Many lectures feature a guest from another UiO faculty or research centre (RITMO, IFI, IMV, Department of Media and Communication, KHiO, etc.).
-3. **Practice (2 h)** — guided hands-on lab. You will work alone or in pairs with real AI tools, produce a small artefact (a paragraph, an image, a sound, a sketch, a short video, or some code), and discuss results with peers.
+3. **Lab (2 h)** — guided hands-on session, structured around three intertwined tracks: **Reflect**, **Explore**, and **Create** (see the next section). You will work alone or in pairs with real AI tools, produce a small artefact (a paragraph, an image, a sound, a sketch, a short video, or some code), and discuss results with peers.
 4. **Self-study (≈ 6 h)** — reading, follow-on experimentation, work on assignments and the final project.
 
 In **week 0** (the week before teaching starts) all students complete a short **AI-literacy onboarding module**: account setup for the term's tools, a privacy briefing, and the [AI at UiO](https://www.uio.no/english/services/ai/) guidelines for student use of AI.
@@ -213,7 +213,7 @@ The 12-week schedule below maps lectures, practice labs, and assignment mileston
 | 12 | [Futures and final projects](futures.ipynb) | Three futures of Creative AI; what stays human | *The Synthetic Gallery* — public showcase of final projects | **Final project** due |
 
 :::{tip} Reading the chapters
-Each chapter is roughly the length of one short lecture's worth of reading. Every chapter follows the same six-section shape: *Why this matters → Concepts → Examples → Practice → Reflection prompts → Going further*. The Practice section is what you will do in the 2-hour lab that week.
+Each chapter is roughly the length of one short lecture's worth of reading. Every chapter follows the same shape: *Why this matters → Concepts → Examples → This week's lab: Reflect, Explore, Create → Going further*. The middle section is what you will do during the 2-hour lab — see [Reflect, Explore, Create — three weekly tracks](#reflect-explore-create-three-weekly-tracks) below.
 :::
 
 ---
@@ -245,6 +245,48 @@ This is a *research-based* course: the content rests on current research from ma
 ### A note on AI tools used to write this book
 
 This textbook is itself an example of AI-supported authorship. Drafts of every chapter have been written collaboratively with large language models, then revised, fact-checked, and re-organised by human editors. Where AI tools have produced figures or examples, we say so. We treat the book as a living document — please open an issue or a pull request on the [GitHub repository](https://github.com/fourMs/Creative-AI) when you spot errors or omissions.
+
+---
+
+(reflect-explore-create-three-weekly-tracks)=
+## Reflect, Explore, Create — three weekly tracks
+
+Every week the lab is organised around three intertwined tracks. They are *not* three separate assignments — they are three **modes of engagement** that together make up a Creative-AI practice. Most weeks you will do at least one short activity in each track.
+
+```{mermaid}
+flowchart LR
+    R[Reflect<br/><i>humanities & social sciences</i>] --> E[Explore<br/><i>applied & behavioural sciences</i>]
+    E --> C[Create<br/><i>computer science, engineering, art & design</i>]
+    C --> R
+```
+
+### Reflect
+
+**Critically study and discuss the impacts of AI on humans, human creativity, cultures, and society at large.** This is the *humanities and social sciences* track: ethics, history, aesthetics, politics, law, learning. Reflect activities ask why we are doing this, who pays for it, who benefits, and who is left out.
+
+> **Typical outputs:** short critical writing (150–300 words) in your weekly log; in-class debates; ethical audits; comparative readings of two tools or two cases; honest captions and provenance notes for your own work.
+
+### Explore
+
+**Use AI-based systems in creative practice — and see how creative methods can be applied in other domains.** This is the *applied and behavioural* track: psychology, therapy, educational sciences, cultural heritage. Explore activities investigate how AI can enhance creativity, foster innovation, and support learning and well-being — by *trying things* and documenting what the tools actually afford.
+
+> **Typical outputs:** controlled experiments (same prompt, vary one knob); prompt comparisons across two tools; hallucination hunts; model-card analyses; tool-to-task mappings; failure-mode catalogues.
+
+### Create
+
+**Make AI-based systems, tools, artworks, frameworks, and policies.** This is the *making* track: computer science, engineering, art, design — with an explicit emphasis on **Co-Creative AI systems that prioritise human agency, environmental sustainability, and the democratisation of AI technologies**. Each lab leaves you with a concrete artefact for your portfolio.
+
+> **Typical outputs:** images, songs, short videos, code sketches, design pipelines, prototype agents, policy briefs, exhibition pieces.
+
+### How the tracks connect
+
+The three tracks reinforce one another. **Reflect** asks why you are doing something; **Explore** asks what the tool actually does; **Create** asks what you can make with that understanding that you stand behind. A good Creative-AI practitioner never separates them for long.
+
+The Reflect / Explore / Create rhythm also maps onto the disciplinary breadth of this course (and of the [fourMs](https://www.uio.no/ritmo/english/projects/fourms/) Co-Creative AI research at RITMO that gave it its shape): humanities and social sciences on the **Reflect** side; applied and behavioural sciences on the **Explore** side; computer science, engineering, art, and design on the **Create** side. Students from every background contribute on every track.
+
+:::{tip} What this means for your weekly log
+Each week's log entry should have **three short paragraphs**: one *Reflect*, one *Explore*, one *Create*. Three or four sentences in each is enough. Linking the three is the skill we are building.
+:::
 
 ---
 
@@ -405,7 +447,7 @@ There is no traditional written exam. The expectation is that you can talk and w
 
 | Component | Weight | Mode | What it is |
 | --- | ---: | --- | --- |
-| Weekly practice log | 10 % | Pass / Fail | A short entry each week: brief, tools used, prompts, what you noticed, one open question. Submitted via the LMS. |
+| Weekly practice log | 10 % | Pass / Fail | A short entry each week, structured as **three paragraphs — Reflect, Explore, Create** — covering tools used, prompts, what you noticed, and one open question. Submitted via the LMS. |
 | **A1** — AI-augmented self-introduction | 5 % | Graded | 1 page of text + 1 image + ½ page reflection. Due in week 2. |
 | **A2** — AI-assisted text in your discipline | 10 % | Graded | 800–1 200 words in a chosen genre (academic, creative, or popular science) + a 1–2 page reflection documenting prompts and edits. Due in week 5. |
 | **A3** — Multimodal mini-piece | 10 % | Graded | A 3–5 page (or slide) cross-modal piece combining text and at least one other modality, with reflection. Due in week 7. |
@@ -443,14 +485,15 @@ You are *allowed and encouraged* to use AI tools in this course. You must, howev
 
 The chapters are roughly linear, but they are also self-contained. If you are a complete beginner, read in order. If you already have some background, you can skim chapters 2–3 and jump into the application chapters that interest you (text, image, sound, video, code).
 
-Every chapter follows the same six-section shape:
+Every chapter follows the same shape:
 
 1. **Why this matters** — a short framing.
 2. **Concepts** — the ideas you should be able to explain after reading.
 3. **Examples** — concrete cases, screenshots, code snippets.
-4. **Practice** — what you will do in the 2-hour lab session.
-5. **Reflection prompts** — questions for your weekly log.
-6. **Going further** — readings, tools, links.
+4. **This week's lab: Reflect, Explore, Create** — the three-track 2-hour lab session, with one or two activities in each of *Reflect*, *Explore*, and *Create*.
+5. **Going further** — readings, tools, links.
+
+The order inside the lab section is deliberate: we start by reflecting on what is at stake, then explore what the tools actually do, then create something we stand behind. Most students will spend 30–45 minutes on Reflect, 30–45 minutes on Explore, and 45–60 minutes on Create — the exact split varies week by week, and you are welcome to bend it to your own discipline.
 
 Let's begin.
 """
@@ -584,33 +627,38 @@ We will, however, take seriously:
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-In the practice session this week you will run **two small experiments** and start a personal *practice log* that you will keep all semester.
+This first lab gets you over the activation energy of opening accounts, running generations, and writing the first entry in the *practice log* you will keep all semester.
 
-1. **Pick one text tool and one image tool** from the lists in the [introduction](intro.ipynb). Make a free account if needed.
-2. **Same brief, two media.** Write a single short brief (1–2 sentences) for a small creative task. For example: *"A flyer for a student concert at Chateau Neuf featuring a jazz trio."* Use the text tool to draft the flyer text; use the image tool to draft a visual.
-3. **Vary one thing.** Re-run each generation with **one** parameter changed (a different style, a different tone, a longer or shorter prompt). Save both versions.
-4. **Write a log entry** with these sections:
-   - Brief used.
-   - Tools used (with version, if shown).
-   - Two prompts, exact wording.
-   - One sentence on what you got, one sentence on what you expected, one sentence on the gap.
-5. **Tell us a story.** In the last 30 minutes of class, pair up and present each other's experiments to a third student. We will then collect surprises on the board.
+### Reflect (≈ 30 min, in lab + your weekly log)
 
-:::{tip} Save your prompts
-Throughout this course, save every prompt you write. It will become the most valuable artefact in your project portfolio at week 12.
-:::
-
----
-
-## Reflection prompts
-
-For your weekly log, choose one prompt and write 150–300 words:
+Pick **one** of the following and write 150–300 words in your weekly log. We will use these answers to seed next week's discussion.
 
 1. Compare your one-sentence definition of *Creative AI* (from the start of this chapter) with the working definition we ended up with. What did you leave out? What did you include that we did not?
 2. Pick one item from the short history above and look it up. What was the historical context (technical, cultural, economic)? Is there a similar context for the 2022 generative turn?
 3. In your discipline, what counted as "creative work" five years ago? Which parts of it are most affected by generative AI today?
+
+### Explore (≈ 60 min, in lab)
+
+1. **Pick one text tool and one image tool** from the lists in the [introduction](intro.ipynb). Make a free account if needed.
+2. **Same brief, two media.** Write a single short brief (1–2 sentences) for a small creative task. For example: *"A flyer for a student concert at Chateau Neuf featuring a jazz trio."* Use the text tool to draft the flyer text; use the image tool to draft a visual.
+3. **Vary one thing.** Re-run each generation with **one** parameter changed (a different style, a different tone, a longer or shorter prompt). Save both versions.
+
+### Create (≈ 30 min, in lab + carry-over to your portfolio)
+
+1. From your variations, **assemble one small artefact** — a single flyer combining your best image with your best caption, or a two-image diptych with one shared title. Aim for something you would be willing to put on your portfolio page in week 12.
+2. **Write the first entry of your practice log** with these fields:
+   - Brief used.
+   - Tools used (with version, if shown).
+   - Prompts, exact wording.
+   - One sentence on what you got, one sentence on what you expected, one sentence on the gap.
+   - The artefact (or a link to it).
+3. **Tell us a story.** In the last 20 minutes of class, pair up and present each other's artefacts to a third student. We will then collect surprises on the board.
+
+:::{tip} Save your prompts
+Throughout this course, save every prompt you write. It will become the most valuable artefact in your project portfolio at week 12.
+:::
 
 ---
 
@@ -761,23 +809,29 @@ For most of this course, you will be **prompting** existing foundation models. I
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-This practice session is in two parts. The first is in-browser; the second is optional code.
+### Reflect (≈ 30 min, in lab + your weekly log)
 
-### Part 1 — Inspecting a model (60 min)
+Pick **one** prompt and write 150–300 words in your weekly log:
 
-1. Visit [Hugging Face](https://huggingface.co/) and search for **`stable-diffusion`**.
+1. List three categories of work in your discipline where AI models are *plausibly* useful, and three where you suspect they are not. What is the difference?
+2. The training data of large models is mostly English, mostly Western, and mostly from the open web. How might that show up in a model's outputs for your discipline or your native language?
+3. Strubell et al. estimated training a large NLP model could emit as much CO₂ as five cars over their lifetimes [@Strubell2019Energy]. How does that change (or not) how you feel about using these tools?
+
+### Explore (≈ 60 min, in lab) — inspect a model card
+
+1. Visit [Hugging Face](https://huggingface.co/) and search for **`stable-diffusion`** (or another model that interests you).
 2. Pick one *model card* and read it from top to bottom. Find:
    - Which **dataset** was the model trained on?
    - How many **parameters** does the model have?
    - What is the **licence**?
    - What are the **known limitations**?
-3. Write down three things from the card that you did not know before, and one thing you did not understand.
+3. Write down three things from the card that you did not know before, and one thing you did not understand. Bring the "one thing you did not understand" to next week's lecture.
 
-### Part 2 — A 10-line training loop (60 min, optional code track)
+### Create (≈ 30 min, optional code track) — a 10-line training loop
 
-This is for students who want to feel a training loop in their fingers. It is *not* required.
+This is for students who want to feel a training loop in their fingers. It is *not* required, but it is the most direct way to *make* a model rather than just use one — and that is the heart of the Create track. If you do not want to code, instead write a 200-word reverse model card for an imagined Norwegian-language image model: what *would* you put on the card, and why?
 
 We will train a tiny model to fit a curve. Open a notebook and run:
 
@@ -803,15 +857,7 @@ for step in range(200):
 print(f"w = {w:.3f}, b = {b:.3f}, loss = {loss:.4f}")
 ```
 
-You should get $w \approx 2$ and $b \approx 0.5$. That is a model with two parameters, trained from scratch, in 12 lines. Every "AI" you will use this semester is the same loop scaled up by a factor of ten billion.
-
----
-
-## Reflection prompts
-
-1. List three categories of work in your discipline where AI models are *plausibly* useful, and three where you suspect they are not. What is the difference?
-2. The training data of large models is mostly English, mostly Western, and mostly from the open web. How might that show up in a model's outputs for your discipline or your native language?
-3. Strubell et al. estimated training a large NLP model could emit as much CO₂ as five cars over their lifetimes [@Strubell2019Energy]. How does that change (or not) how you feel about using these tools?
+You should get $w \approx 2$ and $b \approx 0.5$. That is a model with two parameters, trained from scratch, in 12 lines. Every "AI" you will use this semester is the same loop scaled up by a factor of ten billion. Commit the notebook (or the reverse model card) to your portfolio.
 
 ---
 
@@ -982,27 +1028,33 @@ A short list, useful to keep in mind:
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-### Same prompt, three samplers
+### Reflect (≈ 30 min, in lab + your weekly log)
+
+Pick **one** prompt and write 150–300 words in your weekly log:
+
+1. Describe in plain language the difference between *learning a distribution* and *learning a boundary*. Why does that matter for creative work?
+2. Tools like Midjourney expose only a few sampler parameters; tools like ComfyUI expose dozens. Whom does each design serve?
+3. The same model, same prompt, two clicks: two different images. Is this a feature or a bug for your use case?
+4. Re-read the *Five paradoxes* above and pick the one that bites hardest for your own discipline. Where does it bite, and what does that tell you about the kind of co-creative setup you would want?
+
+### Explore (≈ 60 min, in lab)
+
+**Same prompt, three samplers.**
 
 1. Pick one image tool you have access to.
 2. Write a prompt that has a *clear style and subject* — for example, *"a watercolour illustration of a fox reading a book in a library, soft lighting, warm tones"*.
-3. Generate the image with three different settings:
-   - default,
-   - low CFG / guidance scale (or low temperature),
-   - high CFG / guidance scale (or high temperature).
+3. Generate the image with three different settings: default, low CFG / guidance (or low temperature), high CFG / guidance (or high temperature).
 4. Paste the three results side by side and describe in two sentences each what changed.
 
-### Conditioning beyond text
+**Conditioning beyond text.**
 
 1. Generate an image you like.
 2. Use the same tool's **image-to-image** mode (or *style reference*) to generate a *variation* with the same overall composition.
 3. Write down how strict the conditioning was — what is preserved, what changes?
 
-### Optional code track: sampling from a tiny language model
-
-Open a notebook. Install the `transformers` library if it is not already installed and try:
+**Optional code track — sampling from a tiny language model.**
 
 ```python
 from transformers import pipeline
@@ -1015,13 +1067,9 @@ for t in [0.2, 0.7, 1.2]:
 
 GPT-2 is small and quaint by 2026 standards but illustrates the temperature knob nicely.
 
----
+### Create (≈ 30 min, in lab + carry-over to your portfolio)
 
-## Reflection prompts
-
-1. Describe in plain language the difference between *learning a distribution* and *learning a boundary*. Why does that matter for creative work?
-2. Tools like Midjourney expose only a few sampler parameters; tools like ComfyUI expose dozens. Whom does each design serve?
-3. The same model, same prompt, two clicks: two different images. Is this a feature or a bug for your use case?
+From the Explore experiments, **compose a triptych** for your portfolio: three panels arranged side by side, each captioned with the *one parameter* (sampler, CFG, temperature, conditioning image) that produced it. Add a one-paragraph artist's statement (~150 words) framing the triptych as a small piece of work, not just a screenshot grid. The goal is to push from "I ran the experiments" to "I made *this*, and here is why".
 
 ---
 
@@ -1203,24 +1251,33 @@ You should treat the LLM as a **fast, slightly drunk colleague** — useful, opi
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-### Prompt library
+### Reflect (≈ 30 min, in lab + your weekly log)
 
-1. **Pick three writing tasks** from your discipline (a paragraph, an explanation, a critique, a translation, a summary…).
-2. For each, build a prompt using the **ROLE / TASK / CONSTRAINTS / CONTEXT / OUTPUT** template above.
-3. Run each prompt in two different LLMs (e.g., one commercial, one open-weight via Ollama). Save the outputs.
-4. **Compare**: where do the models differ? Which one made which mistakes?
+Pick **one** prompt and write 150–300 words in your weekly log:
 
-### Hallucination hunt
+1. How would you tell, in five seconds, that a paragraph in front of you was written by an LLM? Test your heuristic on three short paragraphs (a mix of your own, a model's, and a colleague's) and see how often you are right.
+2. The 2024 EU AI Act [@EUAIAct] introduces transparency requirements for "synthetic content". What would meaningful labelling look like for an essay drafted with an LLM?
+3. Where, in your own writing process, is the LLM most useful? Where is it actively in the way?
+
+### Explore (≈ 45 min, in lab)
+
+**Hallucination hunt.**
 
 1. Ask an LLM for **five academic references** on a niche topic in your field (something obscure enough that it might bluff).
 2. Try to find each reference. How many actually exist? How many are partially real (real authors, wrong title; real title, wrong year)?
-3. Write a short note (200 words) on what you found.
+3. Write a short note (200 words) on what you found and on the *pattern* of the hallucinations — which fields did the model invent, which did it transcribe correctly?
 
-### Optional code track
+**Two-model comparison.**
 
-Use the `openai`, `anthropic`, or `ollama` Python package to call a model from a notebook. Try:
+1. Pick a single writing task from your discipline (one paragraph).
+2. Run the **same prompt** through two different LLMs (e.g., one commercial like ChatGPT or Claude, one open-weight via Ollama).
+3. Compare the outputs: where do the models differ in factuality, in tone, in length, in confidence?
+
+**Optional code track.**
+
+Use the `openai`, `anthropic`, or `ollama` Python package to call a model from a notebook. UiO has its own [generative AI service](https://www.uio.no/english/services/ai/) for staff and students.
 
 ```python
 from openai import OpenAI
@@ -1235,15 +1292,14 @@ resp = client.chat.completions.create(
 print(resp.choices[0].message.content)
 ```
 
-(Replace the API key and model name with whatever your institution gives you. UiO has its own [generative AI service](https://www.uio.no/english/services/ai/) for staff and students.)
+### Create (≈ 45 min, in lab + carry-over to your portfolio)
 
----
+**Build a personal prompt library for your discipline.** This is one of the most useful artefacts you can leave the course with.
 
-## Reflection prompts
-
-1. How would you tell, in five seconds, that a paragraph in front of you was written by an LLM? Test your heuristic on three short paragraphs (a mix of your own, a model's, and a colleague's) and see how often you are right.
-2. The 2024 EU AI Act [@EUAIAct] introduces transparency requirements for "synthetic content". What would meaningful labelling look like for an essay drafted with an LLM?
-3. Where, in your own writing process, is the LLM most useful? Where is it actively in the way?
+1. Pick **three writing tasks** you actually do in your field (e.g., a paragraph for a project report, an explanation of a concept for non-experts, a critique of a paper, a translation, a summary).
+2. For each task, build a reusable prompt using the **ROLE / TASK / CONSTRAINTS / CONTEXT / OUTPUT** template above. Save each prompt as a templated form with `{{placeholders}}` for the parts you would swap in next time.
+3. Test each template with one concrete instance and paste the output beside it.
+4. Commit `prompt-library.md` to your portfolio. You will reuse and refine this all semester.
 
 ---
 
@@ -1387,9 +1443,19 @@ You will get further with editing than with pure prompting for most professional
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-### A controlled experiment
+### Reflect (≈ 30 min, in lab + your weekly log)
+
+Pick **one** prompt and write 150–300 words in your weekly log:
+
+1. Compare an AI-generated image of "a typical Norwegian street" with a real photograph. What is the model *averaging away*?
+2. What changes when image-making moves from "ten minutes for a sketch" to "ten seconds for a finished-looking picture"? Who benefits, who loses?
+3. Read Hertzmann's *Can Computers Create Art?* [@Hertzmann2018] alongside this chapter and respond to a single one of its claims using a generation you produced this week.
+
+### Explore (≈ 60 min, in lab)
+
+**A controlled experiment.**
 
 1. Write **one base prompt** with a clear subject, composition, and style.
 2. Generate the image four times, each time changing **exactly one variable**:
@@ -1397,18 +1463,16 @@ You will get further with editing than with pure prompting for most professional
    - same prompt, same seed, four different CFG values (3, 6, 9, 12);
    - same prompt, four different seeds;
    - prompt unchanged except for the lighting words.
-3. Lay out the four grids in a single image (Canva, Figma, an empty markdown cell — anything). Caption each.
+3. Lay out the four grids in a single image. Caption each.
 4. Pick the *one* knob that mattered most for your subject. Write a short note on why.
 
-### Image-to-image
+**Image-to-image.**
 
 1. Take a photograph (or screenshot) you have rights to.
 2. Run it through an **image-to-image** pipeline with three different *denoise strengths* (0.3, 0.5, 0.8).
 3. Note where you sit on the *fidelity ↔ freedom* axis.
 
-### Optional code track
-
-If you have a Hugging Face account, the [`diffusers` library](https://huggingface.co/docs/diffusers/index) lets you generate images locally:
+**Optional code track.** If you have a Hugging Face account, the [`diffusers` library](https://huggingface.co/docs/diffusers/index) lets you generate images locally:
 
 ```python
 import torch
@@ -1424,13 +1488,15 @@ img = pipe("a wooden rowing boat at sunrise on a fjord, watercolour",
 img.save("boat.png")
 ```
 
----
+### Create (≈ 30 min, in lab + carry-over to your portfolio)
 
-## Reflection prompts
+Out of everything you generated above, **assemble one finished piece** for your portfolio. Choose one form:
 
-1. Compare an AI-generated image of "a typical Norwegian street" with a real photograph. What is the model *averaging away*?
-2. What changes when image-making moves from "ten minutes for a sketch" to "ten seconds for a finished-looking picture"? Who benefits, who loses?
-3. Pick a single image you generated this week. Write a 100-word caption that *honestly* describes how it was made — the tool, the prompt, the iterations, the edits.
+- a **four-image series** with a shared subject and a clear conceptual through-line (e.g., the same Oslo street in four seasons);
+- a **single poster** combining one of your generations with hand-set typography;
+- a **photo + AI redraw diptych** that explicitly puts a real image next to its image-to-image variant.
+
+Write a 100-word **honest caption** documenting: the tool, the seed (if visible), the prompt, the variations tried, and any human edits. The caption is part of the artefact, not metadata about it.
 
 ---
 
@@ -1569,41 +1635,40 @@ Three observations:
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-### Part 1 — Transcribe and remix a short clip (60 min)
+### Reflect (≈ 30 min, in lab + your weekly log)
+
+Pick **one** prompt and write 150–300 words in your weekly log:
+
+1. Voice cloning is now essentially a free service. What changes for journalism? For political ads? For your own digital footprint?
+2. Listen carefully to a generated 30-second clip. What gives it away? What does *not* give it away? Are you sure?
+3. Music generation models were trained on existing music. Imagine you are a working musician — how do you feel about that? Imagine you are a film composer working on a small project — how does that change your answer?
+
+### Explore (≈ 45 min, in lab) — transcribe and remix
 
 1. Record (or pick) a 30–60 second voice clip with your permission to use.
 2. Transcribe it with [Whisper](https://huggingface.co/openai/whisper-large-v3) (via the web, via a local install, or via a service).
 3. Generate a **new voice** reading the same text in a TTS tool.
-4. Compare the two side by side. What did the AI catch? What did it miss? What does the synthetic voice add or remove?
+4. Compare the two side by side. What did the AI catch? What did it miss? What does the synthetic voice add or remove? Document the comparison in your log.
 
-### Part 2 — Build a 30-second piece (60 min)
-
-1. Pick a small brief: "background music for a UiO research lab promo video, 30 seconds".
-2. Generate a song in a music tool. Iterate prompts until you have something usable.
-3. Generate a separate ambient sound effect bed.
-4. Mix the two (any DAW; even Audacity works).
-5. Document: tools, prompts, edits, time taken.
-
-### Optional code track
-
-Install `openai-whisper` or `nb-whisper` locally:
+**Optional code track.** Install `openai-whisper` or `nb-whisper` locally:
 
 ```bash
 pip install openai-whisper
 whisper my-clip.mp3 --model small --language Norwegian
 ```
 
-For audio generation, the [`audiocraft`](https://github.com/facebookresearch/audiocraft) library by Meta lets you run MusicGen locally on a moderate GPU.
+### Create (≈ 60 min, in lab + carry-over to your portfolio) — a 30-second piece
 
----
+1. Pick a small brief — for example: *"background music for a UiO research lab promo video, 30 seconds"*.
+2. Generate a song in a music tool. Iterate prompts until you have something usable.
+3. Generate a separate ambient sound effect bed.
+4. Mix the two (any DAW; even Audacity works).
+5. Document: tools, prompts, edits, time taken. Add a **consent and provenance** note — for any voice or sample used, where did it come from and do you have the right to publish it?
+6. Export and commit the final mix to your portfolio.
 
-## Reflection prompts
-
-1. Voice cloning is now essentially a free service. What changes for journalism? For political ads? For your own digital footprint?
-2. Listen carefully to a generated 30-second clip. What gives it away? What does *not* give it away? Are you sure?
-3. Music generation models were trained on existing music. Imagine you are a working musician — how do you feel about that? Imagine you are a film composer working on a small project — how does that change your answer?
+For audio generation in code, the [`audiocraft`](https://github.com/facebookresearch/audiocraft) library by Meta lets you run MusicGen locally on a moderate GPU.
 
 ---
 
@@ -1756,38 +1821,38 @@ If your laptop has 16 GB of RAM and no dedicated GPU, do video work in a hosted 
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-### A 10-second clip from a single image
+### Reflect (≈ 30 min, in lab + your weekly log)
 
-1. Generate a strong **still image** (chapter [5](ai-images.ipynb)) of a clear subject in a clear scene.
-2. In a video tool of your choice, run **image-to-video** with a short motion prompt — e.g., "*the subject turns their head slowly to the right while the camera pushes in*".
-3. Generate three variations. Pick the best.
-4. Optional: generate an **end-frame** and re-run with both first and last frame conditioned.
+Pick **one** prompt and write 150–300 words in your weekly log:
 
-### A 30-second mini-piece
+1. What kinds of moving-image work are easiest for current video AI? Which kinds remain stubbornly out of reach?
+2. Watch one AI-generated short film online (search for "AI short film 2026"). Pause every two seconds. Where does coherence break down? Where does it hold?
+3. Imagine a journalist using AI video for a news report. List three legitimate uses and three uses that would constitute serious misuse. What is the difference?
 
-1. Storyboard **three shots** of a small idea — for example, "a tourist arriving in Oslo at sunrise".
-2. Generate each shot (3–5 seconds each).
-3. Add an ambient soundtrack from chapter [6](ai-sound.ipynb).
-4. Edit the three shots together in a video editor.
-5. Watch it twice. Write down what works, what does not, and what you would re-do.
-
-### Critique
-
-Pair up with another student. Each of you watches the other's 30-second piece silently, then writes:
+**Pair critique.** In the last 20 minutes of class, pair up with another student. Watch each other's 30-second piece (see *Create* below) silently, then write:
 
 - One thing the AI clearly produced well.
 - One thing that gives it away as AI.
 - One thing that would be the next step.
 
----
+### Explore (≈ 30 min, in lab) — a 10-second clip from a single image
 
-## Reflection prompts
+1. Generate a strong **still image** (chapter [5](ai-images.ipynb)) of a clear subject in a clear scene.
+2. In a video tool of your choice, run **image-to-video** with a short motion prompt — e.g., "*the subject turns their head slowly to the right while the camera pushes in*".
+3. Generate three variations. Pick the best.
+4. Optional: generate an **end-frame** and re-run with both first and last frame conditioned.
+5. Note where coherence holds (within a single shot) and where it breaks (motion of multiple objects, hands, fast camera moves).
 
-1. What kinds of moving-image work are easiest for current video AI? Which kinds remain stubbornly out of reach?
-2. Watch one AI-generated short film online (search for "AI short film 2026"). Pause every two seconds. Where does coherence break down? Where does it hold?
-3. Imagine a journalist using AI video for a news report. List three legitimate uses and three uses that would constitute serious misuse. What is the difference?
+### Create (≈ 60 min, in lab + carry-over to your portfolio) — a 30-second mini-piece
+
+1. Storyboard **three shots** of a small idea — for example, *"a tourist arriving in Oslo at sunrise"*.
+2. Generate each shot (3–5 seconds each).
+3. Add an ambient soundtrack from chapter [6](ai-sound.ipynb).
+4. Edit the three shots together in a video editor.
+5. Add a clearly visible **provenance card** at the end of the piece (one frame, white text on black): tools, models, year. This is good practice and may soon be required under the EU AI Act for deepfake-adjacent material.
+6. Watch the result twice. Write down what works, what does not, and what you would re-do. Commit the piece + provenance card to your portfolio.
 
 ---
 
@@ -1943,9 +2008,29 @@ All of this can be assembled with an AI assistant in an afternoon.
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-### Build a sketch with an AI assistant
+### Reflect (≈ 30 min, in lab + your weekly log)
+
+Pick **one** prompt and write 150–300 words in your weekly log:
+
+1. The assistant suggested a function. You ran it. It worked. Five minutes later you cannot remember what it does. What does that mean for your skill, and for the long-term reliability of your project?
+2. What are three things a coding assistant is *worse* at than a beginner? (Hint: novelty, debugging across abstraction, judging which library to use.)
+3. Find one bug the assistant introduced in your sketch. How would you have found it without the assistant?
+
+**Read code you did not write.** Take the assistant's longest function from the *Create* activity below and **explain it back** in your own words — in your log, line by line. (Use the assistant to check your explanation, but write the first pass yourself.) This habit is the most important coding skill in 2026 and counts as a Reflect activity, not a Create one.
+
+### Explore (≈ 30 min, in lab)
+
+Pick the *same* small p5.js feature (e.g., "make the background fade slowly") and prompt **two different AI coding assistants** for an implementation — for example, ChatGPT and Cursor's inline edit, or Claude and GitHub Copilot Chat. Compare:
+
+- Which one wrote idiomatic p5.js?
+- Which one chose a sensible variable name?
+- Which one explained itself when you asked "why did you write it this way?"
+
+Two short paragraphs in your log are enough.
+
+### Create (≈ 60 min, in lab + carry-over to your portfolio) — a mouse-reactive sketch
 
 1. Open the [p5.js Web Editor](https://editor.p5js.org/).
 2. With your AI assistant of choice, build a **mouse-reactive sketch** that meets at least two of:
@@ -1956,27 +2041,7 @@ All of this can be assembled with an AI assistant in an afternoon.
 3. Iterate at least three times: ask for changes, run, ask for more.
 4. Save the sketch publicly and put the link in your weekly log.
 
-### Read code you did not write
-
-Take the assistant's longest function and **explain it back** in your own words — in your log, line by line. (Use the assistant to check your explanation.) This habit is the most important coding skill in 2026.
-
-### Optional advanced track: a generative pipeline
-
-Combine:
-
-- an image model (chapter [5](ai-images.ipynb)),
-- an audio model (chapter [6](ai-sound.ipynb)),
-- a tiny script that wires them together.
-
-For example: generate four images of "*a forest in different seasons*" and a 20-second ambient track for each. Display all four with their soundscapes on a simple HTML page.
-
----
-
-## Reflection prompts
-
-1. The assistant suggested a function. You ran it. It worked. Five minutes later you cannot remember what it does. What does that mean for your skill, and for the long-term reliability of your project?
-2. What are three things a coding assistant is *worse* at than a beginner? (Hint: novelty, debugging across abstraction, judging which library to use.)
-3. Find one bug the assistant introduced in your sketch. How would you have found it without the assistant?
+**Optional advanced track — a generative pipeline.** Combine an image model (chapter [5](ai-images.ipynb)), an audio model (chapter [6](ai-sound.ipynb)), and a tiny script that wires them together. For example: generate four images of *"a forest in different seasons"* and a 20-second ambient track for each. Display all four with their soundscapes on a simple HTML page, and commit the page to your portfolio.
 
 ---
 
@@ -2086,36 +2151,49 @@ The trajectory is clear, but the gap to professional-grade 3D production is wide
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-### Path A — Gaussian splatting (no code)
+### Reflect (≈ 30 min, in lab + your weekly log)
+
+Pick **one** prompt and write 150–300 words in your weekly log:
+
+1. What does it mean to "design" a thing when the AI can generate 100 variations in 60 seconds? Where does design judgement now sit?
+2. A small game studio with five people in 2018 made one game in two years. The same studio with five people in 2026 can make six games in two years. What changes culturally?
+3. Which parts of 3D / design work do you most *want* to stay human, and why?
+
+### Explore (≈ 20 min, in lab) — feel the limits first
+
+Before committing to a Create path below, spend 20 minutes deliberately **breaking** one 3D AI tool of your choice. Try at least three inputs likely to fail:
+
+- a *reflective surface* (a mirror, a glossy car);
+- a *thin structure* (a chair, a bicycle, hair);
+- an *unusual perspective* (a top-down photo, fish-eye, low light).
+
+Capture three failure screenshots and one short note for each. Your *Create* output below will be better for it.
+
+### Create (≈ 60 min, in lab + carry-over to your portfolio) — pick one path
+
+**Path A — Gaussian splatting (no code).**
 
 1. Take 50–100 photos of an object (a plant, a sculpture, a piece of furniture) from many angles.
 2. Upload to [Luma AI](https://lumalabs.ai/) or [Polycam](https://poly.cam/) and let it process the splat.
-3. Explore the resulting scene. Take screenshots from three angles.
-4. Identify three failures of the capture and explain what caused them.
+3. Take three screenshots from three angles. Identify three failures of the capture and explain what caused them.
+4. Commit the screenshots and a one-paragraph caption.
 
-### Path B — Text-to-3D + scene
+**Path B — Text-to-3D + scene.**
 
 1. Generate a 3D asset in [Meshy](https://www.meshy.ai/) or similar.
 2. Import into [Blender](https://www.blender.org/) (free).
 3. Place it in a small scene with one light and one camera.
-4. Render a single still. Document the steps.
+4. Render a single still. Document the steps and commit the render.
 
-### Path C — Game asset pipeline (advanced)
+**Path C — Game asset pipeline (advanced).**
 
 1. Generate four matching 2D sprites for a tiny game character (idle, walk, jump, action).
 2. Generate one tileset for a small environment.
 3. Generate one music loop and three sound effects.
 4. (Optional) Combine in a small playable scene using [Phaser](https://phaser.io/) or [PICO-8](https://www.lexaloffle.com/pico-8.php) with help from an AI coding assistant (chapter [8](ai-code.ipynb)).
-
----
-
-## Reflection prompts
-
-1. What does it mean to "design" a thing when the AI can generate 100 variations in 60 seconds? Where does design judgement now sit?
-2. A small game studio with five people in 2018 made one game in two years. The same studio with five people in 2026 can make six games in two years. What changes culturally?
-3. Which parts of 3D / design work do you most *want* to stay human, and why?
+5. Commit the assets (and the scene, if you built it) to your portfolio.
 
 ---
 
@@ -2235,34 +2313,33 @@ For students this means a single piece of practical advice: **become very good a
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-### Try a multimodal conversation
+### Reflect (≈ 30 min, in lab + your weekly log)
+
+Pick **one** prompt and write 150–300 words in your weekly log:
+
+1. In your discipline, what is a *brief*? Who writes it now, and who would write it if AI did the rest of the work?
+2. Imagine an agent that watches all your work and proactively suggests "next steps" in the background. Is that a tool or a colleague? Should you pay it?
+3. The most successful agents in 2026 are also the ones with the most permissions (browsers, payment, code execution). What is the price of that?
+
+### Explore (≈ 30 min, in lab) — a multimodal conversation
 
 1. Take a photograph of something messy or interesting in your daily life — your desk, a Tupperware drawer, a chord diagram from a music book.
 2. Upload it to a multimodal chat model. Ask it three increasingly specific questions about the image.
 3. Pivot: ask it to *redesign* what is in the image (a tidied desk, a different kind of chord). Note where its design knowledge ends and its general pattern-matching begins.
 
-### Design an agent on paper
+### Create (≈ 60 min, in lab + carry-over to your portfolio) — design an agent
 
-You will not implement an agent today. Instead, **design one**.
+You will not necessarily implement an agent today. Instead, **design one** thoroughly enough that you could.
 
-1. Pick a small creative goal you care about (a website portfolio, a podcast episode, a comic page, a recipe book).
-2. List **every single step** an agent would take to complete it.
-3. For each step, write down: which model, what input, what output, how you would verify the output, and what would happen if it failed.
-4. Stop. Look at the diagram. Which steps are you happy to delegate, and which would you keep manual?
+1. Pick a small creative goal you care about (a website portfolio, a podcast episode, a comic page, a recipe book, a teaching resource).
+2. List **every single step** an agent would take to complete it. Draw the flow as a diagram (whiteboard, paper, Excalidraw, draw.io).
+3. For each step, write down: which model, what input, what output, **how you would verify the output**, and **what would happen if it failed**. Add an explicit *human in the loop* checkpoint where one is needed.
+4. Stop. Look at the diagram. Which steps are you happy to delegate, and which would you keep manual? Annotate the diagram with these answers.
+5. Commit the diagram + a short README to your portfolio.
 
-### Optional code track
-
-Use the OpenAI [Agents SDK](https://platform.openai.com/docs/agents) or LangGraph to build a tiny three-step agent: search for a paper, summarise it, write a one-sentence headline. Don't expect magic — expect a useful sketch.
-
----
-
-## Reflection prompts
-
-1. In your discipline, what is a *brief*? Who writes it now, and who would write it if AI did the rest of the work?
-2. Imagine an agent that watches all your work and proactively suggests "next steps" in the background. Is that a tool or a colleague? Should you pay it?
-3. The most successful agents in 2026 are also the ones with the most permissions (browsers, payment, code execution). What is the price of that?
+**Optional code track.** Use the OpenAI [Agents SDK](https://platform.openai.com/docs/agents) or LangGraph to build a tiny three-step agent that implements *one slice* of your design — e.g., search for a paper, summarise it, write a one-sentence headline. Don't expect magic — expect a useful sketch.
 
 ---
 
@@ -2437,32 +2514,27 @@ This week's ethics essay (see below) is your chance to take a real position on t
 
 ---
 
-## Practice (2 h)
+## This week's lab: Reflect, Explore, Create
 
-### Audit one tool
+This is the most Reflect-heavy chapter of the course — appropriately, since the *mid-term ethics essay* is due this week. The Explore and Create activities exist to give the essay something concrete to point at.
 
-Pick a Creative AI tool you have used this semester. Spend the first hour of the practice session writing a short **ethical audit** of it, using the four questions from the top of this chapter. Cover:
+### Reflect (≈ 60 min, in lab + your weekly log)
 
-- **Provenance** of training data (what the company says publicly).
-- **Bias** — try a small probing set (e.g., 10 prompts that touch gender, geography, language).
-- **Labour** — what do you know about the labellers and moderators?
-- **Sustainability** — does the company publish anything?
-- **Authorship and labelling** — does the tool offer C2PA or watermarking?
+**Group debate (30 min).** Two teams of 3–4 students each. Each team randomly draws a position:
 
-Aim for 600–1 000 words. This is also the seed material for your ethics essay.
+- *"Training generative models on copyrighted material is acceptable as fair use."*
+- *"Training generative models on copyrighted material is not acceptable without per-rights-holder consent."*
 
-### Group debate
+You will defend the position you drew, regardless of your prior view. (This is deliberate — being able to make the strongest case for a view you disagree with is the most useful skill in ethics.)
 
-In the second hour: two teams of 3–4 students each. Each team randomly draws a position:
+**Pick one** of the following and write 150–300 words in your weekly log:
 
-- "Training generative models on copyrighted material is acceptable as fair use."
-- "Training generative models on copyrighted material is not acceptable without per-rights-holder consent."
+1. Pick a Creative AI use you find uncomfortable. Write 300 words on why. Then write 200 words steelmanning the other side.
+2. The EU AI Act [@EUAIAct] requires labelling of AI-generated content "interacting with humans". How would you implement that for your own work?
+3. Your future job will be done partly with AI. What conditions would have to hold for you to feel that this is good for you and good for others?
+4. Re-read the *Death of the Artist or Birth of the Curator?* framing above. Where does it map onto a specific project you have worked on this semester?
 
-You will defend the position you drew, regardless of your prior view. (This is a deliberate exercise — being able to make the strongest case for a view you disagree with is the most useful skill in ethics.)
-
-### Mid-term ethics essay (1 page, Pass / Fail) — due this week
-
-Choose **one** of the following prompts and write a tight, well-argued one-page essay (≈ 600 words) with at least three references:
+**Mid-term ethics essay (1 page, Pass / Fail) — due this week.** Choose **one** of the following prompts and write a tight, well-argued one-page essay (≈ 600 words) with at least three references:
 
 - *Death of the Artist or Birth of the Curator?* — Take a clear position on what generative AI does to authorship.
 - *Should AI-generated work be eligible for copyright protection?* — Argue one side, with worked counter-arguments.
@@ -2472,14 +2544,27 @@ Choose **one** of the following prompts and write a tight, well-argued one-page 
 
 Submit through the LMS. The essay is graded Pass / Fail (10 % of the course); a Fail can be revised once.
 
----
+### Explore (≈ 30 min, in lab) — audit one tool
 
-## Reflection prompts
+Pick a Creative AI tool you have used this semester and write a short **ethical audit** of it, using the four questions from the top of this chapter. Cover:
 
-1. Pick a Creative AI use you find uncomfortable. Write 300 words on why. Then write 200 words steelmanning the other side.
-2. The EU AI Act [@EUAIAct] requires labelling of AI-generated content "interacting with humans". How would you implement that for your own work?
-3. Your future job will be done partly with AI. What conditions would have to hold for you to feel that this is good for you and good for others?
-4. Re-read the *Death of the Artist or Birth of the Curator?* framing above. Where does it map onto a specific project you have worked on this semester?
+- **Provenance** of training data (what the company says publicly).
+- **Bias** — run a small probing set (e.g., 10 prompts that touch gender, geography, language).
+- **Labour** — what do you know about the labellers and moderators?
+- **Sustainability** — does the company publish anything?
+- **Authorship and labelling** — does the tool offer C2PA or watermarking?
+
+Aim for 600–1 000 words. This is empirical work (you are *investigating* a real system), and it is the seed material for the ethics essay above.
+
+### Create (≈ 30 min, in lab + carry-over to your portfolio) — a one-page AI policy
+
+Imagine you are the head of a small UiO department, a music ensemble, a newsroom, or a design studio. Draft a **one-page AI use policy** for your imaginary organisation. Cover:
+
+- **Three things you would mandate** (e.g., declaration, provenance metadata, energy budget, opt-out checks).
+- **Three things you would prohibit** (e.g., voice cloning without explicit consent, training on private student work, undeclared agent use in publications).
+- **One open question** you would ask an expert before finalising the policy.
+
+Keep it to one page. Real organisational policies are short; that is the point. Commit `ai-policy.md` to your portfolio — this is exactly the kind of artefact the Co-Creative AI ethos of this course wants you to leave with.
 
 ---
 
@@ -2652,14 +2737,35 @@ Look back at the one-sentence definition of *Creative AI* you wrote in week 1. D
 
 ---
 
-## Practice (2 h) — Project presentations
+## This week's lab: Reflect, Explore, Create — *The Synthetic Gallery*
 
-The structure for the final session:
+The three tracks converge in the final session. The Synthetic Gallery is itself a piece of *Create* (you are exhibiting an artefact), of *Explore* (you have probed the limits of every tool used to make it), and of *Reflect* (you frame it for an audience that did not live the project).
+
+### Create — present your project (5 min + 5 min Q&A)
 
 - 5 minutes per project + 5 minutes of Q&A.
 - Audience is the rest of the class plus invited guests from elsewhere at UiO.
 - Bring your laptop. Test the AV during the break.
 - Submit your reflection and prompt log by the start of the session.
+- A version of your artefact lives in the GitHub-Pages *Synthetic Gallery* alongside this textbook for at least one year (with your consent).
+
+### Explore — read the room
+
+Watch every other project. For at least three of them, note in your log:
+
+- one **technical** thing that surprised you (what the tool managed, or failed at);
+- one **artistic** choice you would have made differently;
+- one **question** you would steal for your own next project.
+
+### Reflect — a retrospective across the three tracks
+
+After the showcase, write a final 300–500 word entry in your log, organised explicitly around the three tracks:
+
+1. **Reflect:** what changed in your view of AI between week 1 and week 12? Quote your week 1 log entry if you can.
+2. **Explore:** which tool taught you the most, and what was the lesson?
+3. **Create:** which artefact are you most proud of, and which one are you most ready to leave behind?
+
+These three short paragraphs are also the seed of next year's textbook — open a pull request on <https://github.com/fourMs/Creative-AI> if you want to contribute.
 
 ---
 
