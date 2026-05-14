@@ -22,18 +22,32 @@ ROOT = Path(__file__).resolve().parent.parent
 BOOK = ROOT / "book"
 
 
+def _to_source_lines(text: str) -> List[str]:
+    """Convert a string to nbformat's conventional list-of-strings source.
+
+    Each element keeps its trailing ``\\n`` except the final one. This matches
+    the format Jupyter and VS Code write back to .ipynb files, which keeps
+    diffs minimal when the notebooks are opened and re-saved.
+    """
+    text = text.strip("\n")
+    if not text:
+        return []
+    parts = text.split("\n")
+    return [p + "\n" for p in parts[:-1]] + [parts[-1]]
+
+
 def make_notebook(markdown_blocks: List[str]) -> dict:
     """Build a minimal nbformat 4.5 notebook with markdown cells only."""
     cells = []
     for block in markdown_blocks:
-        text = block.strip("\n")
-        if not text:
+        lines = _to_source_lines(block)
+        if not lines:
             continue
         cells.append(
             {
                 "cell_type": "markdown",
                 "metadata": {"language": "markdown"},
-                "source": text,
+                "source": lines,
             }
         )
     return {
@@ -838,6 +852,38 @@ You will hear many architecture names in the wild. The four big families are:
 - **Flow matching / rectified flows** [@Esser2024SD3] — close cousin of diffusion models with simpler training. Powers some of the latest image and video models.
 
 You do not need to memorise this. But when a tool brags about being "GAN-based" or "diffusion-based" or "flow-based", you should be able to nod and understand roughly what that implies.
+
+---
+
+## Five paradoxes of working with generative AI
+
+We have just covered *how the system works* — distributions, sampling, conditioning, prompts, architectures. Before we walk into the medium-specific chapters that follow, it is worth pausing on *how to work with the system*.
+
+The most useful conceptual handle here comes from Salma, Hijón-Neira, and Pizarro's 2025 paper [@Salma2025], which argues that today's generative tools (Midjourney, Copilot, ChatGPT, and their cousins) almost all operate as **executors** — they take a command and produce an output. Creative work, by contrast, is **non-linear, iterative, and ambiguous**. That mismatch produces five *irreducible paradoxes* in human–AI co-creation:
+
+| Paradox | Core tension | Practical question for you |
+| --- | --- | --- |
+| **Ambiguity vs. precision** | Your creative intent is vague; the model needs precise input. | How do you translate a vision into a prompt without prematurely closing the exploration? |
+| **Control vs. serendipity** | You want to steer; the most interesting outputs are the unexpected ones. | How do you stay open to "happy accidents" while keeping authorship? |
+| **Speed vs. reflection** | The model generates in seconds; understanding takes minutes. | Where will you build in pauses, friction, and re-reading? |
+| **Individual vs. collective** | Your voice is unique; the model is trained on the average of millions of voices. | How do you keep your signature when your collaborator is "the wisdom of the crowd"? |
+| **Originality vs. remix** | Generative AI is an extreme remix engine; you also want work that is *yours*. | Where does the novelty come from — the model, the prompt, the edits, the curation? |
+
+The Salma paper's key move is to argue that **these are not bugs to fix; they are tensions to manage**. A good Creative AI practice does not try to resolve them. It learns to *live inside* them, deliberately leaning to one side when the project needs it, and to the other side when it needs the opposite.
+
+A worked walk-through:
+
+- **Ambiguity vs. precision.** A useful early move is to *over-describe* in plain language ("I want this to feel like an early-morning Oslo trikk window seen from a damp coat") and then ask the model to translate your description into a prompt it can actually work with. You keep the ambiguity in your head; the model converts it to precision on the canvas. The interface you want is a *multi-turn refinement loop*, not a single big input box.
+- **Control vs. serendipity.** Always generate at least *three* variations of anything you care about. The one you *would not have chosen on paper* is often the one that does the most work for you. Veto power on suggestions is your most important creative skill in this mode — and "veto" includes the active "the AI is wrong here, but the wrongness gives me an idea" move.
+- **Speed vs. reflection.** The model can generate a song in 90 seconds; spend at least 10 minutes listening to it before you ask for the next one. Build *pause points* into your workflow. The whole risk of generative AI in education and in professional practice is *attentional deskilling* — losing the habit of looking long.
+- **Individual vs. collective.** Watch for the "average" pull. If every image of "a Norwegian fjord" the model gives you looks like the same tourism poster, you are getting the collective; your work needs an explicit *push* the other way (a reference image, a style word, a constraint, an act of refusal).
+- **Originality vs. remix.** Accept, honestly, that the model is remixing prior work. Your originality lives in the *brief*, the *prompt*, the *selection*, the *edits*, and the *context* you put around the output. This is the central argument of chapter [11](ethics.ipynb): in a culture saturated with remix, **the centre of gravity of authorship shifts from making to directing and curating**.
+
+```{important}
+Salma and colleagues reframe the human role in co-creation as **from craftsperson to creative director**: skilled in formulating a high-level vision, briefing collaborators (human or AI), and curating outputs to align with that vision. Hold this framing as you read the next eight chapters.
+```
+
+These five paradoxes will quietly structure the rest of the book. Every applied chapter (image, sound, video, code, 3D, agents) re-runs the same five tensions in a different medium. By the end of the course you should be able to *name* which paradox you are wrestling with in any given lab session — and a good *Surprise / Will* process memo (intro) will usually be a story about exactly one of them.
 
 ---
 
@@ -2048,6 +2094,8 @@ This unlocks a different kind of prompt: **show, don't tell**. The most useful p
 
 ## Agentic AI
 
+The shift from *multimodal models* to *agents* tracks a deeper conceptual shift that Salma, Hijón-Neira, and Pizarro flag in [@Salma2025]: from AI as a passive **executor** of commands to AI as an active **collaborator** in the process. An agent does not just respond to a prompt; it plans, takes steps, observes results, and adjusts — much closer to how a human collaborator behaves on a brief.
+
 An **AI agent** is a system that is given a goal and decides for itself which steps to take. The minimum architecture is:
 
 1. An LLM with **tools** it can call — web search, code execution, file system, browser, APIs.
@@ -2297,6 +2345,8 @@ Both readings are partly true, and they are usefully in tension. The argument ma
 - **what we credit** (and how we pay people whose labour entered the dataset);
 - **what we ask of students and professionals** when we say *"do this with AI"*;
 - **what the public will accept** as a published creative artefact.
+
+Salma, Hijón-Neira, and Pizarro [@Salma2025] sharpen the second reading by re-describing the human role in co-creative systems as a shift **from craftsperson to creative director**. The director is the person who articulates the vision, briefs collaborators (human or AI), curates the outputs, and stands behind the work. Where the "Death of the Artist" framing risks erasing the human, the "Birth of the Curator" framing — read through the *creative-director* lens — gives the human role a positive, *responsible* shape. The author of an AI-assisted work is not "whoever pressed generate" but **whoever can plausibly own the brief and the choices**.
 
 This week's ethics essay (see below) is your chance to take a real position on this tension — or on a different one — and defend it.
 

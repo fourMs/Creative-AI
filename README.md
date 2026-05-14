@@ -63,30 +63,6 @@ Or from the repository root:
 ./scripts/verify-book-build.sh
 ```
 
-### Run notebook execution before every push (optional)
-
-CI already runs `myst build --html --execute` on `main`. To run the same check locally before `git push`, enable this repository's hooks once:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-To push without the check (e.g. a docs-only WIP branch):
-
-```bash
-SKIP_BOOK_VERIFY=1 git push
-```
-
-## Authoring notes
-
-- Chapters live as Jupyter notebooks (`*.ipynb`) in `book/`. Text cells use MyST Markdown; you can mix Python (or other) code cells freely where executable demos help the argument.
-- Each chapter starts with a YAML frontmatter cell that sets the title, subtitle, and description.
-- Use the directive `:::{important}`, `:::{tip}`, `:::{warning}`, etc. for callouts.
-- Cite literature with `[@CitationKey]` against entries in `book/references.bib`.
-- New chapters must be added to the `toc` in `book/myst.yml`.
-
-The source repository lives at <https://github.com/fourMs/Creative-AI>.
-
 ## Credits
 
 Compiled at the University of Oslo. The textbook is released as Open Education under the [Creative Commons Attribution 4.0 (CC-BY-4.0)](https://creativecommons.org/licenses/by/4.0/) licence, except where otherwise noted.
