@@ -94,38 +94,112 @@ The aim of the course is twofold:
 1. To give you a working *understanding* of how today's generative AI systems are built and why they behave the way they do.
 2. To give you *hands-on experience* using these systems for creative work, alongside the critical vocabulary needed to discuss their cultural, ethical, and environmental consequences.
 
-:::{important} Learning outcomes
-Having completed the course, you will be able to:
+Three concepts thread through every week: **intentionality**, **aesthetic control**, and **ethical authorship**. The interesting question is not *can the model do this*, but *what do you want, how do you guide the system there, and on whose terms*.
 
-- describe in plain language how modern generative AI systems (large language models, diffusion models, audio and video models) work, including what they cannot do;
-- use AI tools to produce text, images, sound, video, code, and other artefacts, and reflect on what is gained and lost in the process;
-- discuss ethical, legal, and environmental questions raised by Creative AI — copyright, bias, labour, energy, authorship, and authenticity;
-- design and document a small creative project that uses AI deliberately and responsibly.
+---
+
+## Course at a glance
+
+| Field | Value |
+| --- | --- |
+| Course title | Creative AI |
+| Level | Bachelor — open to students from all UiO faculties |
+| Credits | 10 ECTS (suggested) |
+| Duration | 12 teaching weeks |
+| Format per week | 1 h lecture + 2 h practice-based lab |
+| Workload | ≈ 6 hours of self-study and project work per week |
+| Prerequisites | None. Basic digital literacy assumed; no programming required. |
+| Language | English (with discussion in Norwegian as needed) |
+| Teaching team | Coordinator + invited guest lecturers from across UiO faculties |
+
+---
+
+## Course description (for the course catalogue)
+
+Artificial intelligence has moved from a back-office technology into a tool that shapes everyday creative work: writing, drawing, photography, music, video, design, code, journalism, scholarship, and teaching. **Creative AI** introduces students from across the University of Oslo to the concepts, tools, and ethics of working creatively with contemporary AI systems.
+
+The course assumes no prior programming or specialised art background. Through a combination of short lectures and weekly hands-on labs, students learn how today's text, image, sound, video, and multimodal models work; how to direct and refine their outputs; how to integrate them responsibly into their own discipline; and how to reflect critically on the cultural, legal, environmental, and political stakes of the technology.
+
+Students leave the course with a small portfolio of creative AI artefacts, a documented prompt and decisions log, and a final project presented at a public end-of-semester *Synthetic Gallery* showcase at UiO.
+
+---
+
+## Learning outcomes
+
+Following the standard UiO three-tier format:
+
+:::{important} Knowledge
+Having completed the course, students will:
+
+- explain core ideas behind contemporary generative AI in plain language — including neural networks, large language models, diffusion models, multimodal and agentic systems — and be able to describe what they cannot do;
+- identify typical use cases and limitations of generative AI across text, image, sound, video, code, 3D, and design;
+- describe the key ethical, legal, social, and environmental questions raised by Creative AI: bias, hallucination, consent, copyright, labour, energy, authorship, and authenticity.
 :::
+
+:::{important} Skills
+Students will be able to:
+
+- use a range of accessible AI tools to produce text, images, sound, video, code, and design artefacts;
+- design effective prompts, workflows, and iteration loops to direct AI systems toward specific creative goals;
+- critically evaluate AI-generated content for quality, bias, factual reliability, and appropriateness;
+- document their creative process — tools, prompts, decisions, edits — transparently and reproducibly;
+- collaborate in small groups to design and deliver a creative AI project.
+:::
+
+:::{important} General competence
+Students will:
+
+- discuss opportunities and risks of Creative AI in their own discipline with both technical and critical literacy;
+- reflect on how AI reshapes notions of creativity, originality, and authorship — and on what stays human;
+- make informed, responsible choices about using AI tools in study, professional, and civic contexts.
+:::
+
+---
+
+## Recommended background
+
+- No programming experience required.
+- Basic digital literacy (web browsing, document editors, file management) is assumed.
+- Curiosity from any discipline is more important than any specific prior knowledge.
+
+Students who already program will find an optional **"code track"** in each weekly chapter (clearly marked) — typically a short Python notebook that opens the hood on the same idea explored in the no-code lab.
+
+---
+
+## Modes of teaching and learning
+
+Each weekly cycle follows the same shape:
+
+1. **Before class** — read the week's chapter (≈ 1 hour). The textbook is meant to be read *before* the lecture, not in place of it.
+2. **Lecture (1 h)** — short talk, demos, class discussion. Many lectures feature a guest from another UiO faculty or research centre (RITMO, IFI, IMV, Department of Media and Communication, KHiO, etc.).
+3. **Practice (2 h)** — guided hands-on lab. You will work alone or in pairs with real AI tools, produce a small artefact (a paragraph, an image, a sound, a sketch, a short video, or some code), and discuss results with peers.
+4. **Self-study (≈ 6 h)** — reading, follow-on experimentation, work on assignments and the final project.
+
+In **week 0** (the week before teaching starts) all students complete a short **AI-literacy onboarding module**: account setup for the term's tools, a privacy briefing, and the [AI at UiO](https://www.uio.no/english/services/ai/) guidelines for student use of AI.
 
 ---
 
 ## Course schedule
 
-The course runs for 12 teaching weeks. Each week has **1 hour of lecture** and **2 hours of practice-based work**, plus around 6 hours of self-study and project work. Practice sessions are deliberately mixed: some weeks you will use commercial tools in the browser, other weeks you will write a few lines of Python in a notebook on your laptop or in [UiO Educloud](https://www.uio.no/english/services/it/research/platforms/edu-research/).
+The 12-week schedule below maps lectures, practice labs, and assignment milestones. Practice sessions deliberately mix modes: some weeks you will use commercial tools in the browser; other weeks you will write a few lines of Python in a notebook on your laptop or in [UiO Educloud](https://www.uio.no/english/services/it/research/platforms/edu-research/).
 
-| Week | Chapter | Focus (what to take away) | Lecture (theory) | Practice (2 h, hands-on) |
+| Week | Chapter | Lecture (1 h, theory) | Practice (2 h, hands-on) | Milestone |
 | ---: | --- | --- | --- | --- |
-| 1 | [What is Creative AI?](introduction.ipynb) | A working definition; brief history; scope of the course | Concepts of *creativity* and *AI*; the new "generative" turn | First experiments with one text and one image tool; reflective journal entry |
-| 2 | [Foundations of AI](foundations.ipynb) | Data, models, training, inference | Neural networks and learning from data | Train a tiny model in a notebook; look inside a pretrained model |
-| 3 | [Generative AI](generative-ai.ipynb) | Probability, sampling, conditioning, prompts | The vocabulary shared by all generative systems | Compare outputs from different samplers and prompts |
-| 4 | [AI and language](ai-language.ipynb) | Large language models for writing and dialogue | Tokens, context, in-context learning | Build a prompt library for your discipline; evaluate hallucinations |
-| 5 | [AI and images](ai-images.ipynb) | Diffusion models, text-to-image, image-to-image | From noise to picture; control via prompts and references | Make a four-image series with a controlled variable |
-| 6 | [AI and sound](ai-sound.ipynb) | Speech, music, sound effects | Audio representation; generative audio models | Generate and remix a 30-second clip; document the prompt chain |
-| 7 | [AI and video](ai-video.ipynb) | Text-to-video, image-to-video, animation | Time, motion, and consistency | Storyboard and produce a 10-second clip; critique it as a viewer |
-| 8 | [Creative coding with AI](ai-code.ipynb) | AI-assisted programming; generative graphics | Pair programming with an LLM; from sketch to running code | Build a small interactive sketch with an AI coding assistant |
-| 9 | [AI for 3D, design, and games](ai-3d-games.ipynb) | 3D assets, characters, UI/UX, level design | Generative pipelines for spatial and game content | Generate a 3D asset or game element; integrate into a scene |
-| 10 | [Multimodal and agentic AI](multimodal-agents.ipynb) | Combining modalities; AI agents | When models *see*, *hear*, and *act* | Design (on paper) a multi-step AI agent for a creative task |
-| 11 | [Ethics and politics of Creative AI](ethics.ipynb) | Copyright, bias, labour, energy | Frameworks for reasoning about consequences | Class debate; ethical audit of a tool you have used |
-| 12 | [Futures and final projects](futures.ipynb) | Where Creative AI may go; project showcase | Speculative design; sustainability and creative practice | Present your final project; peer feedback |
+| 1 | [What is Creative AI?](introduction.ipynb) | From Dadaism to diffusion — a brief history; defining creativity, AI, and Creative AI | First experiments with one text tool and one image tool; start the practice log | **A1** starts: AI-augmented self-introduction |
+| 2 | [Foundations of AI](foundations.ipynb) | Data, models, training, inference; bias from data | Inspect a public model card; optional 10-line training loop | A1 due |
+| 3 | [Generative AI](generative-ai.ipynb) | Probability, sampling, conditioning, prompts | Same prompt, three samplers; controlled image experiments | — |
+| 4 | [AI and language](ai-language.ipynb) | Large language models; in-context learning; hallucination | Prompt library for your discipline; hallucination hunt | **A2** starts: AI-assisted text in your field |
+| 5 | [AI and images](ai-images.ipynb) | Diffusion models; controllability; image-to-image | Four-image series with a controlled variable; image-to-image | A2 due |
+| 6 | [AI and sound](ai-sound.ipynb) | Speech, music, sound design; consent and voice | Transcribe and remix a clip; build a 30-second piece | **A3** starts: multimodal mini-piece |
+| 7 | [AI and video](ai-video.ipynb) | Time, motion, consistency; lip-sync; deepfakes | Storyboard and produce a 10-second clip; critique | A3 due |
+| 8 | [Creative coding with AI](ai-code.ipynb) | Pair programming with an LLM; generative graphics | p5.js sketch with an AI assistant; read code you did not write | — |
+| 9 | [AI for 3D, design, and games](ai-3d-games.ipynb) | NeRFs / Gaussian splats; generative pipelines for game and design | Gaussian splat capture or text-to-3D asset in a scene | **Final-project proposal** starts |
+| 10 | [Multimodal and agentic AI](multimodal-agents.ipynb) | When models see, hear, and act; briefs as the new interface | Design (on paper) a multi-step AI pipeline for a creative task | Proposal due |
+| 11 | [Ethics and politics of Creative AI](ethics.ipynb) | Copyright, bias, labour, energy, authorship | Class debate; ethical audit of one tool | **Ethics essay** (Pass/Fail) due |
+| 12 | [Futures and final projects](futures.ipynb) | Three futures of Creative AI; what stays human | *The Synthetic Gallery* — public showcase of final projects | **Final project** due |
 
 :::{tip} Reading the chapters
-Each chapter is roughly the length of one short lecture's worth of reading. The end of every chapter has a *Practice* section — that is what you will work on in the 2-hour session that week — and a *Going further* section with suggested readings, tools, and links.
+Each chapter is roughly the length of one short lecture's worth of reading. Every chapter follows the same six-section shape: *Why this matters → Concepts → Examples → Practice → Reflection prompts → Going further*. The Practice section is what you will do in the 2-hour lab that week.
 :::
 
 ---
@@ -136,21 +210,23 @@ Each chapter is roughly the length of one short lecture's worth of reading. The 
 
 Creative AI is *not* a specialist course in computer science, art, or media. It is designed as a **general education** course: students arrive from law, medicine, musicology, design, theology, mathematics, dentistry, education, literature, biology, and many other places. That diversity is the point. The classroom is itself a small interdisciplinary laboratory where lawyers and artists, medics and historians can ask hard questions of the same AI tool and watch each other's answers.
 
-We assume **no programming background**, but the practice sessions provide an optional "code track" for students who want to look under the hood. Where we use code, it is in Python notebooks that you can run in your browser without installing anything.
+We assume **no programming background**, but each weekly lab provides an optional *code track* for students who want to look under the hood. Where we use code, it is in Python notebooks that you can run in your browser without installing anything.
 
 ### Active learning and a flipped classroom
 
-This course is built around [active learning](https://en.wikipedia.org/wiki/Active_learning). Each weekly cycle is structured as:
+This course is built around [active learning](https://en.wikipedia.org/wiki/Active_learning) and a [flipped classroom](https://en.wikipedia.org/wiki/Flipped_classroom) model: the chapter is read *before* the lecture; the lecture is the place to argue, demo, and answer the questions you bring in; the lab is where you make things.
 
-1. **Before class** — Read the chapter (≈ 1 hour).
-2. **Lecture (1 h)** — Short talk, demonstrations, and class discussion of the week's ideas.
-3. **Practice (2 h)** — A guided hands-on session in the lab or seminar room. You will work alone or in pairs with real AI tools, and produce a small artefact (a paragraph, an image, a sound, a sketch, a short video, or some code).
+### Studio-based labs and process over polish
 
-The textbook is meant to be read *before* the lecture, not in place of it. The lecture is the place to argue, demo, and answer the questions you bring in.
+The labs are run **studio-style**: short briefs, fast iteration, peer feedback, instructor and TA on hand. The assessment philosophy follows from this — we grade *process*, *reflection*, and *deliberate decisions* over technical perfection. Risk-taking, honesty about failure, and originality are explicitly rewarded.
+
+### Guest lecturers from across UiO
+
+Where possible, each week's lecture features a guest from a UiO department or research centre whose work intersects with the week's theme: e.g., RITMO for sound and music, IFI for the machine-learning weeks, IMK for the ethics and media weeks, KHiO and architecture for design weeks, the Law Faculty for the copyright discussions, NB AI Lab and the National Library for language and audio in Norwegian.
 
 ### Research-based and research-led
 
-This is a *research-based* course: the content rests on current research from machine learning, human–computer interaction, media studies, the humanities, and the arts. It is also *research-led*: the teachers are themselves working on Creative AI projects, and parts of the course (in particular the final-project showcase) feed into ongoing research at UiO.
+This is a *research-based* course: the content rests on current research from machine learning, human–computer interaction, media studies, the humanities, and the arts. It is also *research-led*: the teachers are themselves working on Creative AI projects, and parts of the course (in particular the final-project showcase) feed into ongoing research at UiO and partner centres.
 
 ### A note on AI tools used to write this book
 
@@ -230,17 +306,42 @@ This is also a political stance. Creative AI is being built and deployed mainly 
 
 ---
 
-## A word on assessment
+## Assessment
 
-Assessment in this course consists of:
+There is no traditional written exam. The expectation is that you can talk and write coherently about what you made, with what tools, and why. Assessment is *portfolio-based* and is structured as a ladder of increasingly ambitious deliverables:
 
-- **Weekly practice logs (50%)** — a short reflective entry each week documenting what you did, with what tool, what you noticed, and what questions it raised. The logs are graded pass/fail.
-- **Final project (50%)** — a small creative project produced over the second half of the semester, presented in week 12, plus a short written reflection. Group projects (2–3 students) are encouraged.
+| Component | Weight | Mode | What it is |
+| --- | ---: | --- | --- |
+| Weekly practice log | 10 % | Pass / Fail | A short entry each week: brief, tools used, prompts, what you noticed, one open question. Submitted via the LMS. |
+| **A1** — AI-augmented self-introduction | 5 % | Graded | 1 page of text + 1 image + ½ page reflection. Due in week 2. |
+| **A2** — AI-assisted text in your discipline | 10 % | Graded | 800–1 200 words in a chosen genre (academic, creative, or popular science) + a 1–2 page reflection documenting prompts and edits. Due in week 5. |
+| **A3** — Multimodal mini-piece | 10 % | Graded | A 3–5 page (or slide) cross-modal piece combining text and at least one other modality, with reflection. Due in week 7. |
+| Mid-term **ethics essay** | 10 % | Pass / Fail | 1-page argumentative essay on a topic of the student's choice (recommended: *"Death of the Artist or Birth of the Curator?"*, *"Should AI-generated work be copyright-eligible?"*, *"Where should AI stay out of my discipline?"*). Due in week 11. |
+| Final-project **proposal** | 5 % | Pass / Fail | 1–2 page proposal + feasibility sketch. Due in week 10. |
+| **Final project** + reflection | 50 % | Graded | A creative AI artefact in any medium, presented at the *Synthetic Gallery* showcase in week 12, plus a 1 500–2 500-word reflective essay and the full prompt log. Solo or groups of 2–3. |
 
-There is no traditional written exam. The expectation is that you can talk and write coherently about what you made and why.
+### Process memo
+
+Each graded assignment is submitted with a short **process memo** answering, at minimum, two prompts that we will use all semester (adapted from the practice-based tradition at RITMO and from earlier creative-AI courses):
+
+1. **Surprise.** Where did the AI surprise you — pleasantly or unpleasantly — and what did that teach you about the tool?
+2. **Will.** Where did you exert your own creative *will* over the output — through prompt, edit, refusal, selection, or composition?
+
+These two questions are the centre of gravity of the course. If you can answer them honestly across all your work, you will pass.
+
+### The final project — "The Synthetic Gallery"
+
+The final project is presented at a **public mini-exhibition** in week 12 (the *Synthetic Gallery*), open to other UiO students and staff. The exhibition lives both physically (in a UiO common space) and online (as a static gallery on the course's GitHub Pages site). Selected projects, with consent, are kept in the public gallery for future cohorts.
+
+Final-project requirements:
+
+- Any medium — text, image series, short film, song / EP, podcast episode, interactive sketch, small game, redesign of a real organisation's brand, critical essay, teaching resource, etc.
+- The work must use **at least two different AI modalities** (e.g., text + image, image + video, audio + code) — this is the technical bar.
+- Solo or groups of 2–3.
+- Documented with a full prompt-and-decisions log and a 1 500–2 500-word reflection.
 
 :::{tip} Academic integrity and AI
-You are *allowed and encouraged* to use AI tools in this course. You must, however, **declare** which tools you used and *how*. A simple log of prompts and decisions is enough. Hiding AI use is treated as academic dishonesty; using AI thoughtfully and transparently is treated as a course goal.
+You are *allowed and encouraged* to use AI tools in this course. You must, however, **declare** which tools you used and *how*. A simple, honest log of prompts and decisions is enough. Hiding AI use is treated as academic dishonesty; using AI thoughtfully and transparently is treated as a course goal.
 :::
 
 ---
@@ -249,12 +350,12 @@ You are *allowed and encouraged* to use AI tools in this course. You must, howev
 
 The chapters are roughly linear, but they are also self-contained. If you are a complete beginner, read in order. If you already have some background, you can skim chapters 2–3 and jump into the application chapters that interest you (text, image, sound, video, code).
 
-Each chapter follows the same shape:
+Every chapter follows the same six-section shape:
 
 1. **Why this matters** — a short framing.
 2. **Concepts** — the ideas you should be able to explain after reading.
 3. **Examples** — concrete cases, screenshots, code snippets.
-4. **Practice** — what you will do in the 2-hour session.
+4. **Practice** — what you will do in the 2-hour lab session.
 5. **Reflection prompts** — questions for your weekly log.
 6. **Going further** — readings, tools, links.
 
@@ -330,15 +431,26 @@ Notice three things about this definition:
 
 ---
 
-## A short, opinionated history
+## A short, opinionated history — *from Dadaism to diffusion*
 
-The history of Creative AI is older than it looks. A few landmarks help orient us.
+The history of Creative AI is older than it looks, and it has two intertwined strands. One strand is the *technology* — rule-based programs, neural networks, transformers, diffusion. The other is the *art-historical* lineage of practices that *welcomed chance, machines, systems, and procedures into the studio* long before any of this technology existed. Without that second strand, the first looks like it appeared from nowhere in 2022.
 
 ```{figure} figures/timeline.svg
 :alt: A simplified timeline of creative AI milestones from 1957 to today
 :align: center
 A simplified timeline of creative AI milestones from 1957 to the mid-2020s.
 ```
+
+### The art-historical strand
+
+- **1910s — Dadaism.** Tristan Tzara writes a poem by drawing words out of a hat. The point is precisely that *chance* is allowed into the work, and that the artist's role becomes setting the conditions rather than choosing every word.
+- **1950s–60s — Concrete music, serialism, and Fluxus.** Composers like Iannis Xenakis use stochastic processes to compose pieces; the Fluxus group treats *instructions* as the artwork ("Drip Music", "Composition 1960 #7").
+- **1960s–70s — Generative art.** Vera Molnar, Manfred Mohr, and Frieder Nake produce drawings *with* algorithms and plotters; Sol LeWitt writes "Sentences on Conceptual Art" — *"the idea becomes a machine that makes the art"*.
+- **1990s–2010s — Algorithmic art and creative coding.** Casey Reas and Ben Fry release Processing; *generative art* becomes a stable category and the lineage that today flows directly into AI-augmented creative coding (chapter [8](ai-code.ipynb)).
+
+The shift to generative AI is therefore not a break with art history — it is the latest entry in a long tradition of artists *delegating* parts of the work to systems, procedures, and machines. What changes is *how much* gets delegated, *how powerful* the systems are, and *who* owns them.
+
+### The technical strand
 
 - **1957 — Illiac Suite.** Lejaren Hiller and Leonard Isaacson compose what is often cited as the first piece of music generated by a computer, using rules and pseudo-random choices.
 - **1973–present — AARON.** The artist Harold Cohen develops AARON, a rule-based system that draws and later paints autonomously [@McCorduck1991].
@@ -351,6 +463,16 @@ A simplified timeline of creative AI milestones from 1957 to the mid-2020s.
 - **2023 onwards — Multimodality and scale.** Models now handle text, image, audio, and video together, run on phones, and are integrated into operating systems, browsers, and creative software.
 
 Two patterns are worth pulling out of this list. First, **the medium-specific waves are converging**: by 2024 the same model family powers writing, drawing, coding, and speaking. Second, **public visibility lags research by years**: every "sudden" public moment (2015 DeepDream, 2022 ChatGPT) sits on top of a decade of slower academic and industrial work.
+
+### Three concepts that thread through the course
+
+Out of these two strands, three concepts run through every remaining chapter:
+
+- **Intentionality.** Why are *you* making this? A model can produce a thousand variations cheaply. The interesting question is which of them you *meant*.
+- **Aesthetic control.** How precisely can you steer the system toward the artefact you actually want? Most of the technical content of this course — prompts, conditioning, sampling, editing, reference images, LoRAs, agents — is in service of this single question.
+- **Ethical authorship.** Who is the author when a model trained on millions of other people's work assists you? What do you owe them, your audience, and yourself in how you describe the work?
+
+We will return to these three words repeatedly. They will also appear, almost verbatim, in your process memos.
 
 ---
 
@@ -2165,11 +2287,26 @@ Three habits worth committing to as a creator in 2026:
 
 ---
 
+## *Death of the Artist or Birth of the Curator?*
+
+A useful — and deliberately provocative — framing for the cultural argument: in 1967, Roland Barthes wrote *The Death of the Author* and shifted authority from the writer onto the reader. In the AI era, a parallel debate has opened up: does generative AI dissolve the *artist* into the model and the dataset, or does it elevate a new figure — the *curator* who selects, prompts, edits, refuses, and stands behind the work?
+
+Both readings are partly true, and they are usefully in tension. The argument matters because it shapes:
+
+- **what we call authorship** (and what we put in copyright registers);
+- **what we credit** (and how we pay people whose labour entered the dataset);
+- **what we ask of students and professionals** when we say *"do this with AI"*;
+- **what the public will accept** as a published creative artefact.
+
+This week's ethics essay (see below) is your chance to take a real position on this tension — or on a different one — and defend it.
+
+---
+
 ## Practice (2 h)
 
 ### Audit one tool
 
-Pick a Creative AI tool you have used this semester. Spend the practice session writing a short **ethical audit** of it, using the four questions from the top of this chapter. Cover:
+Pick a Creative AI tool you have used this semester. Spend the first hour of the practice session writing a short **ethical audit** of it, using the four questions from the top of this chapter. Cover:
 
 - **Provenance** of training data (what the company says publicly).
 - **Bias** — try a small probing set (e.g., 10 prompts that touch gender, geography, language).
@@ -2177,16 +2314,28 @@ Pick a Creative AI tool you have used this semester. Spend the practice session 
 - **Sustainability** — does the company publish anything?
 - **Authorship and labelling** — does the tool offer C2PA or watermarking?
 
-Aim for 1000 words. This will be one of your most useful weekly logs.
+Aim for 600–1 000 words. This is also the seed material for your ethics essay.
 
 ### Group debate
 
-Two teams of 3–4 students each. Each team randomly draws a position:
+In the second hour: two teams of 3–4 students each. Each team randomly draws a position:
 
 - "Training generative models on copyrighted material is acceptable as fair use."
 - "Training generative models on copyrighted material is not acceptable without per-rights-holder consent."
 
 You will defend the position you drew, regardless of your prior view. (This is a deliberate exercise — being able to make the strongest case for a view you disagree with is the most useful skill in ethics.)
+
+### Mid-term ethics essay (1 page, Pass / Fail) — due this week
+
+Choose **one** of the following prompts and write a tight, well-argued one-page essay (≈ 600 words) with at least three references:
+
+- *Death of the Artist or Birth of the Curator?* — Take a clear position on what generative AI does to authorship.
+- *Should AI-generated work be eligible for copyright protection?* — Argue one side, with worked counter-arguments.
+- *Where should AI stay out of my discipline, and why?* — Pick your field and draw a defensible line.
+- *Whose voice, whose face?* — The ethics of voice and likeness cloning in the age of consent.
+- A topic of your own, proposed in your weekly log by the end of week 9.
+
+Submit through the LMS. The essay is graded Pass / Fail (10 % of the course); a Fail can be revised once.
 
 ---
 
@@ -2195,6 +2344,7 @@ You will defend the position you drew, regardless of your prior view. (This is a
 1. Pick a Creative AI use you find uncomfortable. Write 300 words on why. Then write 200 words steelmanning the other side.
 2. The EU AI Act [@EUAIAct] requires labelling of AI-generated content "interacting with humans". How would you implement that for your own work?
 3. Your future job will be done partly with AI. What conditions would have to hold for you to feel that this is good for you and good for others?
+4. Re-read the *Death of the Artist or Birth of the Curator?* framing above. Where does it map onto a specific project you have worked on this semester?
 
 ---
 
@@ -2283,9 +2433,9 @@ A few habits that help, regardless of what happens:
 
 ---
 
-## Final projects
+## Final projects — *The Synthetic Gallery*
 
-The remaining 2 hours of class are spent on **final project presentations**. The project counts for 50% of the course grade and is the central artefact of your semester.
+The remaining 2 hours of class are spent on the **final project showcase**, which we call *The Synthetic Gallery*. The project counts for 50% of the course grade and is the central artefact of your semester. The Synthetic Gallery is a public mini-exhibition open to other UiO students, staff, and invited guests — held both in a physical room at UiO and as a static gallery on the course's GitHub Pages site.
 
 ### What a project can look like
 
@@ -2305,17 +2455,24 @@ Anything that meaningfully uses Creative AI for a creative purpose:
 
 Solo or in groups of 2–3. The project should be ambitious enough to be hard, and small enough to finish.
 
+### Technical requirements
+
+- The work must use **at least two different AI modalities** — for example text + image, image + video, audio + code, 3D + text. This is the technical bar of the course.
+- All prompts, generations, and decisions must be **logged** and submitted with the work.
+- The work and reflection must explicitly **acknowledge** which AI tools were used, with versions or dates.
+
 ### What you must deliver
 
-1. **The work itself** — file, link, video, deck, performance.
-2. **A reflection** (≈ 1500 words) covering:
+1. **The work itself** — file, link, video, deck, or performance.
+2. **A reflection** (1 500–2 500 words) covering:
    - The brief and the audience.
    - The tools used, with versions.
-   - A timeline of decisions.
+   - A timeline of decisions, including the moments where the AI *surprised* you and the moments where you exerted your *will*.
    - One ethical question you ran into and how you resolved it.
    - What you would do differently.
-3. **A 5-minute presentation** to the class in week 12, with a 5-minute Q&A.
-4. **Your full prompt log** (the file you have been keeping all semester). Yes, this matters.
+3. **A 5-minute presentation** at the Synthetic Gallery in week 12, with a 5-minute Q&A.
+4. **A gallery page** — a single HTML/markdown page (template provided) for the public online gallery, with consent options for inclusion in future cohorts' material.
+5. **Your full prompt log** (the file you have been keeping all semester). Yes, this matters.
 
 ### What "good" looks like
 
@@ -2326,6 +2483,15 @@ Examples of strong projects from prior offerings:
 - *A short interactive piece in p5.js* where the user types a memory and a generated soundscape plays back. The reflection focused on what the AI got wrong, and why those errors became part of the piece.
 
 What makes these projects strong is not the polish but the **fit between brief, tool, and reflection**. A modest project with a clear, honest brief beats a flashy project with no spine.
+
+### Process memo — once more, with feeling
+
+When you submit, your reflection must answer the two questions we have used all semester:
+
+1. **Where did the AI surprise you?**
+2. **Where did you exert your own creative will?**
+
+These will be the first things the audience at the Synthetic Gallery asks you in the Q&A. Be ready.
 
 ---
 
