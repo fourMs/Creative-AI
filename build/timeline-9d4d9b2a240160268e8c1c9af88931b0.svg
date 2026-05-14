@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" role="img" aria-label="A simplified timeline of creative AI milestones">
+  <style>
+    .axis { stroke: #333; stroke-width: 2; }
+    .tick { stroke: #333; stroke-width: 1.5; }
+    .year { font: 600 12px Helvetica, Arial, sans-serif; fill: #333; }
+    .label { font: 500 13px Helvetica, Arial, sans-serif; fill: #222; }
+    .dot { fill: #5a2a7a; }
+  </style>
+  <line class="axis" x1="40" y1="140" x2="860" y2="140"/>
+  <!-- ticks -->
+  <g>
+    <line class="tick" x1="60" y1="135" x2="60" y2="145"/>
+    <text class="year" x="60" y="165" text-anchor="middle">1957</text>
+    <circle class="dot" cx="60" cy="140" r="5"/>
+    <text class="label" x="60" y="115" text-anchor="middle">Illiac Suite</text>
+
+    <line class="tick" x1="160" y1="135" x2="160" y2="145"/>
+    <text class="year" x="160" y="165" text-anchor="middle">1973</text>
+    <circle class="dot" cx="160" cy="140" r="5"/>
+    <text class="label" x="160" y="95" text-anchor="middle">AARON</text>
+
+    <line class="tick" x1="320" y1="135" x2="320" y2="145"/>
+    <text class="year" x="320" y="165" text-anchor="middle">2014</text>
+    <circle class="dot" cx="320" cy="140" r="5"/>
+    <text class="label" x="320" y="115" text-anchor="middle">GANs</text>
+
+    <line class="tick" x1="400" y1="135" x2="400" y2="145"/>
+    <text class="year" x="400" y="165" text-anchor="middle">2015</text>
+    <circle class="dot" cx="400" cy="140" r="5"/>
+    <text class="label" x="400" y="95" text-anchor="middle">DeepDream</text>
+
+    <line class="tick" x1="520" y1="135" x2="520" y2="145"/>
+    <text class="year" x="520" y="165" text-anchor="middle">2017</text>
+    <circle class="dot" cx="520" cy="140" r="5"/>
+    <text class="label" x="520" y="115" text-anchor="middle">Transformer</text>
+
+    <line class="tick" x1="640" y1="135" x2="640" y2="145"/>
+    <text class="year" x="640" y="165" text-anchor="middle">2020</text>
+    <circle class="dot" cx="640" cy="140" r="5"/>
+    <text class="label" x="640" y="95" text-anchor="middle">Diffusion · GPT-3</text>
+
+    <line class="tick" x1="760" y1="135" x2="760" y2="145"/>
+    <text class="year" x="760" y="165" text-anchor="middle">2022</text>
+    <circle class="dot" cx="760" cy="140" r="6"/>
+    <text class="label" x="760" y="115" text-anchor="middle">Generative turn</text>
+
+    <line class="tick" x1="840" y1="135" x2="840" y2="145"/>
+    <text class="year" x="840" y="165" text-anchor="middle">2026</text>
+    <circle class="dot" cx="840" cy="140" r="5"/>
+    <text class="label" x="840" y="95" text-anchor="middle">Multimodal · agentic</text>
+  </g>
+  <text x="450" y="200" text-anchor="middle" font="500 12px Helvetica, Arial, sans-serif" fill="#666">From rule-based composition to multimodal agents</text>
+</svg>

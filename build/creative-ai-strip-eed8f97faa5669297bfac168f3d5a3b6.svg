@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 120" role="img" aria-label="Creative AI">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1f2545"/>
+      <stop offset="55%" stop-color="#5a2a7a"/>
+      <stop offset="100%" stop-color="#e8556d"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="120" fill="url(#bg)"/>
+  <g stroke="#ffffff" stroke-opacity="0.4" stroke-width="1" fill="none">
+    <line x1="40" y1="40" x2="120" y2="60"/>
+    <line x1="40" y1="80" x2="120" y2="60"/>
+    <line x1="120" y1="60" x2="200" y2="40"/>
+    <line x1="120" y1="60" x2="200" y2="80"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="40" cy="40" r="4"/>
+    <circle cx="40" cy="80" r="4"/>
+    <circle cx="120" cy="60" r="5"/>
+    <circle cx="200" cy="40" r="4"/>
+    <circle cx="200" cy="80" r="4"/>
+  </g>
+  <text x="260" y="78" font-family="Helvetica, Arial, sans-serif" font-size="46" font-weight="700" fill="#ffffff">Creative AI</text>
+</svg>

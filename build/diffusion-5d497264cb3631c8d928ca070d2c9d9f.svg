@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" role="img" aria-label="Diffusion: forward and reverse">
+  <style>
+    .label { font: 600 14px Helvetica, Arial, sans-serif; fill: #1f2545; }
+    .small { font: 500 12px Helvetica, Arial, sans-serif; fill: #444; }
+    .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
+    .arrow2 { fill: none; stroke: #e8556d; stroke-width: 2; marker-end: url(#b); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+    </marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
+    </marker>
+  </defs>
+  <!-- forward row -->
+  <text class="label" x="40" y="50">Forward (training): add noise step by step</text>
+  <g>
+    <rect x="40"  y="80" width="80" height="80" fill="#9ad" stroke="#1f2545"/>
+    <text class="small" x="80"  y="180" text-anchor="middle">image</text>
+    <rect x="180" y="80" width="80" height="80" fill="#bbd" stroke="#1f2545"/>
+    <text class="small" x="220" y="180" text-anchor="middle">+ a bit</text>
+    <rect x="320" y="80" width="80" height="80" fill="#cce" stroke="#1f2545"/>
+    <text class="small" x="360" y="180" text-anchor="middle">+ more</text>
+    <rect x="460" y="80" width="80" height="80" fill="#ddd" stroke="#1f2545"/>
+    <text class="small" x="500" y="180" text-anchor="middle">noisier</text>
+    <rect x="600" y="80" width="80" height="80" fill="#eee" stroke="#1f2545"/>
+    <text class="small" x="640" y="180" text-anchor="middle">noisier</text>
+    <rect x="740" y="80" width="80" height="80" fill="#fff" stroke="#1f2545" stroke-dasharray="4 3"/>
+    <text class="small" x="780" y="180" text-anchor="middle">pure noise</text>
+  </g>
+  <path class="arrow" d="M 120 120 L 180 120"/>
+  <path class="arrow" d="M 260 120 L 320 120"/>
+  <path class="arrow" d="M 400 120 L 460 120"/>
+  <path class="arrow" d="M 540 120 L 600 120"/>
+  <path class="arrow" d="M 680 120 L 740 120"/>
+  <!-- reverse row -->
+  <text class="label" x="40" y="220">Reverse (inference): denoise from random noise</text>
+  <path class="arrow2" d="M 740 270 L 680 270"/>
+  <path class="arrow2" d="M 600 270 L 540 270"/>
+  <path class="arrow2" d="M 460 270 L 400 270"/>
+  <path class="arrow2" d="M 320 270 L 260 270"/>
+  <path class="arrow2" d="M 180 270 L 120 270"/>
+  <g>
+    <rect x="740" y="240" width="80" height="40" fill="#fff" stroke="#e8556d" stroke-dasharray="4 3"/>
+    <rect x="600" y="240" width="80" height="40" fill="#eee" stroke="#e8556d"/>
+    <rect x="460" y="240" width="80" height="40" fill="#ddd" stroke="#e8556d"/>
+    <rect x="320" y="240" width="80" height="40" fill="#cce" stroke="#e8556d"/>
+    <rect x="180" y="240" width="80" height="40" fill="#bbd" stroke="#e8556d"/>
+    <rect x="40"  y="240" width="80" height="40" fill="#9ad" stroke="#e8556d"/>
+    <text class="small" x="80"  y="300" text-anchor="middle">image</text>
+    <text class="small" x="780" y="300" text-anchor="middle">noise</text>
+  </g>
+</svg>
