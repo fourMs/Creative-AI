@@ -43,3 +43,6 @@ Thumbs.db
 # Cursor
 .cursorignore
 .cursorindexingignore
+
+# Private working notes (drafts, model comparisons, etc.)
+notes/
