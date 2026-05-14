@@ -312,6 +312,85 @@ Specific products listed above will appear, merge, and disappear during the seme
 
 ---
 
+## Reading list
+
+The textbook itself is meant to carry the conceptual load of the course. The readings below are *complements* and *deepenings* — short essays you can read in an evening, books you can dip into around the chapter that needs them, and a few classics that anyone working with AI in cultural production should meet at least once. Many of them are openly available; the rest are in the UiO library.
+
+You are *not* expected to read all of them. Pick **one core title** to read alongside the textbook over the semester, and dip into the **supplementary** list around the weekly topics that pull you.
+
+### Core curriculum
+
+A short, deliberately broad list. Pick **one** to read in parallel with the textbook:
+
+- **Mitchell, M. (2019).** *Artificial Intelligence: A Guide for Thinking Humans.* Farrar, Straus and Giroux [@Mitchell2019]. — the most readable contemporary introduction to AI for a general audience, by an AI researcher who refuses to oversell. Best technical anchor.
+- **Hertzmann, A. (2018).** *"Can Computers Create Art?"* Arts 7(2):18 [@Hertzmann2018]. — short, open-access essay covering the philosophical question that hovers over the whole course. Best creative-AI anchor.
+- **Crawford, K. (2021).** *Atlas of AI: Power, Politics, and the Planetary Costs of Artificial Intelligence.* Yale University Press [@Crawford2021Atlas]. — structural critique of where the data, the labour, and the energy come from. Best critical anchor.
+- **Bridle, J. (2022).** *Ways of Being.* Allen Lane [@Bridle2022]. — contemporary, accessible reframe of "intelligence" beyond the human-vs-machine binary. Best forward-looking anchor.
+
+If you read only one of these, pick **Mitchell** for the technical side or **Hertzmann** for the creative side. If you read two, pair one of those with **Crawford** or **Bridle**.
+
+### Supplementary reading by theme
+
+<details>
+<summary>The technical side, accessibly</summary>
+
+- Goodfellow, I., Bengio, Y., Courville, A. *Deep Learning* [@Goodfellow2016] — free at <https://www.deeplearningbook.org/>. Chapter 1 is the readable introduction; the rest is a reference.
+- 3Blue1Brown's [Neural Networks](https://www.3blue1brown.com/topics/neural-networks) video series — the best visual explanation of backpropagation and transformers.
+- The [Hugging Face course](https://huggingface.co/learn) — free, code-first, beginner-friendly.
+- Russell, S., Norvig, P. *Artificial Intelligence: A Modern Approach* (4th ed.) [@Russell2021] — the standard textbook for one of the standard "AI in general" courses. Browse, do not read cover-to-cover.
+
+</details>
+
+<details>
+<summary>Art history, aesthetics, and creativity</summary>
+
+- Benjamin, W. (1935). *The Work of Art in the Age of Mechanical Reproduction* [@Benjamin1935] — short, foundational essay on what mass reproduction does to art. The historical precedent the generative-AI debates rhyme with.
+- LeWitt, S. (1967). *"Paragraphs on Conceptual Art"* [@LeWitt1967] — five pages; the early manifesto of "the idea is the machine that makes the art". The conceptual lineage that flows directly into Creative AI.
+- Boden, M. A. (2004). *The Creative Mind: Myths and Mechanisms* (2nd ed.) [@Boden2004] — definitive philosophical treatment of creativity; introduces the P-/H- and combinational / exploratory / transformational distinctions we use throughout.
+- McCorduck, P. (1991). *"AARON's Code"* [@McCorduck1991] — short profile of Harold Cohen's painting program; the original "creative AI" before the term existed.
+- Manovich, L. (2018). *AI Aesthetics* [@Manovich2018] — short, opinionated essays on what AI-mediated images look like *culturally*.
+- McCormack, J., et al. (2019). *"Autonomy, Authenticity, Authorship and Intention in Computer Generated Art"* [@McCormack2019] — useful, short philosophical paper on what authorship means when a system makes the work.
+
+</details>
+
+<details>
+<summary>Critical, social, and political perspectives</summary>
+
+- Bender, E. M., Gebru, T., McMillan-Major, A., Shmitchell, S. (2021). *"On the Dangers of Stochastic Parrots"* [@Bender2021Parrots] — the critical take on large language models you have to read.
+- Broussard, M. (2018). *Artificial Unintelligence* [@BroussardArt] — accessible critique from a former journalist turned data-science researcher.
+- O'Neil, C. (2016). *Weapons of Math Destruction* [@ONeil2016] — broader critique of algorithmic harm in society. Pre-dates the generative wave but still defines the vocabulary.
+- Pasquinelli, M. (2023). *The Eye of the Master: A Social History of Artificial Intelligence* [@Pasquinelli2023] — readable cultural-historical lens on how AI got here.
+- Strubell, E., Ganesh, A., McCallum, A. (2019). *"Energy and Policy Considerations for Deep Learning in NLP"* [@Strubell2019Energy] — the early empirical paper on the environmental cost of training.
+
+</details>
+
+<details>
+<summary>Where it is going</summary>
+
+- Suleyman, M., Bhaskar, M. (2023). *The Coming Wave* [@Suleyman2023] — accessible policy book by an industry insider with surprising clarity about risks.
+- Bridle, J. (2022). *Ways of Being* [@Bridle2022] — see "core curriculum" above; also reads beautifully against chapter [12](futures.ipynb).
+- Salma, Z., Hijón-Neira, R., Pizarro, C. (2025). *"Designing Co-Creative Systems: Five Paradoxes in Human–AI Collaboration"* [@Salma2025] — the source of the five-paradox framework introduced in chapter [3](generative-ai.ipynb).
+
+</details>
+
+<details>
+<summary>Norway and the EU — institutional context</summary>
+
+- [AI at UiO](https://www.uio.no/english/services/ai/) [@UiOAI] — institutional resource page; the place to start when a question concerns the university itself.
+- The [EU AI Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) [@EUAIAct] and its [official summary](https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai) — the binding legal frame for AI in Europe in 2026.
+- [NB AI Lab](https://ai.nb.no/) at the National Library of Norway — Norwegian-language AI research (especially relevant for chapter [6](ai-sound.ipynb)).
+- [RITMO Centre for Interdisciplinary Studies in Rhythm, Time and Motion](https://www.uio.no/ritmo/english/) — UiO research centre many of this course's guest speakers come from.
+
+</details>
+
+:::{tip} Buying vs. borrowing
+Most of the books above are available through the [UiO Library](https://www.ub.uio.no/english/), as e-books or physical copies. If you want to *own* one, Mitchell and Bridle are the most rewarding bedside-table reads of the lot.
+:::
+
+Each weekly chapter ends with a *Going further* section that adds chapter-specific suggestions on top of this list.
+
+---
+
 ## Open Education and Open Research
 
 The textbook follows the principles of [Open Education](https://en.wikipedia.org/wiki/Open_education) and [Open Research](https://en.wikipedia.org/wiki/Open_research): the material is openly licensed (CC-BY-4.0), the source is on GitHub, and we point to open tools and datasets where possible. Where a tool requires a paid account, we say so and try to offer an open alternative.
@@ -537,10 +616,13 @@ For your weekly log, choose one prompt and write 150–300 words:
 
 ## Going further
 
-- Margaret Boden, *The Creative Mind: Myths and Mechanisms* [@Boden2004]
-- Lev Manovich, *AI Aesthetics* [@Manovich2018] — short and accessible
-- Kate Crawford, *Atlas of AI* [@Crawford2021Atlas] — for the political side
-- The [AI Index Report](https://aiindex.stanford.edu/) (Stanford HAI) — annual snapshot of the field
+- Aaron Hertzmann, *"Can Computers Create Art?"* [@Hertzmann2018] — short, open-access, the right next thing to read after this chapter.
+- Margaret Boden, *The Creative Mind: Myths and Mechanisms* [@Boden2004] — definitive philosophical treatment.
+- Walter Benjamin, *The Work of Art in the Age of Mechanical Reproduction* [@Benjamin1935] — the historical precedent the current debates keep rhyming with.
+- Sol LeWitt, *"Paragraphs on Conceptual Art"* [@LeWitt1967] — five pages; the conceptual lineage in one sitting.
+- Lev Manovich, *AI Aesthetics* [@Manovich2018] — short and accessible.
+- Kate Crawford, *Atlas of AI* [@Crawford2021Atlas] — for the political side.
+- The [AI Index Report](https://aiindex.stanford.edu/) (Stanford HAI) — annual snapshot of the field.
 
 Open tools you can install this week:
 
@@ -735,10 +817,11 @@ You should get $w \approx 2$ and $b \approx 0.5$. That is a model with two param
 
 ## Going further
 
-- Goodfellow, Bengio, Courville — *Deep Learning* [@Goodfellow2016], free at <https://www.deeplearningbook.org/>
-- 3Blue1Brown's [Neural Networks](https://www.3blue1brown.com/topics/neural-networks) series on YouTube — best visual explanation of backpropagation
-- The [Hugging Face course](https://huggingface.co/learn) — free, code-first, beginner-friendly
-- Crawford, *Atlas of AI* [@Crawford2021Atlas], chapter 1, on what is *in* the data
+- Melanie Mitchell, *Artificial Intelligence: A Guide for Thinking Humans* [@Mitchell2019] — the most accessible book-length introduction to the *technical* side of the field; ideal companion to this chapter.
+- Goodfellow, Bengio, Courville — *Deep Learning* [@Goodfellow2016], free at <https://www.deeplearningbook.org/>.
+- 3Blue1Brown's [Neural Networks](https://www.3blue1brown.com/topics/neural-networks) series on YouTube — best visual explanation of backpropagation.
+- The [Hugging Face course](https://huggingface.co/learn) — free, code-first, beginner-friendly.
+- Crawford, *Atlas of AI* [@Crawford2021Atlas], chapter 1, on what is *in* the data.
 """
 
 
@@ -1353,11 +1436,13 @@ img.save("boat.png")
 
 ## Going further
 
-- Rombach et al., *Latent Diffusion Models* [@Rombach2022LatentDiffusion] — the founding paper of Stable Diffusion
-- Esser et al., *Scaling Rectified Flow Transformers* [@Esser2024SD3] — the SD3 paper
-- The [Hugging Face Diffusers documentation](https://huggingface.co/docs/diffusers/index)
-- Lev Manovich, *AI Aesthetics* [@Manovich2018] — short essays on what AI image-making *looks like*
-- For the legal side: cases from [Andersen v. Stability AI](https://en.wikipedia.org/wiki/Andersen_v._Stability_AI) and the [Getty Images v. Stability AI](https://en.wikipedia.org/wiki/Getty_Images_v._Stability_AI) suits
+- Gatys, Ecker, Bethge, *A Neural Algorithm of Artistic Style* [@Gatys2015] — the 2015 paper that opened "neural style transfer", a useful pre-diffusion ancestor for image-curious readers.
+- Rombach et al., *Latent Diffusion Models* [@Rombach2022LatentDiffusion] — the founding paper of Stable Diffusion.
+- Esser et al., *Scaling Rectified Flow Transformers* [@Esser2024SD3] — the SD3 paper.
+- The [Hugging Face Diffusers documentation](https://huggingface.co/docs/diffusers/index).
+- Lev Manovich, *AI Aesthetics* [@Manovich2018] — short essays on what AI image-making *looks like*.
+- Aaron Hertzmann, *"Can Computers Create Art?"* [@Hertzmann2018] — re-read this week with image generation in mind.
+- For the legal side: cases from [Andersen v. Stability AI](https://en.wikipedia.org/wiki/Andersen_v._Stability_AI) and the [Getty Images v. Stability AI](https://en.wikipedia.org/wiki/Getty_Images_v._Stability_AI) suits.
 """
 
 
@@ -2404,6 +2489,9 @@ Submit through the LMS. The essay is graded Pass / Fail (10 % of the course); a 
 - Crawford, *Atlas of AI* [@Crawford2021Atlas] — the most readable structural critique
 - O'Neil, *Weapons of Math Destruction* [@ONeil2016]
 - Broussard, *Artificial Unintelligence* [@BroussardArt]
+- Pasquinelli, *The Eye of the Master: A Social History of Artificial Intelligence* [@Pasquinelli2023] — a readable cultural-historical lens that pairs well with Crawford
+- McCormack et al., *Autonomy, Authenticity, Authorship and Intention in Computer Generated Art* [@McCormack2019] — useful short paper directly on this chapter's authorship question
+- Benjamin, *The Work of Art in the Age of Mechanical Reproduction* [@Benjamin1935] — the 1935 essay whose questions our debates inherit
 - UNESCO, *Recommendation on the Ethics of AI* (2021)
 - The [EU AI Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) text and summaries [@EUAIAct]
 - The [Spawning Coalition](https://spawning.ai/) — for opt-out tools and arguments
@@ -2579,6 +2667,8 @@ The structure for the final session:
 
 After the course:
 
+- James Bridle, *Ways of Being* [@Bridle2022] — accessible book-length reframe of intelligence beyond the human/machine binary; reads beautifully right after this chapter.
+- Suleyman & Bhaskar, *The Coming Wave* [@Suleyman2023] — an industry-insider policy book that takes the risks seriously without giving up on the technology.
 - The [Stanford AI Index](https://aiindex.stanford.edu/) — the best single-volume snapshot of the field, published yearly.
 - The [Distill](https://distill.pub/) archive and [Lilian Weng's blog](https://lilianweng.github.io/) — the best long-form technical writing on machine learning ideas, free.
 - [Hugging Face](https://huggingface.co/) — the closest thing the open AI world has to a town square. Follow people there, not on Twitter.
