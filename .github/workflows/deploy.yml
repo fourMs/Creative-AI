@@ -1,5 +1,12 @@
-# Builds the MyST/Jupyter Book site and publishes to the gh-pages branch.
-# Repo Settings → Pages: set source to branch gh-pages, folder / (root).
+# Builds the MyST/Jupyter Book site and publishes it to GitHub Pages
+# using GitHub's official deploy-pages flow.
+#
+# One-time setup in the repository:
+#   Settings → Pages → Source: "GitHub Actions"
+#
+# Note: this workflow replaces the previous peaceiris/actions-gh-pages
+# flow. The old gh-pages branch can safely be deleted once a deployment
+# from this workflow has succeeded.
 name: Deploy Jupyter Book
 
 on:
@@ -7,21 +14,32 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
+# BASE_URL must point at the sub-path GitHub Pages serves the site from.
+# For a project page at https://<owner>.github.io/<repo>/ this is /<repo>.
+env:
+  BASE_URL: /${{ github.event.repository.name }}
 
+# Permissions required by the official Pages flow.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, but don't cancel in-progress
+# production deployments — let them finish.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -43,11 +61,20 @@ jobs:
       - name: Build Jupyter Book HTML
         run: |
           cd book
-          BASE_URL=/Creative-AI myst build --html --execute
+          myst build --html --execute
 
-      - name: Deploy to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./book/_build/html
-          force_orphan: true
+          path: ./book/_build/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
