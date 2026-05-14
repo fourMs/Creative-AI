@@ -376,9 +376,9 @@ If you read only one of these, pick **Mitchell** for the technical side or **Her
 <details>
 <summary>The technical side, accessibly</summary>
 
-- Goodfellow, I., Bengio, Y., Courville, A. *Deep Learning* [@Goodfellow2016] — free at <https://www.deeplearningbook.org/>. Chapter 1 is the readable introduction; the rest is a reference.
-- 3Blue1Brown's [Neural Networks](https://www.3blue1brown.com/topics/neural-networks) video series — the best visual explanation of backpropagation and transformers.
-- The [Hugging Face course](https://huggingface.co/learn) — free, code-first, beginner-friendly.
+- Goodfellow, I., Bengio, Y., Courville, A. *Deep Learning* [@Goodfellow2016] — free online textbook. Chapter 1 is the readable introduction; the rest is a reference.
+- 3Blue1Brown's *Neural Networks* video series [@Blue1Brown] — the best visual explanation of backpropagation and transformers.
+- The Hugging Face course [@HuggingFaceCourse] — free, code-first, beginner-friendly.
 - Russell, S., Norvig, P. *Artificial Intelligence: A Modern Approach* (4th ed.) [@Russell2021] — the standard textbook for one of the standard "AI in general" courses. Browse, do not read cover-to-cover.
 
 </details>
@@ -389,7 +389,7 @@ If you read only one of these, pick **Mitchell** for the technical side or **Her
 - Benjamin, W. (1935). *The Work of Art in the Age of Mechanical Reproduction* [@Benjamin1935] — short, foundational essay on what mass reproduction does to art. The historical precedent the generative-AI debates rhyme with.
 - LeWitt, S. (1967). *"Paragraphs on Conceptual Art"* [@LeWitt1967] — five pages; the early manifesto of "the idea is the machine that makes the art". The conceptual lineage that flows directly into Creative AI.
 - Boden, M. A. (2004). *The Creative Mind: Myths and Mechanisms* (2nd ed.) [@Boden2004] — definitive philosophical treatment of creativity; introduces the P-/H- and combinational / exploratory / transformational distinctions we use throughout.
-- McCorduck, P. (1991). *"AARON's Code"* [@McCorduck1991] — short profile of Harold Cohen's painting program; the original "creative AI" before the term existed.
+- McCorduck, P. (1991). *AARON's Code: Meta-Art, Artificial Intelligence, and the Work of Harold Cohen.* W.\,H. Freeman [@McCorduck1991] — long-form study of Harold Cohen's painting program; the original "creative AI" before the term existed.
 - Manovich, L. (2018). *AI Aesthetics* [@Manovich2018] — short, opinionated essays on what AI-mediated images look like *culturally*.
 - McCormack, J., et al. (2019). *"Autonomy, Authenticity, Authorship and Intention in Computer Generated Art"* [@McCormack2019] — useful, short philosophical paper on what authorship means when a system makes the work.
 
@@ -418,10 +418,10 @@ If you read only one of these, pick **Mitchell** for the technical side or **Her
 <details>
 <summary>Norway and the EU — institutional context</summary>
 
-- [AI at UiO](https://www.uio.no/english/services/ai/) [@UiOAI] — institutional resource page; the place to start when a question concerns the university itself.
-- The [EU AI Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) [@EUAIAct] and its [official summary](https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai) — the binding legal frame for AI in Europe in 2026.
-- [NB AI Lab](https://ai.nb.no/) at the National Library of Norway — Norwegian-language AI research (especially relevant for chapter [6](ai-sound.ipynb)).
-- [RITMO Centre for Interdisciplinary Studies in Rhythm, Time and Motion](https://www.uio.no/ritmo/english/) — UiO research centre many of this course's guest speakers come from.
+- *AI at UiO* [@UiOAI] — institutional resource page; the place to start when a question concerns the university itself.
+- The EU AI Act [@EUAIAct] and its official summary [@EUAIActSummary] — the binding legal frame for AI in Europe in 2026.
+- The NB AI Lab [@NBAILab] at the National Library of Norway — Norwegian-language AI research (especially relevant for chapter [6](ai-sound.ipynb)).
+- The RITMO Centre [@RITMO] — UiO research centre many of this course's guest speakers come from.
 
 </details>
 
@@ -670,12 +670,12 @@ Throughout this course, save every prompt you write. It will become the most val
 - Sol LeWitt, *"Paragraphs on Conceptual Art"* [@LeWitt1967] — five pages; the conceptual lineage in one sitting.
 - Lev Manovich, *AI Aesthetics* [@Manovich2018] — short and accessible.
 - Kate Crawford, *Atlas of AI* [@Crawford2021Atlas] — for the political side.
-- The [AI Index Report](https://aiindex.stanford.edu/) (Stanford HAI) — annual snapshot of the field.
+- Stanford HAI, *The AI Index Report* [@StanfordAIIndex] — annual snapshot of the field.
 
 Open tools you can install this week:
 
-- [Ollama](https://ollama.com/) — open-weight chat models on your laptop
-- [Stable Diffusion in the browser](https://huggingface.co/spaces) — many free Spaces
+- Ollama [@Ollama] — open-weight chat models on your laptop.
+- Hugging Face Spaces [@HuggingFaceSpaces] — many free image- and text-model demos in the browser.
 
 ```{admonition} Question
 :class: question
@@ -864,9 +864,9 @@ You should get $w \approx 2$ and $b \approx 0.5$. That is a model with two param
 ## Going further
 
 - Melanie Mitchell, *Artificial Intelligence: A Guide for Thinking Humans* [@Mitchell2019] — the most accessible book-length introduction to the *technical* side of the field; ideal companion to this chapter.
-- Goodfellow, Bengio, Courville — *Deep Learning* [@Goodfellow2016], free at <https://www.deeplearningbook.org/>.
-- 3Blue1Brown's [Neural Networks](https://www.3blue1brown.com/topics/neural-networks) series on YouTube — best visual explanation of backpropagation.
-- The [Hugging Face course](https://huggingface.co/learn) — free, code-first, beginner-friendly.
+- Goodfellow, Bengio, Courville — *Deep Learning* [@Goodfellow2016] — free online textbook.
+- 3Blue1Brown — *Neural Networks* video series [@Blue1Brown] — best visual explanation of backpropagation.
+- The Hugging Face course [@HuggingFaceCourse] — free, code-first, beginner-friendly.
 - Crawford, *Atlas of AI* [@Crawford2021Atlas], chapter 1, on what is *in* the data.
 """
 
@@ -1075,9 +1075,9 @@ From the Explore experiments, **compose a triptych** for your portfolio: three p
 
 ## Going further
 
-- Lilian Weng, [What are diffusion models?](https://lilianweng.github.io/posts/2021-07-11-diffusion-models/) — a careful, illustrated technical introduction
-- Andrej Karpathy, [The unreasonable effectiveness of recurrent neural networks](https://karpathy.github.io/2015/05/21/rnn-effectiveness/) — old but a beautifully written introduction to "next-token" generation
-- [Hugging Face — diffusers documentation](https://huggingface.co/docs/diffusers/index)
+- Lilian Weng, *What are diffusion models?* [@Weng2021Diffusion] — a careful, illustrated technical introduction.
+- Andrej Karpathy, *The unreasonable effectiveness of recurrent neural networks* [@Karpathy2015RNN] — old but a beautifully written introduction to "next-token" generation.
+- Hugging Face — *Diffusers* documentation [@HuggingFaceDiffusers].
 """
 
 
@@ -1305,11 +1305,11 @@ print(resp.choices[0].message.content)
 
 ## Going further
 
-- Vaswani et al., *Attention Is All You Need* [@Vaswani2017] — the founding paper of the transformer
-- Stephen Wolfram, [What is ChatGPT Doing... and Why Does It Work?](https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/) — best intuitive explanation of LLMs
-- Hugging Face's [LLM course](https://huggingface.co/learn/llm-course/) — free and code-first
-- Bender et al., *On the Dangers of Stochastic Parrots* [@Bender2021Parrots] — the critical take you have to read
-- The [UiO AI service guidelines](https://www.uio.no/english/services/ai/) [@UiOAI]
+- Vaswani et al., *Attention Is All You Need* [@Vaswani2017] — the founding paper of the transformer.
+- Stephen Wolfram, *What Is ChatGPT Doing... and Why Does It Work?* [@Wolfram2023ChatGPT] — best intuitive explanation of LLMs.
+- The Hugging Face course [@HuggingFaceCourse] — free and code-first; includes the LLM track.
+- Bender et al., *On the Dangers of Stochastic Parrots* [@Bender2021Parrots] — the critical take you have to read.
+- The UiO AI service guidelines [@UiOAI].
 """
 
 
@@ -1505,10 +1505,10 @@ Write a 100-word **honest caption** documenting: the tool, the seed (if visible)
 - Gatys, Ecker, Bethge, *A Neural Algorithm of Artistic Style* [@Gatys2015] — the 2015 paper that opened "neural style transfer", a useful pre-diffusion ancestor for image-curious readers.
 - Rombach et al., *Latent Diffusion Models* [@Rombach2022LatentDiffusion] — the founding paper of Stable Diffusion.
 - Esser et al., *Scaling Rectified Flow Transformers* [@Esser2024SD3] — the SD3 paper.
-- The [Hugging Face Diffusers documentation](https://huggingface.co/docs/diffusers/index).
+- The Hugging Face *Diffusers* documentation [@HuggingFaceDiffusers].
 - Lev Manovich, *AI Aesthetics* [@Manovich2018] — short essays on what AI image-making *looks like*.
 - Aaron Hertzmann, *"Can Computers Create Art?"* [@Hertzmann2018] — re-read this week with image generation in mind.
-- For the legal side: cases from [Andersen v. Stability AI](https://en.wikipedia.org/wiki/Andersen_v._Stability_AI) and the [Getty Images v. Stability AI](https://en.wikipedia.org/wiki/Getty_Images_v._Stability_AI) suits.
+- For the legal side: *Andersen v. Stability AI* [@AndersenStability] and *Getty Images v. Stability AI* [@GettyStability].
 """
 
 
@@ -1674,10 +1674,10 @@ For audio generation in code, the [`audiocraft`](https://github.com/facebookrese
 
 ## Going further
 
-- Engel et al., *Neural Audio Synthesis of Musical Notes with WaveNet Autoencoders* [@Engel2017NSynth] — early but influential paper from Google's Magenta team
-- Agostinelli et al., *MusicLM: Generating Music From Text* [@Agostinelli2023MusicLM] — research paper from Google
-- Holly Herndon, the [Spawning Coalition](https://spawning.ai/), and the wider movement around **opting voices and likeness out** of training datasets
-- The [NB-Whisper](https://huggingface.co/NbAiLab/nb-whisper-large) project at the National Library of Norway — a great example of a low-resource-language AI effort
+- Engel et al., *Neural Audio Synthesis of Musical Notes with WaveNet Autoencoders* [@Engel2017NSynth] — early but influential paper from Google's Magenta team.
+- Agostinelli et al., *MusicLM: Generating Music From Text* [@Agostinelli2023MusicLM] — research paper from Google.
+- The Spawning Coalition [@Spawning] — Holly Herndon's and others' movement around **opting voices and likeness out** of training datasets.
+- The NB-Whisper project [@NBWhisper] at the NB AI Lab [@NBAILab] — a great example of a low-resource-language AI effort at the National Library of Norway.
 """
 
 
@@ -1858,10 +1858,10 @@ Pick **one** prompt and write 150–300 words in your weekly log:
 
 ## Going further
 
-- [The Runway research blog](https://runwayml.com/research) — readable updates on video model development
-- [OpenAI Sora system card](https://openai.com/sora) — useful for understanding what one major company commits to and refuses
-- *Tracking Generative Video* (Stanford HAI) — annual surveys of capabilities and limits
-- For ethics: documentation around the [EU AI Act's deepfake provisions](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) [@EUAIAct]
+- The Runway research blog [@RunwayResearch] — readable updates on video model development.
+- The OpenAI Sora system card [@OpenAISora] — useful for understanding what one major company commits to and refuses.
+- The Stanford *AI Index Report* [@StanfordAIIndex] — annual surveys with chapters on generative video capabilities and limits.
+- For ethics: the EU AI Act and its official summary [@EUAIAct; @EUAIActSummary], in particular the deepfake provisions.
 """
 
 
@@ -2047,11 +2047,11 @@ Two short paragraphs in your log are enough.
 
 ## Going further
 
-- [The p5.js learning materials](https://p5js.org/learn/) — beautifully designed, free
-- Daniel Shiffman's [The Nature of Code](https://natureofcode.com/) — free book on generative graphics
-- [Cursor's docs](https://cursor.com/docs) and Claude Code's [getting-started guide](https://docs.anthropic.com/claude-code) for AI-assisted programming
-- Casey Reas et al., [*A Brief History of Generative Music*](https://github.com/CodingTrain) lectures (YouTube)
-- [Hugging Face Spaces](https://huggingface.co/spaces) — to see what one-page AI demos look like
+- The p5.js learning materials [@P5js] — beautifully designed, free.
+- Daniel Shiffman, *The Nature of Code* [@Shiffman2024NatureOfCode] — free book on generative graphics.
+- Cursor's docs [@CursorDocs] and Claude Code's documentation [@ClaudeCode] — for AI-assisted programming.
+- The Coding Train YouTube channel [@CodingTrain] — long-form creative-coding lectures by Daniel Shiffman.
+- Hugging Face Spaces [@HuggingFaceSpaces] — to see what one-page AI demos look like.
 """
 
 
@@ -2199,10 +2199,9 @@ Capture three failure screenshots and one short note for each. Your *Create* out
 
 ## Going further
 
-- [Inria's official Gaussian Splatting page](https://inria.hal.science/hal-04261469) — the original 2023 paper
-- [Polycam Academy](https://poly.cam/academy) — quick, video-based introductions to 3D capture
-- The [Blender + AI](https://www.blender.org/) ecosystem — many add-ons combining traditional modelling with AI
-- *AI Animation Studio*, IDEO and Anthropic case studies on AI in studio practice
+- Kerbl, Kopanas, Leimkühler, Drettakis, *3D Gaussian Splatting for Real-Time Radiance Field Rendering* [@Kerbl2023GaussianSplatting] — the original 2023 SIGGRAPH paper.
+- Polycam Academy [@PolycamAcademy] — quick, video-based introductions to 3D capture.
+- Blender [@Blender] — the free, open-source 3D suite, with a growing ecosystem of AI-assisted add-ons.
 """
 
 
@@ -2345,10 +2344,10 @@ You will not necessarily implement an agent today. Instead, **design one** thoro
 
 ## Going further
 
-- Anthropic's [Claude Code](https://www.anthropic.com/claude-code) documentation — readable, opinionated take on coding agents
-- OpenAI's [Operator](https://openai.com/index/introducing-operator/) demos
-- Andrej Karpathy, *Software 2.0 / 3.0* talks on YouTube — programming-with-prompts as a paradigm shift
-- The [AutoGPT](https://github.com/Significant-Gravitas/AutoGPT) and [BabyAGI](https://github.com/yoheinakajima/babyagi) historical projects — for a sense of where this all started in 2023
+- Anthropic, *Claude Code* documentation [@ClaudeCode] — readable, opinionated take on coding agents.
+- OpenAI, *Introducing Operator* [@OpenAIOperator] — a browser-using agent product page.
+- Andrej Karpathy, *Software 2.0 / 3.0* talks [@Karpathy2024Software] — programming-with-prompts as a paradigm shift.
+- The AutoGPT [@AutoGPT] and BabyAGI [@BabyAGI] historical projects — for a sense of where this all started in 2023.
 """
 
 
@@ -2577,9 +2576,9 @@ Keep it to one page. Real organisational policies are short; that is the point. 
 - Pasquinelli, *The Eye of the Master: A Social History of Artificial Intelligence* [@Pasquinelli2023] — a readable cultural-historical lens that pairs well with Crawford
 - McCormack et al., *Autonomy, Authenticity, Authorship and Intention in Computer Generated Art* [@McCormack2019] — useful short paper directly on this chapter's authorship question
 - Benjamin, *The Work of Art in the Age of Mechanical Reproduction* [@Benjamin1935] — the 1935 essay whose questions our debates inherit
-- UNESCO, *Recommendation on the Ethics of AI* (2021)
-- The [EU AI Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) text and summaries [@EUAIAct]
-- The [Spawning Coalition](https://spawning.ai/) — for opt-out tools and arguments
+- UNESCO, *Recommendation on the Ethics of Artificial Intelligence* [@UNESCO2021Ethics]
+- The EU AI Act and its official summary [@EUAIAct; @EUAIActSummary]
+- The Spawning Coalition [@Spawning] — for opt-out tools and arguments
 """
 
 
@@ -2775,9 +2774,9 @@ After the course:
 
 - James Bridle, *Ways of Being* [@Bridle2022] — accessible book-length reframe of intelligence beyond the human/machine binary; reads beautifully right after this chapter.
 - Suleyman & Bhaskar, *The Coming Wave* [@Suleyman2023] — an industry-insider policy book that takes the risks seriously without giving up on the technology.
-- The [Stanford AI Index](https://aiindex.stanford.edu/) — the best single-volume snapshot of the field, published yearly.
-- The [Distill](https://distill.pub/) archive and [Lilian Weng's blog](https://lilianweng.github.io/) — the best long-form technical writing on machine learning ideas, free.
-- [Hugging Face](https://huggingface.co/) — the closest thing the open AI world has to a town square. Follow people there, not on Twitter.
+- The Stanford *AI Index Report* [@StanfordAIIndex] — the best single-volume snapshot of the field, published yearly.
+- The Distill archive [@Distill] and Lilian Weng's *Lil'Log* [@WengBlog] — the best long-form technical writing on machine learning ideas, free.
+- The Hugging Face Hub [@HuggingFaceHub] — the closest thing the open AI world has to a town square. Follow people there, not on Twitter.
 - The next iteration of this course. The textbook is open and updated yearly. Issues, pull requests, and corrections welcome at <https://github.com/fourMs/Creative-AI>.
 
 Thank you for spending the semester here. Make things.
