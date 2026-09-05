@@ -23,7 +23,7 @@ project:
     - file: language.ipynb
     - file: images.ipynb
     - file: sound.ipynb
-    - file: ai-video.ipynb
+    - file: video.ipynb
     - file: ai-code.ipynb
     - file: ai-3d-games.ipynb
     - file: multimodal-agents.ipynb
