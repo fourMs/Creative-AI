@@ -20,7 +20,7 @@ project:
     - file: introduction.ipynb
     - file: how-it-works.ipynb
     - file: co-creation-and-ethics.ipynb
-    - file: ai-language.ipynb
+    - file: language.ipynb
     - file: ai-images.ipynb
     - file: ai-sound.ipynb
     - file: ai-video.ipynb
