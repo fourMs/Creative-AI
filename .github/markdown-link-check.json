@@ -31,6 +31,9 @@
     },
     {
       "pattern": "^https://www\\.krea\\.ai/"
+    },
+    {
+      "pattern": "^https://transactions\\.ismir\\.net/"
     }
   ],
   "httpHeaders": [
