@@ -252,7 +252,9 @@ Second batch, after the chapters are in place: seed-and-guidance grid viewer, fr
 
 ## 9. Assessment
 
-Unchanged in weight and philosophy. Milestones move as in the schedule: A1 due week 2, A2 due week 5, ethics essay due week 7, A3 due week 8, proposal due week 10, final project due end of week 12, Synthetic Gallery in the exam period. The weekly log keeps three paragraphs, now in the order Explore, Reflect, Create. The process memo keeps the two questions, surprise and will.
+Changed on 2026-09-05 at the course owner's request. The exam is the **semester project**: a performance or an installation of the student's project, presented at the Synthetic Gallery in the exam period, plus a short critical reflection (1 000 to 1 500 words) and the full prompt log; graded A to F; solo or groups of two to three. The two process-memo questions, surprise and will, structure the reflection.
+
+The weekly log, A1 (AI-augmented self-introduction, due week 2), A2 (AI-assisted text in your discipline, due week 5), the ethics essay (set week 3, due week 7), A3 (multimodal mini-piece, due week 8), and the project proposal (due week 10) are **obligatory activities**, assessed pass/fail, that must be approved before the student can present the project. The weekly log keeps three paragraphs in the order Explore, Reflect, Create. Milestones stay as in the schedule; the project is rehearsed in week 12 and presented in the exam period.
 
 ## 10. Relationship to Sensing Sound and Music
 
