@@ -18,7 +18,7 @@ The book also ships with its own small apps: single-page, self-contained tools b
 - [Inference energy estimator](https://fourms.github.io/Creative-AI/apps/energy-estimator/): estimate the energy and water cost of running a prompt through a model of a given size.
 - [Provenance inspector](https://fourms.github.io/Creative-AI/apps/provenance-inspector/): inspect the metadata a generated file carries, and what it does and does not prove.
 - [Word-vector explorer](https://fourms.github.io/Creative-AI/apps/word-vectors/): explore how word embeddings place related words near each other in vector space.
-- [Markov melody generator](https://fourms.github.io/Creative-AI/apps/markov-melody/) (in preparation): generate a short melody from a Markov chain trained on a handful of tunes.
+- [Markov melody generator](https://fourms.github.io/Creative-AI/apps/markov-melody/): generate a short melody from a Markov chain trained on a handful of tunes.
 - [Agent loop simulator](https://fourms.github.io/Creative-AI/apps/agent-loop/) (in preparation): step through an agent's plan, act, and observe loop one tool call at a time.
 - [Rhythm-bot](https://fourms.github.io/Creative-AI/apps/rhythm-bot/) (in preparation): map a tapped rhythm onto a simple generative pattern, live in the browser.
 

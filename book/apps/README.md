@@ -19,3 +19,4 @@ leaves the browser. Bundled data files list their licence here.
 | energy-estimator | 3 | none (defaults cite Luccioni et al. 2024) |
 | provenance-inspector | 3 | none |
 | word-vectors | 4 | vectors.json from GloVe 6B 50d (PDDL), first 7 000 words |
+| markov-melody | 6 | none |

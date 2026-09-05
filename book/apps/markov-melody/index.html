@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<!--
+  Bundled melody: the traditional French folk round "Frere Jacques" (public
+  domain), transcribed by ear into MIDI note numbers and three duration
+  classes for use as the model's example data. This page makes no network
+  requests.
+-->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Markov melody generator</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    input[type="number"] {
+      width: 100%; padding: 6px 8px; margin: 2px 0 4px; font-size: 1rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    select {
+      width: 100%; padding: 6px 8px; margin: 2px 0 4px; font-size: 1rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+    @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+    .stats { font-size: 0.95rem; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+    canvas { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 10px; background: var(--canvas); }
+    #keys { position: relative; height: 120px; margin-top: 4px; user-select: none; touch-action: none; }
+    .wkey, .bkey {
+      position: absolute; top: 0; border: 1px solid var(--border);
+      border-radius: 0 0 6px 6px; cursor: pointer; padding: 0;
+    }
+    .wkey { height: 100%; background: var(--bg); z-index: 1; }
+    .bkey { height: 58%; background: var(--fg); z-index: 2; }
+    .wkey.down { background: var(--accent); }
+    .bkey.down { background: var(--accent); }
+    .keyhint { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 0.72rem; color: var(--muted); pointer-events: none; }
+    .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <h1>Markov melody generator</h1>
+  <p class="intro">The folk-tune generators of the 2010s learned melodies from thousands of tunes. This one learns from the melody you play and continues it; the order and temperature knobs decide how much it copies and how much it wanders. Everything runs in this page: nothing you play, load, or generate leaves your browser.</p>
+
+  <fieldset>
+    <legend>Play a melody</legend>
+    <div id="keys" aria-label="Two-octave on-screen keyboard, C4 to B5"></div>
+    <p class="hint">Play with the keys above, or with the computer keyboard: <kbd>a s d f g h j k</kbd> for the white notes C4 to C5, <kbd>w e t y u</kbd> for the black notes in between, and <kbd>o l ; p</kbd> for four extra notes in the octave above. How long you hold a key sets its duration: short, medium, or long.</p>
+    <div class="row">
+      <button type="button" id="loadExample">Load example</button>
+      <button type="button" id="clearBtn">Clear</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Generate a continuation</legend>
+    <div class="grid2">
+      <div>
+        <label for="order">Model order</label>
+        <select id="order">
+          <option value="1">1 (last note only)</option>
+          <option value="2" selected>2</option>
+          <option value="3">3 (last three notes)</option>
+        </select>
+      </div>
+      <div>
+        <label for="length">Length to generate <span class="vals" id="lengthDisp"></span></label>
+        <input type="range" id="length" min="8" max="64" step="1" value="24" aria-describedby="lengthDisp"/>
+      </div>
+    </div>
+    <label for="temperature">Temperature <span class="vals" id="temperatureDisp"></span></label>
+    <input type="range" id="temperature" min="0.1" max="2" step="0.1" value="1" aria-describedby="temperatureDisp"/>
+    <div class="grid2">
+      <div>
+        <label for="seed">Seed</label>
+        <input type="number" id="seed" value="42" step="1"/>
+      </div>
+      <div style="align-self:end;">
+        <button type="button" id="newSeed">New seed</button>
+      </div>
+    </div>
+    <p class="hint">Higher orders copy longer stretches of what you played; low temperature repeats phrases almost verbatim, high temperature wanders further from them.</p>
+    <button type="button" id="generate" class="primary">Generate</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Playback</legend>
+    <label for="tempo">Tempo <span class="vals" id="tempoDisp"></span> bpm</label>
+    <input type="range" id="tempo" min="60" max="180" step="1" value="100" aria-describedby="tempoDisp"/>
+    <div class="row">
+      <button type="button" id="play" class="primary" aria-pressed="false">Play</button>
+      <button type="button" id="stop">Stop</button>
+    </div>
+  </fieldset>
+
+  <div class="stats" id="stats" aria-live="polite">Play some notes, or load the example, to get started.</div>
+  <div class="stats">
+    <span class="legend-swatch" id="swatchRecorded"></span>played
+    &nbsp;&nbsp;
+    <span class="legend-swatch" id="swatchGenerated"></span>generated
+  </div>
+  <canvas id="roll" width="720" height="220" role="img" aria-label="Piano roll of the played and generated melody"></canvas>
+
+  <p class="hint">What to notice: at low temperature and a high order, the generator tends to copy whole phrases back at you, because it has only ever seen one thing follow that exact context; raise the temperature, or lower the order, and it wanders further from what you played.</p>
+
+  <script>
+(function () {
+  'use strict';
+
+  // ---- constants ----
+  var DUR_BEATS = { short: 0.5, medium: 1, long: 2 };
+  var HOLD_SHORT_MAX_MS = 220;
+  var HOLD_MEDIUM_MAX_MS = 550;
+  var MAX_RECORDED = 300;
+
+  // ---- bundled example melody: "Frere Jacques", a traditional French folk
+  // round (public domain). Each phrase is played twice, giving the n-gram
+  // model repeated (pitch, duration) contexts to copy at low temperature. ----
+  var EXAMPLE_MELODY = [
+    [60, 'medium'], [62, 'medium'], [64, 'medium'], [60, 'medium'],
+    [60, 'medium'], [62, 'medium'], [64, 'medium'], [60, 'medium'],
+    [64, 'medium'], [65, 'medium'], [67, 'medium'],
+    [64, 'medium'], [65, 'medium'], [67, 'medium'],
+    [67, 'medium'], [69, 'medium'], [67, 'medium'], [65, 'medium'], [64, 'medium'], [60, 'medium'],
+    [67, 'medium'], [69, 'medium'], [67, 'medium'], [65, 'medium'], [64, 'medium'], [60, 'medium'],
+    [60, 'medium'], [55, 'medium'], [48, 'medium'],
+    [60, 'medium'], [55, 'medium'], [48, 'long']
+  ];
+
+  var el = function (id) { return document.getElementById(id); };
+  var orderEl = el('order'), lengthEl = el('length'), temperatureEl = el('temperature');
+  var seedEl = el('seed'), newSeedBtn = el('newSeed');
+  var generateBtn = el('generate'), loadExampleBtn = el('loadExample'), clearBtn = el('clearBtn');
+  var tempoEl = el('tempo'), playBtn = el('play'), stopBtn = el('stop');
+  var statsEl = el('stats');
+  var keysDiv = el('keys');
+  var canvas = el('roll'), c2d = canvas.getContext('2d');
+
+  // ---- state ----
+  var recorded = [];   // [{midi, dur}], played by the user or loaded
+  var generated = [];  // [{midi, dur}], produced by Generate
+
+  // ============================================================
+  // Audio engine. No sound is produced, and no AudioContext exists,
+  // until a key or a button is pressed: ensureAudio() runs only from
+  // inside a user-gesture handler (keydown, pointerdown, click).
+  // ============================================================
+  var ctx = null, keyboardMaster = null;
+  var heldNotes = {};      // midi -> { osc, gain, startPerf }
+  var activeNodes = [];    // oscillators and gains from the current Play, for Stop
+  var currentMaster = null;
+  var playing = false;
+  var rafId = null;
+  var playStartCtxTime = 0, playTotalDur = 0;
+
+  function ensureAudio() {
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      keyboardMaster = ctx.createGain();
+      keyboardMaster.gain.value = 0.28;
+      keyboardMaster.connect(ctx.destination);
+    }
+    if (ctx.state === 'suspended') { ctx.resume(); }
+  }
+
+  function midiToHz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+  function classifyHold(ms) {
+    if (ms < HOLD_SHORT_MAX_MS) { return 'short'; }
+    if (ms < HOLD_MEDIUM_MAX_MS) { return 'medium'; }
+    return 'long';
+  }
+
+  // ---- live keyboard notes: attack then hold at sustain until the key is
+  // released, when a short release ramp is applied (a live ADSR). ----
+  function noteDown(midi) {
+    ensureAudio();
+    if (heldNotes[midi]) { return; }
+    var t0 = ctx.currentTime;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.85, t0 + 0.01);
+    g.gain.setTargetAtTime(0.6, t0 + 0.01, 0.06);
+    var osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = midiToHz(midi);
+    osc.connect(g);
+    g.connect(keyboardMaster);
+    osc.start(t0);
+    heldNotes[midi] = { osc: osc, gain: g, startPerf: performance.now() };
+    setKeyVisual(midi, true);
+  }
+
+  function noteUp(midi) {
+    var v = heldNotes[midi];
+    if (!v) { return; }
+    delete heldNotes[midi];
+    setKeyVisual(midi, false);
+    var heldMs = performance.now() - v.startPerf;
+    var durClass = classifyHold(heldMs);
+    var t = ctx.currentTime;
+    v.gain.gain.cancelScheduledValues(t);
+    v.gain.gain.setTargetAtTime(0, t, 0.05);
+    v.osc.stop(t + 0.3);
+    pushRecorded(midi, durClass);
+  }
+
+  function panicKeyboard() {
+    var m;
+    for (m in heldNotes) {
+      if (heldNotes.hasOwnProperty(m)) {
+        var v = heldNotes[m];
+        try {
+          v.gain.gain.cancelScheduledValues(ctx.currentTime);
+          v.gain.gain.setValueAtTime(0, ctx.currentTime);
+          v.osc.stop(ctx.currentTime + 0.02);
+        } catch (e) { /* ctx or nodes already gone */ }
+        setKeyVisual(parseInt(m, 10), false);
+      }
+    }
+    heldNotes = {};
+  }
+
+  function pushRecorded(midi, durClass) {
+    recorded.push({ midi: midi, dur: durClass });
+    if (recorded.length > MAX_RECORDED) { recorded.shift(); }
+    generated = [];
+    updateStats();
+    drawRoll(null);
+  }
+
+  // ---- scheduled playback: the whole timeline (played, then generated) is
+  // scheduled ahead of time against AudioContext.currentTime; Stop cancels
+  // every scheduled gain ramp and stops every oscillator immediately. ----
+  function computeTimeline(notes, bpm) {
+    var beat = 60 / bpm;
+    var t = 0, i, dur, events = [];
+    for (i = 0; i < notes.length; i++) {
+      dur = (DUR_BEATS[notes[i].dur] || 1) * beat;
+      events.push({ midi: notes[i].midi, start: t, dur: dur });
+      t += dur;
+    }
+    return { events: events, total: t };
+  }
+
+  function scheduleNote(midi, t0, dur, master) {
+    var osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = midiToHz(midi);
+    var g = ctx.createGain();
+    var a = 0.008, d = 0.03, s = 0.65, r = Math.min(0.05, dur * 0.25);
+    var releaseStart = Math.max(t0 + a + d, t0 + dur - r);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(1, t0 + a);
+    g.gain.linearRampToValueAtTime(s, t0 + a + d);
+    g.gain.setValueAtTime(s, releaseStart);
+    g.gain.linearRampToValueAtTime(0, releaseStart + r);
+    osc.connect(g);
+    g.connect(master);
+    osc.start(t0);
+    osc.stop(releaseStart + r + 0.02);
+    activeNodes.push(osc);
+    activeNodes.push(g);
+  }
+
+  function doPlay() {
+    ensureAudio();
+    stopPlayback();
+    var seq = recorded.concat(generated);
+    if (seq.length === 0) {
+      statsEl.textContent = 'Nothing to play yet: play some notes, or load the example, first.';
+      return;
+    }
+    var bpm = parseInt(tempoEl.value, 10);
+    var timeline = computeTimeline(seq, bpm);
+    var master = ctx.createGain();
+    master.gain.value = 0.3;
+    master.connect(ctx.destination);
+    currentMaster = master;
+    var t0 = ctx.currentTime + 0.08;
+    var i;
+    for (i = 0; i < timeline.events.length; i++) {
+      scheduleNote(timeline.events[i].midi, t0 + timeline.events[i].start, timeline.events[i].dur * 0.88, master);
+    }
+    playStartCtxTime = t0;
+    playTotalDur = timeline.total;
+    playing = true;
+    playBtn.setAttribute('aria-pressed', 'true');
+    rafId = requestAnimationFrame(animatePlayhead);
+  }
+
+  function animatePlayhead() {
+    if (!playing) { return; }
+    var elapsed = ctx.currentTime - playStartCtxTime;
+    if (elapsed >= playTotalDur) {
+      stopPlayback();
+      return;
+    }
+    drawRoll(elapsed);
+    rafId = requestAnimationFrame(animatePlayhead);
+  }
+
+  function stopPlayback() {
+    playing = false;
+    playBtn.setAttribute('aria-pressed', 'false');
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (ctx) {
+      var now = ctx.currentTime, i, n;
+      for (i = 0; i < activeNodes.length; i++) {
+        n = activeNodes[i];
+        try {
+          if (n.frequency) {
+            n.stop(now);
+          } else {
+            n.gain.cancelScheduledValues(now);
+            n.gain.setValueAtTime(0, now);
+          }
+        } catch (e) { /* node already stopped */ }
+      }
+      if (currentMaster) {
+        currentMaster.gain.cancelScheduledValues(now);
+        currentMaster.gain.setValueAtTime(0, now);
+      }
+      panicKeyboard();
+    }
+    activeNodes = [];
+    drawRoll(null);
+  }
+
+  // ============================================================
+  // Model: an n-gram over (pitch, duration-class) pairs, sampled with
+  // temperature and back-off, the same scheme as the next-token sampler.
+  // ============================================================
+
+  // ---- seeded pseudo-random generator (linear congruential generator) ----
+  function makeLCG(seed) {
+    var state = seed >>> 0;
+    return function () {
+      state = (Math.imul(1103515245, state) + 12345) & 0x7fffffff;
+      return state / 0x7fffffff;
+    };
+  }
+
+  function encodeNote(note) { return note.midi + ':' + note.dur; }
+  function decodeToken(tok) {
+    var i = tok.lastIndexOf(':');
+    return { midi: parseInt(tok.slice(0, i), 10), dur: tok.slice(i + 1) };
+  }
+
+  // ---- build count tables for orders 0 (unigram) .. maxOrder ----
+  function buildTables(tokens, maxOrder) {
+    var tables = [];
+    var uni = new Map();
+    var i, o, ctxKey, nextTok, map, inner;
+    for (i = 0; i < tokens.length; i++) {
+      uni.set(tokens[i], (uni.get(tokens[i]) || 0) + 1);
+    }
+    tables[0] = uni;
+    for (o = 1; o <= maxOrder; o++) {
+      map = new Map();
+      for (i = 0; i + o < tokens.length; i++) {
+        ctxKey = tokens.slice(i, i + o).join('|');
+        nextTok = tokens[i + o];
+        inner = map.get(ctxKey);
+        if (!inner) { inner = new Map(); map.set(ctxKey, inner); }
+        inner.set(nextTok, (inner.get(nextTok) || 0) + 1);
+      }
+      tables[o] = map;
+    }
+    return tables;
+  }
+
+  // ---- next-token count distribution, backing off from the highest order
+  // that the current context can support down to the unigram table ----
+  function nextCounts(tables, context, order) {
+    var maxO = Math.min(order, context.length);
+    var o, ctxKey, map, hit;
+    for (o = maxO; o >= 1; o--) {
+      ctxKey = context.slice(context.length - o).join('|');
+      map = tables[o];
+      hit = map && map.get(ctxKey);
+      if (hit) { return hit; }
+    }
+    return tables[0];
+  }
+
+  // ---- counts -> probabilities, with temperature applied: probabilities
+  // are raised to the power 1/temperature, then renormalised ----
+  function shapeDistribution(countsMap, temperature) {
+    var entries = Array.from(countsMap.entries());
+    var total = 0, i, invT, powSum;
+    for (i = 0; i < entries.length; i++) { total += entries[i][1]; }
+    var probs = new Array(entries.length);
+    for (i = 0; i < entries.length; i++) { probs[i] = [entries[i][0], entries[i][1] / total]; }
+    invT = 1 / temperature;
+    powSum = 0;
+    for (i = 0; i < probs.length; i++) {
+      probs[i][1] = Math.pow(probs[i][1], invT);
+      powSum += probs[i][1];
+    }
+    for (i = 0; i < probs.length; i++) { probs[i][1] /= powSum; }
+    return probs;
+  }
+
+  function sampleToken(probs, rng) {
+    var r = rng(), cum = 0, i;
+    for (i = 0; i < probs.length; i++) {
+      cum += probs[i][1];
+      if (r <= cum) { return probs[i][0]; }
+    }
+    return probs[probs.length - 1][0];
+  }
+
+  function generateContinuation(tokens, order, temperature, seed, length) {
+    var tables = buildTables(tokens, order);
+    var rng = makeLCG(seed);
+    var context = tokens.slice(Math.max(0, tokens.length - order));
+    var out = [], i, counts, probs, tok;
+    for (i = 0; i < length; i++) {
+      counts = nextCounts(tables, context, order);
+      probs = shapeDistribution(counts, temperature);
+      tok = sampleToken(probs, rng);
+      out.push(tok);
+      context.push(tok);
+      if (context.length > order) { context.shift(); }
+    }
+    return out;
+  }
+
+  function runGenerate() {
+    if (recorded.length === 0) {
+      statsEl.textContent = 'Play some notes, or load the example, before generating.';
+      return;
+    }
+    var order = parseInt(orderEl.value, 10);
+    var temperature = parseFloat(temperatureEl.value);
+    var length = parseInt(lengthEl.value, 10);
+    var seed = parseInt(seedEl.value, 10) || 0;
+    var tokens = recorded.map(encodeNote);
+    var outTokens = generateContinuation(tokens, order, temperature, seed, length);
+    generated = outTokens.map(decodeToken);
+    updateStats();
+    drawRoll(null);
+  }
+
+  // ============================================================
+  // On-screen keyboard: two octaves, C4 to B5, built as real buttons.
+  // ============================================================
+  var WHITE_OFFSETS = [0, 2, 4, 5, 7, 9, 11];
+  var WHITE_HINTS = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'o', 'l', '', ';', 'p', ''];
+  var BLACK_OFFSETS = [1, 3, 6, 8, 10];
+  var BLACK_WHITE_INDEX = [0, 1, 3, 4, 5]; // white-key index each black key follows, within its octave
+  var NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  var N_WHITE = 14; // two octaves, 7 white keys each
+  var keyEls = {};
+
+  function midiToName(m) {
+    var oct = Math.floor(m / 12) - 1;
+    return NOTE_NAMES[((m % 12) + 12) % 12] + oct;
+  }
+
+  function makeKey(midi, cls, leftPct, widthPct, hint) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = cls;
+    b.style.left = leftPct + '%';
+    b.style.width = widthPct + '%';
+    b.setAttribute('aria-label', 'Note ' + midiToName(midi));
+    if (hint) {
+      var s = document.createElement('span');
+      s.className = 'keyhint';
+      s.textContent = hint;
+      b.appendChild(s);
+    }
+    b.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      b.setPointerCapture(e.pointerId);
+      noteDown(midi);
+    });
+    var up = function (e) { e.preventDefault(); noteUp(midi); };
+    b.addEventListener('pointerup', up);
+    b.addEventListener('pointercancel', up);
+    keysDiv.appendChild(b);
+    keyEls[midi] = b;
+  }
+
+  function setKeyVisual(midi, down) {
+    if (keyEls[midi]) { keyEls[midi].classList.toggle('down', down); }
+  }
+
+  (function buildKeyboard() {
+    var whiteW = 100 / N_WHITE;
+    var oct, i, midi, whiteIndex, hint;
+    for (oct = 0; oct < 2; oct++) {
+      for (i = 0; i < 7; i++) {
+        whiteIndex = oct * 7 + i;
+        midi = 60 + 12 * oct + WHITE_OFFSETS[i];
+        hint = WHITE_HINTS[whiteIndex];
+        makeKey(midi, 'wkey', whiteIndex * whiteW, whiteW, hint);
+      }
+    }
+    var blackW = whiteW * 0.6;
+    for (oct = 0; oct < 2; oct++) {
+      for (i = 0; i < 5; i++) {
+        whiteIndex = oct * 7 + BLACK_WHITE_INDEX[i];
+        midi = 60 + 12 * oct + BLACK_OFFSETS[i];
+        makeKey(midi, 'bkey', (whiteIndex + 0.7) * whiteW - blackW / 2, blackW, null);
+      }
+    }
+  })();
+
+  // ---- computer keyboard mapping ----
+  var KEY_MAP = {
+    a: 60, w: 61, s: 62, e: 63, d: 64, f: 65, t: 66, g: 67, y: 68, h: 69, u: 70, j: 71, k: 72,
+    o: 74, l: 76, ';': 79, p: 81
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) { return; }
+    var m = KEY_MAP[e.key.toLowerCase()];
+    if (m !== undefined) { e.preventDefault(); noteDown(m); }
+  });
+  document.addEventListener('keyup', function (e) {
+    var m = KEY_MAP[e.key.toLowerCase()];
+    if (m !== undefined) { noteUp(m); }
+  });
+
+  // ============================================================
+  // Piano-roll canvas: played notes in one colour, generated in another,
+  // with a moving playhead during playback.
+  // ============================================================
+  var ROLL_ASPECT = 220 / 720;
+  var rollSize = { w: 720, h: 220 };
+
+  function fitCanvas(cnv, cctx, aspect) {
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = cnv.getBoundingClientRect().width || cnv.clientWidth || 720;
+    var cssHeight = Math.round(cssWidth * aspect);
+    cnv.width = Math.round(cssWidth * dpr);
+    cnv.height = Math.round(cssHeight * dpr);
+    cnv.style.height = cssHeight + 'px';
+    cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssWidth, h: cssHeight };
+  }
+
+  function theme() {
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return dark
+      ? { bg: '#101216', grid: '#2a2f37', recorded: '#4da3c7', generated: '#e0954f', playhead: '#e6e7e9', text: '#9aa0a8' }
+      : { bg: '#ffffff', grid: '#e3e5e8', recorded: '#0b6e99', generated: '#b8560f', playhead: '#1c1e21', text: '#5a6069' };
+  }
+
+  function paintSwatches() {
+    var th = theme();
+    el('swatchRecorded').style.background = th.recorded;
+    el('swatchGenerated').style.background = th.generated;
+  }
+
+  function drawRoll(playheadTime) {
+    var th = theme();
+    var w = rollSize.w, h = rollSize.h;
+    c2d.fillStyle = th.bg;
+    c2d.fillRect(0, 0, w, h);
+    paintSwatches();
+
+    var all = recorded.map(function (n) { return { midi: n.midi, dur: n.dur, kind: 'recorded' }; })
+      .concat(generated.map(function (n) { return { midi: n.midi, dur: n.dur, kind: 'generated' }; }));
+
+    if (all.length === 0) {
+      c2d.fillStyle = th.text;
+      c2d.font = '13px system-ui, sans-serif';
+      c2d.fillText('Play notes, or load the example, to see the piano roll.', 10, h / 2);
+      return;
+    }
+
+    var mL = 4, mR = 4, mT = 4, mB = 4;
+    var pw = w - mL - mR, ph = h - mT - mB;
+
+    var bpm = parseInt(tempoEl.value, 10) || 100;
+    var beat = 60 / bpm;
+    var i, dur, t = 0, minMidi = Infinity, maxMidi = -Infinity;
+    var positioned = new Array(all.length);
+    for (i = 0; i < all.length; i++) {
+      dur = (DUR_BEATS[all[i].dur] || 1) * beat;
+      positioned[i] = { midi: all[i].midi, kind: all[i].kind, start: t, dur: dur };
+      t += dur;
+      if (all[i].midi < minMidi) { minMidi = all[i].midi; }
+      if (all[i].midi > maxMidi) { maxMidi = all[i].midi; }
+    }
+    minMidi -= 1; maxMidi += 1;
+    if (maxMidi - minMidi < 11) { maxMidi = minMidi + 11; }
+    var total = t || 1;
+    var pxPerSec = pw / total;
+    var rowH = ph / (maxMidi - minMidi + 1);
+
+    function xPix(sec) { return mL + sec * pxPerSec; }
+    function yPix(midi) { return mT + (maxMidi - midi) * rowH; }
+
+    for (i = 0; i < positioned.length; i++) {
+      var note = positioned[i];
+      c2d.fillStyle = note.kind === 'recorded' ? th.recorded : th.generated;
+      var x = xPix(note.start);
+      var width = Math.max(2, note.dur * pxPerSec - 1);
+      c2d.fillRect(x, yPix(note.midi) + 1, width, Math.max(2, rowH - 2));
+    }
+
+    c2d.fillStyle = th.text;
+    c2d.font = '11px system-ui, sans-serif';
+    c2d.fillText(midiToName(maxMidi), 4, mT + 10);
+    c2d.fillText(midiToName(minMidi), 4, mT + ph - 3);
+
+    if (playheadTime !== null && playheadTime !== undefined) {
+      c2d.strokeStyle = th.playhead;
+      c2d.lineWidth = 1.5;
+      c2d.beginPath();
+      c2d.moveTo(xPix(playheadTime), mT);
+      c2d.lineTo(xPix(playheadTime), mT + ph);
+      c2d.stroke();
+    }
+  }
+
+  // ============================================================
+  // UI wiring
+  // ============================================================
+  function updateStats() {
+    if (recorded.length === 0 && generated.length === 0) {
+      statsEl.textContent = 'Play some notes, or load the example, to get started.';
+      return;
+    }
+    statsEl.textContent = 'Played: ' + recorded.length + ' note' + (recorded.length === 1 ? '' : 's') +
+      '. Generated: ' + generated.length + ' note' + (generated.length === 1 ? '' : 's') + '.';
+  }
+
+  function updateLabels() {
+    el('lengthDisp').textContent = lengthEl.value;
+    el('temperatureDisp').textContent = parseFloat(temperatureEl.value).toFixed(1);
+    el('tempoDisp').textContent = tempoEl.value;
+  }
+
+  function loadExample() {
+    recorded = EXAMPLE_MELODY.map(function (pair) { return { midi: pair[0], dur: pair[1] }; });
+    generated = [];
+    updateStats();
+    drawRoll(null);
+  }
+
+  function doClear() {
+    stopPlayback();
+    recorded = [];
+    generated = [];
+    updateStats();
+    drawRoll(null);
+  }
+
+  generateBtn.addEventListener('click', runGenerate);
+  loadExampleBtn.addEventListener('click', loadExample);
+  clearBtn.addEventListener('click', doClear);
+  playBtn.addEventListener('click', doPlay);
+  stopBtn.addEventListener('click', stopPlayback);
+  newSeedBtn.addEventListener('click', function () {
+    seedEl.value = String(Math.floor(Math.random() * 1e9));
+  });
+  lengthEl.addEventListener('input', updateLabels);
+  temperatureEl.addEventListener('input', updateLabels);
+  tempoEl.addEventListener('input', function () { updateLabels(); drawRoll(null); });
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(function () {
+      rollSize = fitCanvas(canvas, c2d, ROLL_ASPECT);
+      drawRoll(null);
+    }, 120);
+  });
+
+  updateLabels();
+  rollSize = fitCanvas(canvas, c2d, ROLL_ASPECT);
+  updateStats();
+  drawRoll(null);
+})();
+  </script>
+</body>
+</html>
