@@ -12,6 +12,17 @@ byte-level (each leaf token is a single UTF-8 byte, spelled as one Latin-1
 character; a leading "▁" ('lower one eighth block', used the way
 SentencePiece uses it) marks the start of a word).
 
+Caveats:
+- The word budget in collect_wikipedia_corpus() is only checked between
+  whole articles (after each fetch), not within one, so the corpus can
+  overshoot WORDS_PER_LANGUAGE by up to one article's worth of words --
+  this is why the built vocab.json's English and Norwegian shares are not
+  exactly equal.
+- Wikipedia extracts are fetched live, at build time, and are not pinned to
+  a revision. Re-running this script will hit whatever the ten articles say
+  at the time, so it will not reproduce today's vocab.json byte for byte
+  even though the code is unchanged.
+
 Usage: python scripts/build-tokeniser-vocab.py
 """
 import json
