@@ -21,6 +21,7 @@ The book also ships with its own small apps: single-page, self-contained tools b
 - [Markov melody generator](https://fourms.github.io/Creative-AI/apps/markov-melody/): generate a short melody from a Markov chain trained on a handful of tunes.
 - [Agent loop simulator](https://fourms.github.io/Creative-AI/apps/agent-loop/): step through an agent's plan, act, and observe loop one tool call at a time.
 - [Rhythm-bot](https://fourms.github.io/Creative-AI/apps/rhythm-bot/): map a tapped rhythm onto a simple generative pattern, live in the browser.
+- [Evolve a picture](https://fourms.github.io/Creative-AI/apps/evolve/): breed a drawing by choosing favourites, biomorph style.
 
 ## Tool categories
 

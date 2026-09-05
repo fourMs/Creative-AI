@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Evolve a picture</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    input[type="number"] {
+      width: 100px; padding: 6px 8px; margin: 2px 0 4px; font-size: 1rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .stats { font-size: 1.05rem; margin: 10px 0; font-variant-numeric: tabular-nums; }
+    .grid3 {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0;
+    }
+    .tile {
+      padding: 5px; display: block; width: 100%;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    }
+    .tile:hover { border-color: var(--accent); }
+    .tile.parent { border-width: 2px; border-color: var(--accent); }
+    .tile canvas {
+      display: block; width: 100%; height: auto; aspect-ratio: 1 / 1;
+      border-radius: 4px; background: var(--canvas); pointer-events: none;
+    }
+    pre#genomePanel {
+      display: none; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85rem; background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 10px; margin: 10px 0;
+    }
+    pre#genomePanel.shown { display: block; }
+    .lineage-wrap { overflow-x: auto; padding-bottom: 4px; }
+    .lineage { display: flex; gap: 6px; }
+    .lineage-item {
+      flex: 0 0 auto; width: 44px; height: 44px; border: 1px solid var(--border);
+      border-radius: 4px; overflow: hidden; background: var(--canvas);
+    }
+    .lineage-item canvas { display: block; width: 100%; height: 100%; }
+    .lineage-item.current { border-color: var(--accent); border-width: 2px; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Evolve a picture</h1>
+  <p class="intro">Richard Dawkins's 1986 biomorphs let you breed drawings by choosing favourites. Do the same here: the middle picture is the parent, the eight around it are mutants; click the one you like and it becomes the parent. You are the fitness function. Everything runs in your browser; nothing leaves it.</p>
+
+  <fieldset>
+    <legend>Mutation</legend>
+    <label for="rate">Mutation rate (chance each gene mutates) <span class="vals" id="rateDisp">0.50</span></label>
+    <input type="range" id="rate" min="0.1" max="1.0" step="0.01" value="0.5" aria-describedby="rateDisp"/>
+    <label for="strength">Mutation strength (size of a mutation, relative to a gene's range) <span class="vals" id="strengthDisp">0.20</span></label>
+    <input type="range" id="strength" min="0.05" max="0.5" step="0.01" value="0.2" aria-describedby="strengthDisp"/>
+  </fieldset>
+
+  <fieldset>
+    <legend>Seed</legend>
+    <div class="row">
+      <div>
+        <label for="seed">Seed</label>
+        <input type="number" id="seed" value="1" step="1"/>
+      </div>
+      <button type="button" id="newSeedBtn">New seed</button>
+    </div>
+  </fieldset>
+
+  <div class="row">
+    <button type="button" id="resetBtn" class="primary">Reset</button>
+    <button type="button" id="undoBtn" disabled>Undo</button>
+    <button type="button" id="genomeToggle" aria-pressed="false">Show genome</button>
+  </div>
+
+  <div class="stats" id="stats" aria-live="polite">Generation 0.</div>
+
+  <div class="grid3" id="grid" role="group" aria-label="Parent picture and eight mutants">
+    <button type="button" class="tile" data-pos="0" aria-label="Variant 1"><canvas width="240" height="240" aria-hidden="true" tabindex="-1"></canvas></button>
+    <button type="button" class="tile" data-pos="1" aria-label="Variant 2"><canvas width="240" height="240" aria-hidden="true" tabindex="-1"></canvas></button>
+    <button type="button" class="tile" data-pos="2" aria-label="Variant 3"><canvas width="240" height="240" aria-hidden="true" tabindex="-1"></canvas></button>
+    <button type="button" class="tile" data-pos="3" aria-label="Variant 4"><canvas width="240" height="240" aria-hidden="true" tabindex="-1"></canvas></button>
+    <button type="button" class="tile parent" data-pos="4" aria-label="Current parent"><canvas width="240" height="240" aria-hidden="true" tabindex="-1"></canvas></button>
+    <button type="button" class="tile" data-pos="5" aria-label="Variant 5"><canvas width="240" height="240" aria-hidden="true" tabindex="-1"></canvas></button>
+    <button type="button" class="tile" data-pos="6" aria-label="Variant 6"><canvas width="240" height="240" aria-hidden="true" tabindex="-1"></canvas></button>
+    <button type="button" class="tile" data-pos="7" aria-label="Variant 7"><canvas width="240" height="240" aria-hidden="true" tabindex="-1"></canvas></button>
+    <button type="button" class="tile" data-pos="8" aria-label="Variant 8"><canvas width="240" height="240" aria-hidden="true" tabindex="-1"></canvas></button>
+  </div>
+
+  <pre id="genomePanel" aria-live="polite"></pre>
+
+  <p class="hint">Click or press Enter/Space on a tile to make it the new parent; its eight neighbours are then redrawn as fresh mutants of it. Raise the mutation rate for changes that touch more of the genome at once, and the mutation strength for wilder individual changes. Undo steps back one generation; Reset draws a brand new parent from the seed above.</p>
+
+  <fieldset>
+    <legend>Lineage</legend>
+    <div class="lineage-wrap">
+      <div class="lineage" id="lineage" role="list" aria-label="Every parent chosen so far"></div>
+    </div>
+  </fieldset>
+
+  <script>
+(function () {
+  'use strict';
+
+  // ---- genome layout: twelve numbers driving a recursive branching drawing ----
+  var GENES = [
+    { key: 'depth',       min: 3,    max: 7,   integer: true },
+    { key: 'angle',       min: 12,   max: 45   },
+    { key: 'lengthRatio', min: 0.55, max: 0.82 },
+    { key: 'branches',    min: 2,    max: 4,   integer: true },
+    { key: 'curvature',   min: -18,  max: 18   },
+    { key: 'lineWidth',   min: 1,    max: 4.5  },
+    { key: 'hue',         min: 0,    max: 360  },
+    { key: 'hueDrift',    min: -40,  max: 40   },
+    { key: 'symmetry',    min: 0,    max: 1,   integer: true },
+    { key: 'wobbleAmp',   min: 0,    max: 0.16 },
+    { key: 'wobbleFreq',  min: 0.3,  max: 4    },
+    { key: 'startFrac',   min: 0.22, max: 0.42 }
+  ];
+  var MAX_SEGMENTS_CAP = 3600; // keeps every tile's drawing to a few thousand segments
+  // Standard-normal samples have mean absolute value sqrt(2/pi); dividing by
+  // it rescales a Gaussian sample to mean absolute value 1. The extra 1.4
+  // factor compensates for clamping: several genes (symmetry, and often
+  // branches and depth) sit at or near a boundary, so a good few mutations
+  // round straight back to where they started, which pulls the *observed*
+  // mean relative change of a changed gene below the nominal strength. 1.4
+  // was chosen so that, averaged over many random genomes, the observed
+  // figure lands close to the mutation-strength slider's own value.
+  var MUTATION_SCALE = 1.4 / Math.sqrt(2 / Math.PI);
+
+  // ---- seeded pseudo-random generator (linear congruential generator) ----
+  function makeLCG(seed) {
+    var state = seed >>> 0;
+    return function () {
+      state = (Math.imul(1103515245, state) + 12345) & 0x7fffffff;
+      return state / 0x7fffffff;
+    };
+  }
+  function gaussian(rng) {
+    var u1 = Math.max(rng(), 1e-12);
+    var u2 = rng();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  }
+
+  function clampGene(v, spec) {
+    var c = Math.min(spec.max, Math.max(spec.min, v));
+    return spec.integer ? Math.round(c) : c;
+  }
+
+  function randomGenome(rng) {
+    var g = new Array(GENES.length), i, spec, v;
+    for (i = 0; i < GENES.length; i++) {
+      spec = GENES[i];
+      v = spec.min + rng() * (spec.max - spec.min);
+      g[i] = spec.integer ? Math.round(v) : v;
+    }
+    return g;
+  }
+
+  // Mutates each gene independently with probability `rate`; a mutated gene
+  // is nudged by MUTATION_SCALE * a standard-normal sample, scaled by
+  // `strength` and the gene's own range, then clamped back into range. That
+  // makes the mean number of mutated genes roughly `rate * GENES.length`,
+  // and the mean relative change of a mutated gene (after clamping) land
+  // close to `strength`.
+  function mutateGenome(genome, rate, strength, rng) {
+    var out = genome.slice();
+    var changed = 0;
+    var relChanges = [];
+    var i, spec, range, z, delta;
+    for (i = 0; i < GENES.length; i++) {
+      if (rng() < rate) {
+        spec = GENES[i];
+        range = spec.max - spec.min;
+        z = gaussian(rng) * MUTATION_SCALE;
+        delta = z * strength * range;
+        out[i] = clampGene(genome[i] + delta, spec);
+        changed += 1;
+        relChanges.push(Math.abs(out[i] - genome[i]) / range);
+      }
+    }
+    return { genome: out, changed: changed, relChanges: relChanges };
+  }
+
+  // Largest depth d (capped at the genome's own depth gene) for which a full
+  // tree with the given branching factor stays within MAX_SEGMENTS_CAP nodes.
+  function effectiveDepth(branches, desiredDepth, cap) {
+    var total = 1, d;
+    for (d = 1; d <= desiredDepth; d++) {
+      total += Math.pow(branches, d);
+      if (total > cap) { return d - 1; }
+    }
+    return desiredDepth;
+  }
+
+  // Walks the recursive branching structure described by a genome, calling
+  // visit(x1, y1, x2, y2, hueAtLevel, lineWidth) once per segment. `sizePx`
+  // is the drawing area in the same units x/y are returned in (CSS pixels
+  // for an on-screen canvas; any positive number for a headless count).
+  // Returns the total number of segments visited. Deterministic: the same
+  // genome and sizePx always walk the same tree, with no live randomness.
+  function traverseGenome(genome, sizePx, visit) {
+    var depthGene = genome[0], angleGene = genome[1], lengthRatio = genome[2],
+        branchesRaw = genome[3], curvature = genome[4], lineWidthGene = genome[5],
+        hue = genome[6], hueDrift = genome[7], symmetryGene = genome[8],
+        wobbleAmp = genome[9], wobbleFreq = genome[10], startFrac = genome[11];
+    var branches = Math.max(2, Math.min(4, Math.round(branchesRaw)));
+    var depth = Math.max(3, Math.min(7, Math.round(depthGene)));
+    var maxDepth = effectiveDepth(branches, depth, MAX_SEGMENTS_CAP);
+    var symmetry = symmetryGene >= 0.5;
+    var spreadRad = angleGene * Math.PI / 180;
+    var curveRad = curvature * Math.PI / 180;
+    var startLen = sizePx * startFrac;
+    var count = 0;
+
+    function recurse(x, y, angle, length, level, pathHash) {
+      count += 1;
+      var wobble = Math.sin(pathHash * 1.618 + level * wobbleFreq) * wobbleAmp * length;
+      var a2 = angle + (length > 1e-6 ? wobble / length : 0);
+      var ex = x + Math.cos(a2) * length;
+      var ey = y + Math.sin(a2) * length;
+      var hueAtLevel = ((hue + hueDrift * level) % 360 + 360) % 360;
+      var width = Math.max(0.6, lineWidthGene * Math.pow(0.72, level));
+      visit(x, y, ex, ey, hueAtLevel, width);
+
+      if (level >= maxDepth) { return; }
+      var nextLen = length * lengthRatio;
+      if (nextLen < 0.6) { return; }
+
+      var n = branches, i, t, bias, childAngle;
+      for (i = 0; i < n; i++) {
+        t = n === 1 ? 0 : (i / (n - 1)) * 2 - 1;
+        bias = symmetry ? 0 : curveRad;
+        childAngle = a2 + t * spreadRad + bias;
+        recurse(ex, ey, childAngle, nextLen, level + 1, pathHash * 4 + i + 1);
+      }
+    }
+
+    recurse(sizePx / 2, sizePx * 0.92, -Math.PI / 2, startLen, 0, 1);
+    return count;
+  }
+
+  function genomeText(genome) {
+    var lines = [], i;
+    for (i = 0; i < GENES.length; i++) {
+      lines.push(GENES[i].key + ': ' + genome[i].toFixed(3));
+    }
+    return lines.join('\n');
+  }
+
+  // ---- drawing ----
+  function isDark() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+
+  function drawGenome(ctx, sizePx, genome) {
+    var dark = isDark();
+    ctx.clearRect(0, 0, sizePx, sizePx);
+    ctx.fillStyle = dark ? '#101216' : '#ffffff';
+    ctx.fillRect(0, 0, sizePx, sizePx);
+    var lightness = dark ? 64 : 40;
+    traverseGenome(genome, sizePx, function (x1, y1, x2, y2, hue, width) {
+      ctx.strokeStyle = 'hsl(' + hue.toFixed(1) + ', 65%, ' + lightness + '%)';
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    });
+  }
+
+  // ---- canvas sizing for devicePixelRatio, drawn in CSS-pixel units ----
+  function fitCanvas(canvas) {
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = canvas.getBoundingClientRect().width || canvas.clientWidth || 240;
+    var cssHeight = cssWidth;
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    canvas.style.height = cssHeight + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx: ctx, size: cssWidth };
+  }
+
+  // ---- DOM refs ----
+  var el = function (id) { return document.getElementById(id); };
+  var rateEl = el('rate'), rateDispEl = el('rateDisp');
+  var strengthEl = el('strength'), strengthDispEl = el('strengthDisp');
+  var seedEl = el('seed'), newSeedBtn = el('newSeedBtn');
+  var resetBtn = el('resetBtn'), undoBtn = el('undoBtn'), genomeToggle = el('genomeToggle');
+  var statsEl = el('stats'), genomePanel = el('genomePanel');
+  var gridEl = el('grid');
+  var lineageEl = el('lineage');
+
+  var tileButtons = Array.prototype.slice.call(gridEl.querySelectorAll('.tile'));
+  var tileCanvases = tileButtons.map(function (b) { return b.querySelector('canvas'); });
+  var POSITIONS = [0, 1, 2, 3, 5, 6, 7, 8]; // grid positions holding the eight mutants; 4 is the parent
+
+  // ---- state ----
+  var rng = null;
+  var parentGenome = null;
+  var neighbourGenomes = [];
+  var generation = 0;
+  var history = [];
+  var lineage = [];
+  var genomeShown = false;
+
+  function rate() { return parseFloat(rateEl.value); }
+  function strength() { return parseFloat(strengthEl.value); }
+
+  function regenerateNeighbours() {
+    var i, r = rate(), s = strength();
+    neighbourGenomes = new Array(8);
+    for (i = 0; i < 8; i++) {
+      neighbourGenomes[i] = mutateGenome(parentGenome, r, s, rng).genome;
+    }
+  }
+
+  function renderGrid() {
+    drawGenome(tileCanvases[4].getContext('2d'), fitCanvas(tileCanvases[4]).size, parentGenome);
+    var i, pos, canvas, fitted;
+    for (i = 0; i < POSITIONS.length; i++) {
+      pos = POSITIONS[i];
+      canvas = tileCanvases[pos];
+      fitted = fitCanvas(canvas);
+      drawGenome(fitted.ctx, fitted.size, neighbourGenomes[i]);
+    }
+  }
+
+  function renderStats() {
+    statsEl.textContent = 'Generation ' + generation + '.';
+  }
+
+  function renderGenomePanel() {
+    if (genomeShown) {
+      genomePanel.textContent = genomeText(parentGenome);
+    }
+  }
+
+  function makeLineageThumb(entry, isCurrent) {
+    var item = document.createElement('div');
+    item.className = 'lineage-item' + (isCurrent ? ' current' : '');
+    item.setAttribute('role', 'listitem');
+    var canvas = document.createElement('canvas');
+    canvas.width = 44;
+    canvas.height = 44;
+    canvas.setAttribute('aria-hidden', 'true');
+    item.appendChild(canvas);
+    var label = document.createElement('span');
+    label.className = 'sr-only';
+    label.textContent = 'Parent, generation ' + entry.gen;
+    item.appendChild(label);
+    lineageEl.appendChild(item);
+    var fitted = fitCanvas(canvas);
+    drawGenome(fitted.ctx, fitted.size, entry.genome);
+    return item;
+  }
+
+  function renderLineage() {
+    lineageEl.textContent = '';
+    var i;
+    for (i = 0; i < lineage.length; i++) {
+      makeLineageThumb(lineage[i], i === lineage.length - 1);
+    }
+  }
+
+  function pushLineage(genome) {
+    lineage.push({ genome: genome.slice(), gen: generation });
+    if (lineage.length > 24) { lineage.shift(); }
+    renderLineage();
+  }
+
+  function updateButtonsEnabled() {
+    undoBtn.disabled = history.length === 0;
+  }
+
+  function snapshot() {
+    return {
+      parentGenome: parentGenome.slice(),
+      neighbourGenomes: neighbourGenomes.map(function (g) { return g.slice(); }),
+      generation: generation,
+      lineage: lineage.map(function (e) { return { genome: e.genome.slice(), gen: e.gen }; })
+    };
+  }
+
+  function restore(snap) {
+    parentGenome = snap.parentGenome;
+    neighbourGenomes = snap.neighbourGenomes;
+    generation = snap.generation;
+    lineage = snap.lineage;
+  }
+
+  function selectTile(pos) {
+    if (pos === 4) { return; }
+    var idx = POSITIONS.indexOf(pos);
+    if (idx === -1) { return; }
+    history.push(snapshot());
+    parentGenome = neighbourGenomes[idx];
+    generation += 1;
+    regenerateNeighbours();
+    pushLineage(parentGenome);
+    renderGrid();
+    renderStats();
+    renderGenomePanel();
+    updateButtonsEnabled();
+    tileButtons[4].focus();
+  }
+
+  function reset() {
+    var seedVal = parseInt(seedEl.value, 10);
+    if (!isFinite(seedVal)) { seedVal = 1; seedEl.value = '1'; }
+    rng = makeLCG(seedVal);
+    parentGenome = randomGenome(rng);
+    generation = 0;
+    history = [];
+    regenerateNeighbours();
+    lineage = [];
+    pushLineage(parentGenome);
+    renderGrid();
+    renderStats();
+    renderGenomePanel();
+    updateButtonsEnabled();
+  }
+
+  function undo() {
+    if (!history.length) { return; }
+    restore(history.pop());
+    renderGrid();
+    renderLineage();
+    renderStats();
+    renderGenomePanel();
+    updateButtonsEnabled();
+  }
+
+  // ---- wiring ----
+  var i;
+  for (i = 0; i < tileButtons.length; i++) {
+    (function (pos) {
+      tileButtons[i].addEventListener('click', function () { selectTile(pos); });
+    })(parseInt(tileButtons[i].getAttribute('data-pos'), 10));
+  }
+
+  function updateRateLabel() { rateDispEl.textContent = rate().toFixed(2); }
+  function updateStrengthLabel() { strengthDispEl.textContent = strength().toFixed(2); }
+
+  rateEl.addEventListener('input', function () {
+    updateRateLabel();
+    regenerateNeighbours();
+    renderGrid();
+  });
+  strengthEl.addEventListener('input', function () {
+    updateStrengthLabel();
+    regenerateNeighbours();
+    renderGrid();
+  });
+
+  resetBtn.addEventListener('click', reset);
+  undoBtn.addEventListener('click', undo);
+  seedEl.addEventListener('change', reset);
+  newSeedBtn.addEventListener('click', function () {
+    seedEl.value = String(Math.floor(Math.random() * 1000000));
+    reset();
+  });
+
+  genomeToggle.addEventListener('click', function () {
+    genomeShown = !genomeShown;
+    genomeToggle.setAttribute('aria-pressed', genomeShown ? 'true' : 'false');
+    genomeToggle.textContent = genomeShown ? 'Hide genome' : 'Show genome';
+    genomePanel.classList.toggle('shown', genomeShown);
+    renderGenomePanel();
+  });
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(function () {
+      renderGrid();
+      renderLineage();
+    }, 120);
+  });
+
+  updateRateLabel();
+  updateStrengthLabel();
+  reset();
+})();
+  </script>
+</body>
+</html>

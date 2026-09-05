@@ -22,3 +22,4 @@ leaves the browser. Bundled data files list their licence here.
 | markov-melody | 6 | none |
 | agent-loop | 11 | none |
 | rhythm-bot | 12 | none |
+| evolve | 2, 9 | none |
