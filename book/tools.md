@@ -12,7 +12,7 @@ Across the semester you will meet many tools. The list below is not exhaustive, 
 The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. Most are still being built; each link below goes live once its app lands, and the "in preparation" label disappears at the same time.
 
 - [Training loop playground](https://fourms.github.io/Creative-AI/apps/training-loop/): watch a tiny model's loss fall step by step as it trains.
-- [Next-token sampler](https://fourms.github.io/Creative-AI/apps/next-token-sampler/) (in preparation): compare greedy, temperature, and top-p sampling on the same next-token distribution.
+- [Next-token sampler](https://fourms.github.io/Creative-AI/apps/next-token-sampler/): compare greedy, temperature, and top-p sampling on the same next-token distribution.
 - [Tokeniser explorer](https://fourms.github.io/Creative-AI/apps/tokeniser-explorer/) (in preparation): see how a sentence splits into tokens, and why Norwegian text costs more tokens than English.
 - [Forward diffusion explorer](https://fourms.github.io/Creative-AI/apps/diffusion-explorer/) (in preparation): watch an image dissolve into noise, then step back to see how diffusion models learn to reverse it.
 - [Inference energy estimator](https://fourms.github.io/Creative-AI/apps/energy-estimator/) (in preparation): estimate the energy and water cost of running a prompt through a model of a given size.
