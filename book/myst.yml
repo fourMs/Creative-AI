@@ -22,7 +22,7 @@ project:
     - file: co-creation-and-ethics.ipynb
     - file: language.ipynb
     - file: images.ipynb
-    - file: ai-sound.ipynb
+    - file: sound.ipynb
     - file: ai-video.ipynb
     - file: ai-code.ipynb
     - file: ai-3d-games.ipynb
