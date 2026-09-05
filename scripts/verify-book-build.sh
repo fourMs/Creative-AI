@@ -13,6 +13,9 @@ fi
 echo "Checking chapter template, citations, and figures..."
 python scripts/check-chapters.py
 
+echo "Checking prose style (report-only; see scripts/check-style.py)..."
+python scripts/check-style.py || true
+
 cd book
 echo "Running: myst build --html --execute (same as CI deploy)..."
 myst build --html --execute

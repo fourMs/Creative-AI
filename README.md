@@ -64,6 +64,8 @@ Or from the repository root:
 ./scripts/verify-book-build.sh
 ```
 
+Chapter structure, citations, and figures are checked by `python scripts/check-chapters.py`; prose style is checked, report-only, by `python scripts/check-style.py` (the style guide it enforces lives in the course Dropbox, outside this repository).
+
 ## Credits
 
 Compiled at the University of Oslo. The textbook is released as Open Education under the [Creative Commons Attribution 4.0 (CC-BY-4.0)](https://creativecommons.org/licenses/by/4.0/) licence, except where otherwise noted.

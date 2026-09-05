@@ -100,6 +100,70 @@ def test_checker_skips_template_for_non_chapters():
     r = _run_checker(page)
     assert r.returncode == 0, r.stdout
 
+STYLE_VIOLATIONS_MD = """# Show, don't tell
+
+This chapter **really** matters for the argument, and it don't make sense otherwise.
+
+Moreover, the seminar was cancelled today.
+
+We will now see how this fits into the wider story of the course.
+
+I disagree with this reading, and I want to explain exactly why.
+
+This sentence keeps going and going without much of a point just to push the total count of words past the forty word threshold so that the checker has something long enough to flag as a long sentence for the test to verify properly today.
+
+This is audio-visual content that mixes the two channels.
+
+Wow, this is surprising!
+
+This has one em dash — right there in a sentence.
+"""
+
+STYLE_CLEAN_MD = """# Show, don't tell
+
+**The claim.** This paragraph opens with an allowed critical-look label.
+
+- **Term.** A list item may start with a bold lead like this one.
+
+This is a plain sentence with no problems in it at all.
+
+:::{seealso} Further reading
+- **Author, Title (2020)** — a short annotated note about the reading itself.
+:::
+
+:::{tip} Explore interactively
+- [App](https://example.org/app): don't worry, this app link isn't checked for style at all!
+:::
+"""
+
+
+def test_style_checker_flags_each_violation():
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "ch.md"); open(src, "w").write(STYLE_VIOLATIONS_MD)
+        r = subprocess.run([PY, os.path.join(ROOT, "scripts", "check-style.py"), "--files", src],
+                            capture_output=True, text=True)
+        assert r.returncode == 0, r.stdout + r.stderr
+        for category in ["contraction", "bold-in-sentence", "paragraph-opener", "long-sentence",
+                          "audiovisual", "first-person", "lecturer-we", "exclamation", "em-dash"]:
+            assert f": {category}:" in r.stdout, f"missing {category} in:\n{r.stdout}"
+
+
+def test_style_checker_strict_fails_on_violations():
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "ch.md"); open(src, "w").write(STYLE_VIOLATIONS_MD)
+        r = subprocess.run([PY, os.path.join(ROOT, "scripts", "check-style.py"), "--files", src, "--strict"],
+                            capture_output=True, text=True)
+        assert r.returncode == 1, r.stdout + r.stderr
+
+
+def test_style_checker_accepts_clean_fixture():
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "ch.md"); open(src, "w").write(STYLE_CLEAN_MD)
+        r = subprocess.run([PY, os.path.join(ROOT, "scripts", "check-style.py"), "--files", src, "--strict"],
+                            capture_output=True, text=True)
+        assert r.returncode == 0, r.stdout + r.stderr
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):

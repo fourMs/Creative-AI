@@ -1,0 +1,3 @@
+# Headings that carry an established idiom, exempt from the contraction rule.
+# One heading text per line (the heading with leading #'s stripped), no comment after it.
+Show, don't tell

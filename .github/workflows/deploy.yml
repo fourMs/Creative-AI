@@ -61,6 +61,9 @@ jobs:
       - name: Check chapter template, citations, and figures
         run: python scripts/check-chapters.py
 
+      - name: Check prose style (report-only)
+        run: python scripts/check-style.py || true
+
       - name: Build Jupyter Book HTML
         run: |
           cd book
