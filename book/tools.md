@@ -9,7 +9,7 @@ Across the semester you will meet many tools. The list below is not exhaustive, 
 
 ## Apps made for this book
 
-The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. Most are still being built; each link below goes live once its app lands, and the "in preparation" label disappears at the same time.
+The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. The eleven below are ready to use, and a few more are still in preparation, labelled as such where the chapters link to them.
 
 - [Training loop playground](https://fourms.github.io/Creative-AI/apps/training-loop/): watch a tiny model's loss fall step by step as it trains.
 - [Next-token sampler](https://fourms.github.io/Creative-AI/apps/next-token-sampler/): compare greedy, temperature, and top-p sampling on the same next-token distribution.

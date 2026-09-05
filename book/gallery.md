@@ -54,15 +54,15 @@ Solo or in groups of two to three. In a group, the reflection names what each pe
 3. **A gallery page** for the public online gallery, using the [gallery page template](templates/gallery-page.md), with your format, your technical needs, and consent options for inclusion in future cohorts' material.
 4. **Your full prompt log** (the file you have been keeping all semester). It is part of the submission rather than an optional extra.
 
-The reflection and the gallery page are due at the same time as the presentation, in the exam period. Your proposal in week 10 and your rehearsal in week 12 are the two checkpoints on the way there.
+The reflection and the gallery page are due as you show the work, in the exam period. Your proposal in week 10 and your rehearsal in week 12 are the two checkpoints on the way there.
 
 ## What "good" looks like
 
 Examples of strong projects from prior offerings:
 
-- *A 40-second music video for an original song the student wrote*, generated stems with re-recorded vocals on top and a hand-edited storyboard, screened with a live introduction and the song played through the room. The reflection compared early music videos with the new affordances of cheap motion.
+- *A 40-second music video for an original song the student wrote*, generated stems with re-recorded vocals on top and a hand-edited storyboard, screened with a live introduction and the song played through the room. The reflection compared early Bob Dylan music videos with the new affordances of cheap motion.
 - *A redesign of the visual identity for a Norwegian charity*, moodboards and vector marks generated and then rebuilt by hand into a system, installed as a printed wall with the maker walking visitors through every prompt and editorial decision.
-- *A short interactive piece* where the visitor types a memory and a generated soundscape plays back, installed on a laptop with headphones for the length of the event. The reflection focused on what the AI got wrong, and why those errors became part of the piece.
+- *A short interactive piece in p5.js* where the visitor types a memory and a generated soundscape plays back, installed on a laptop with headphones for the length of the event. The reflection focused on what the AI got wrong, and why those errors became part of the piece.
 
 What makes these projects strong is not the polish but the fit between brief, tool, and reflection. A modest project with a clear, honest brief beats a flashy project with no spine.
 

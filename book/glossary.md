@@ -16,7 +16,7 @@ Alignment training (RLHF)
 : Shaping a raw next-token predictor into a system that answers questions, follows instructions, and refuses some requests, using human or model-generated feedback rather than plain next-token prediction.
 
 Anarchive
-: A computational memory that holds no fixed documents but continuously reorganises cultural traces into new generative forms, a term proposed by Pierre Cassou-Noguès and Gwenola Wagon. Chapter 3 uses it for the latent space of a trained model, where provenance is unstable and meaning is relational rather than documentary.
+: A computational memory that holds no fixed documents but continuously reorganises cultural traces into new generative forms, a term used by Pierre Cassou-Noguès and Gwenola Wagon. Chapter 3 uses it for the latent space of a trained model, where provenance is unstable and meaning is relational rather than documentary.
 
 Audio–video and auditory–visual
 : Audio and video name data, the recorded, transmitted, or generated signal; auditory and visual name perception and processing, whether in a person or in a machine. A film is an audio–video artefact, and watching it is auditory–visual. The book keeps the two apart rather than folding them into a single word that means both.
