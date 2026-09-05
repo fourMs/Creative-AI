@@ -77,7 +77,6 @@
     th { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
     td .vals { display: block; font-size: 0.8rem; margin: 0; }
     td input[type="range"] { width: 120px; }
-    table[hidden], .table-buttons-row { }
     details {
       border: 1px solid var(--border); border-radius: 8px;
       padding: 8px 12px; background: var(--panel); margin: 14px 0 0;
@@ -110,7 +109,7 @@
 
   <fieldset>
     <legend>Mapping</legend>
-    <p class="hint">Each row below sends one sensor axis to one sound parameter. Choose the source axis, set the input range that the axis is expected to move within, invert the direction if you want, and smooth out jitter.</p>
+    <p class="hint">Each row below sends one sensor axis to one sound parameter. Choose the source axis, set the input range that the axis is expected to move within, invert the direction if you want, and smooth out jitter. The sensible mapping below stands in for shake with a single rotation rate axis (&beta;), or with the pointer&rsquo;s Y axis on a laptop with no motion sensors.</p>
     <div class="row">
       <button type="button" id="randomiseBtn">Randomise mapping</button>
       <button type="button" id="resetMappingBtn">Reset to a sensible mapping</button>
@@ -136,7 +135,7 @@
 
   <fieldset>
     <legend>Learnability experiment</legend>
-    <p class="hint">Task: make the sound go up, then get brighter. Design your own mapping above, run the task and note the time, then press &ldquo;Randomise mapping&rdquo; and try the same task again without looking at the table.</p>
+    <p class="hint">Task: make the sound go up, then get brighter. &ldquo;Up&rdquo; means raising the pitch noticeably above where it started, and &ldquo;brighter&rdquo; means raising the filter cutoff noticeably above where it started once the pitch has risen; if a parameter starts the stage already near its top, the task asks you to bring it down first so that a rise is still possible. Design your own mapping above, run the task and note the time, then press &ldquo;Randomise mapping&rdquo; and try the same task again without looking at the table.</p>
     <div class="row">
       <button type="button" id="taskBtn" aria-pressed="false">Start task</button>
       <span class="stats" id="taskTimer">Time: 0.0 s</span>
@@ -149,7 +148,7 @@
 
   <details>
     <summary>How it works</summary>
-    <p>Every animation frame, the app reads the current value of each available axis: acceleration and rotation rate from the phone&rsquo;s motion sensors, or pointer position and speed from the mouse or trackpad. For each sound parameter, the axis chosen in the mapping table is rescaled from the input minimum and maximum you set to a range from 0 to 1, inverted if you asked for that, then smoothed so that a jump in the raw reading arrives as a gradual change rather than a jump in sound. That smoothed value drives an oscillator&rsquo;s pitch, a filter&rsquo;s cutoff frequency for brightness, and the speed of a pulsing gain for tempo. The learnability task compares your own mapping against a randomised one by timing how long each takes to complete. This app bundles no data files, so there is no licence to name, and it makes no network requests.</p>
+    <p>Every animation frame, the app reads the current value of each available axis: acceleration and rotation rate from the phone&rsquo;s motion sensors, or pointer position and speed from the mouse or trackpad. For each sound parameter, the axis chosen in the mapping table is rescaled from the input minimum and maximum you set to a range from 0 to 1, inverted if you asked for that, then smoothed so that a jump in the raw reading arrives as a gradual change rather than a jump in sound. That smoothed value drives an oscillator&rsquo;s pitch, a filter&rsquo;s cutoff frequency for brightness, and the speed of a pulsing gain for tempo. The learnability task compares your own mapping against a randomised one by timing how long each takes to complete. Shake has no sensor of its own, so the sensible mapping approximates it with a single rotation rate axis (&beta;); on a laptop with no motion sensors, the pointer&rsquo;s Y axis stands in for it instead. This app bundles no data files, so there is no licence to name, and it makes no network requests.</p>
   </details>
 
   <script>
@@ -511,8 +510,8 @@
     if (maxFrac <= minFrac) { maxFrac = Math.min(1, minFrac + 0.02); row.maxInput.value = String(Math.round(maxFrac * 1000)); }
     mapping[key].min = axis.min + minFrac * span;
     mapping[key].max = axis.min + maxFrac * span;
-    row.minDisp.textContent = mapping[key].min.toFixed(1);
-    row.maxDisp.textContent = mapping[key].max.toFixed(1);
+    row.minDisp.textContent = mapping[key].min.toFixed(1) + (axis.unit ? ' ' + axis.unit : '');
+    row.maxDisp.textContent = mapping[key].max.toFixed(1) + (axis.unit ? ' ' + axis.unit : '');
   }
 
   // The two range inputs for input minimum/maximum are stored as a 0..1000
@@ -528,8 +527,8 @@
     refs.maxInput.min = '0'; refs.maxInput.max = '1000'; refs.maxInput.step = '1';
     refs.minInput.value = String(Math.round(((row.min - axis.min) / span) * 1000));
     refs.maxInput.value = String(Math.round(((row.max - axis.min) / span) * 1000));
-    refs.minDisp.textContent = row.min.toFixed(1);
-    refs.maxDisp.textContent = row.max.toFixed(1);
+    refs.minDisp.textContent = row.min.toFixed(1) + (axis.unit ? ' ' + axis.unit : '');
+    refs.maxDisp.textContent = row.max.toFixed(1) + (axis.unit ? ' ' + axis.unit : '');
     refs.invertInput.checked = row.invert;
     refs.smoothInput.value = String(row.smoothing);
     refs.smoothDisp.textContent = row.smoothing + ' %';
@@ -554,13 +553,19 @@
     return row.invert ? 1 - frac : frac;
   }
 
-  function updateSmoothedNorms() {
-    var i, p, row, rawNorm, alpha;
+  // One-pole low-pass smoothing, with the time constant (not the per-frame
+  // step) set by the smoothing slider, so the same slider value behaves the
+  // same on a 60 Hz and a 120 Hz screen. `dtSec` is the measured time since
+  // the previous frame.
+  var SMOOTH_TAU_MIN = 0.006, SMOOTH_TAU_MAX = 1.5;
+  function updateSmoothedNorms(dtSec) {
+    var i, p, row, rawNorm, tau, alpha;
     for (i = 0; i < PARAMS.length; i++) {
       p = PARAMS[i];
       row = mapping[p.key];
       rawNorm = computeRawNorm(row);
-      alpha = 1 - (row.smoothing / 100) * 0.97;
+      tau = SMOOTH_TAU_MIN + (row.smoothing / 100) * (SMOOTH_TAU_MAX - SMOOTH_TAU_MIN);
+      alpha = 1 - Math.exp(-dtSec / tau);
       smoothedNorm[p.key] += alpha * (rawNorm - smoothedNorm[p.key]);
     }
   }
@@ -676,17 +681,39 @@
   // ============================================================
   var taskBtn = el('taskBtn'), taskTimerEl = el('taskTimer');
   var taskRunning = false, taskStage = 0, taskStartTime = 0, pitchBaseline = 0, brightnessBaseline = 0;
-  var RISE_THRESHOLD = 0.25;
+  var stageArmed = false; // true once the current stage's baseline has been captured at a safe, low-enough value
+  var RISE_THRESHOLD = 0.25; // stage completes on a rise of this much above its baseline...
+  var HIGH_ABS_THRESHOLD = 0.95; // ...or on reaching this absolute value outright, whichever comes first
+  var SAFE_HEADROOM = 0.3; // a stage only arms if its parameter has at least this much room left to rise
+  var REARM_BELOW = 0.6; // while unarmed, a stage arms as soon as its parameter drops below this
+
+  // Enters (or re-enters) a stage. If the relevant parameter is already too
+  // close to its top, there is no room left for a "rise", so the stage is
+  // left unarmed and the student is asked to bring it down first; updateTask
+  // arms it automatically once that happens. `readyMessage` is used only
+  // when the stage can arm immediately.
+  function enterStage(stage, readyMessage) {
+    taskStage = stage;
+    var value = stage === 1 ? smoothedNorm.pitch : smoothedNorm.brightness;
+    if (value > 1 - SAFE_HEADROOM) {
+      stageArmed = false;
+      setStatus(stage === 1
+        ? 'The pitch is already high. Bring it back down, then make the sound go up.'
+        : 'The brightness is already high. Bring it back down, then make it brighter.');
+    } else {
+      stageArmed = true;
+      if (stage === 1) { pitchBaseline = value; } else { brightnessBaseline = value; }
+      setStatus(readyMessage);
+    }
+  }
 
   function startTask() {
     taskRunning = true;
-    taskStage = 1;
     taskStartTime = performance.now();
-    pitchBaseline = smoothedNorm.pitch;
     taskTimerEl.textContent = 'Time: 0.0 s';
     taskBtn.setAttribute('aria-pressed', 'true');
     taskBtn.textContent = 'Cancel task';
-    setStatus('Task started: make the sound go up, then get brighter.');
+    enterStage(1, 'Task started: make the sound go up, then get brighter.');
   }
 
   function cancelTask(message) {
@@ -705,11 +732,24 @@
     if (!taskRunning) { return; }
     var elapsedSec = (performance.now() - taskStartTime) / 1000;
     taskTimerEl.textContent = 'Time: ' + elapsedSec.toFixed(1) + ' s';
-    if (taskStage === 1 && (smoothedNorm.pitch - pitchBaseline) > RISE_THRESHOLD) {
-      taskStage = 2;
-      brightnessBaseline = smoothedNorm.brightness;
-      setStatus('Pitch raised after ' + elapsedSec.toFixed(1) + ' seconds. Now make it brighter.');
-    } else if (taskStage === 2 && (smoothedNorm.brightness - brightnessBaseline) > RISE_THRESHOLD) {
+    var value = taskStage === 1 ? smoothedNorm.pitch : smoothedNorm.brightness;
+
+    if (!stageArmed) {
+      if (value < REARM_BELOW) {
+        stageArmed = true;
+        if (taskStage === 1) { pitchBaseline = value; } else { brightnessBaseline = value; }
+        setStatus(taskStage === 1 ? 'Task started: make the sound go up, then get brighter.' : 'Now make it brighter.');
+      }
+      return;
+    }
+
+    var baseline = taskStage === 1 ? pitchBaseline : brightnessBaseline;
+    var risen = (value - baseline) > RISE_THRESHOLD || value > HIGH_ABS_THRESHOLD;
+    if (!risen) { return; }
+
+    if (taskStage === 1) {
+      enterStage(2, 'Pitch raised after ' + elapsedSec.toFixed(1) + ' seconds. Now make it brighter.');
+    } else {
       taskRunning = false;
       taskStage = 0;
       taskBtn.setAttribute('aria-pressed', 'false');
@@ -724,12 +764,15 @@
   var statusEl = el('status');
   function setStatus(msg) { statusEl.textContent = msg; }
 
-  function frame() {
+  var lastFrameTime = null;
+  function frame(nowPerf) {
+    var dtSec = lastFrameTime === null ? 1 / 60 : Math.min(0.25, Math.max(0, (nowPerf - lastFrameTime) / 1000));
+    lastFrameTime = nowPerf;
     // pointer speed decays between pointermove events, so it settles back
     // towards zero when the pointer stops rather than holding its last peak
     if (rawAxes.pointerSpeed) { rawAxes.pointerSpeed *= 0.9; }
     renderMeters();
-    updateSmoothedNorms();
+    updateSmoothedNorms(dtSec);
     updateAudioParams();
     updateTask();
     requestAnimationFrame(frame);
