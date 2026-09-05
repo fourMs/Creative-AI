@@ -26,7 +26,7 @@ matter, then scanned line by line for:
                         "Furthermore", "Additionally", "Ultimately",
                         "Importantly", or "Crucially"
     long-sentence       a sentence over forty words
-    audiovisual         "audiovisual" outside "Audiovisual Rhythms"
+    "audiovisual"       "audiovisual" outside "Audiovisual Rhythms"
                         and cite keys, or the hyphenated forms
                         "audio-visual" / "auditory-visual"
     first-person        first-person singular "I" in prose
@@ -36,12 +36,16 @@ matter, then scanned line by line for:
                         allowed and needs human judgement
     exclamation         an exclamation mark in prose
     em-dash             a sentence with exactly one em dash, outside
-                        Further reading list items
+                        Further reading list items and outside a list
+                        item titled with bold, a link, or a citation
 
-Two book conventions are exempt throughout: the em dash used as the
-list-item separator inside ":::{seealso} Further reading" blocks, and
-all content inside ":::{tip} Explore interactively" blocks (the app
-links), which is skipped entirely.
+Three things are exempt throughout: the em dash used as the list-item
+separator inside ":::{seealso} Further reading" blocks and inside any
+list item whose title is bold, linked, or cited (the reading-list and
+tool-list convention); quoted or *italicised* example text, for the
+first-person and "audiovisual" rules, so this rulebook can name the
+very word it bans; and all content inside ":::{tip} Explore
+interactively" blocks (the app links), which is skipped entirely.
 
 Exit 0 and print per-file, per-category counts. With --strict, exit 1
 if any category other than lecturer-we has a hit anywhere.
@@ -91,6 +95,17 @@ FURTHER_READING_START = ":::{seealso} Further reading"
 EXPLORE_TIP_START = ":::{tip} Explore interactively"
 FENCE_END = ":::"
 
+# A list item whose title is a bold span, a Markdown link, or a citation key
+# uses the em dash as a "title — description" separator (the reading-list and
+# tool-list convention), not the mid-sentence drama dash rule 13 warns about.
+LIST_MARKER_RE = re.compile(r"^[ \t]*(?:[-*+]|\d+\.)[ \t]+")
+MD_LINK_RE = re.compile(r"\[[^\]]+\]\([^)]+\)")
+CITE_KEY_RE = re.compile(r"\[@[^\]]+\]")
+BOLD_LEAD_RE = re.compile(r"^\*\*.+?\*\*")
+
+# A single, unnested *italic* span (never the "*" of a "**bold**" pair).
+ITALIC_RE = re.compile(r"(?<!\*)\*(?!\*)([^*\n]*?)(?<!\*)\*(?!\*)")
+
 CATEGORIES = [
     "contraction", "bold-in-sentence", "paragraph-opener", "long-sentence",
     "audiovisual", "first-person", "lecturer-we", "exclamation", "em-dash",
@@ -109,6 +124,33 @@ def mask_quotes(line):
     line = re.sub(r'"[^"]*"', lambda m: "�" * len(m.group(0)), line)
     line = re.sub(r"“[^”]*”", lambda m: "�" * len(m.group(0)), line)
     return line
+
+
+def mask_examples(line):
+    """Mask quoted text and *italicised* example text (a line at a time; this
+    never reaches across lines). Used by rules where such text is an example
+    or a mention rather than the author's own voice: first-person "I" and the
+    word "audiovisual". Bold **spans** are left untouched: the italic pattern
+    never matches a "*" that is part of a "**" pair."""
+    line = mask_quotes(line)
+    # Do not let a leading "* " or "1. " list marker read as an italic
+    # delimiter: blank it out first, in place, so positions do not shift.
+    m = LIST_MARKER_RE.match(line)
+    if m:
+        line = " " * len(m.group(0)) + line[len(m.group(0)):]
+    line = ITALIC_RE.sub(lambda mm: "�" * len(mm.group(0)), line)
+    return line
+
+
+def is_titled_list_item(line):
+    """A list item is exempt from the em-dash rule when its title is a bold
+    span, a Markdown link, or a citation key: the "title — description"
+    convention used throughout the reading and tool lists."""
+    m = LIST_MARKER_RE.match(line)
+    if not m:
+        return False
+    rest = line[m.end():]
+    return bool(BOLD_LEAD_RE.match(rest) or MD_LINK_RE.search(rest) or CITE_KEY_RE.search(rest))
 
 
 def load_allowlist():
@@ -185,27 +227,29 @@ def check_text(text, allowlist):
                 hits.append((lineno, "paragraph-opener", excerpt(stripped, m.start(), m.end())))
 
         # sentence length, and single em dash per sentence
+        titled_item = is_titled_list_item(line)
         for sentence in sentences_of(line):
             words = sentence.split()
             if len(words) > 40:
                 hits.append((lineno, "long-sentence", sentence[:80]))
-            if sentence.count("—") == 1 and not in_further:
+            if sentence.count("—") == 1 and not in_further and not titled_item:
                 hits.append((lineno, "em-dash", sentence[:80]))
 
         # audiovisual / hyphenated audio-visual / auditory-visual
-        for m in AUDIOVISUAL_RE.finditer(line):
+        # (quoted or *italicised* mentions of the word itself do not count)
+        examples_masked = mask_examples(line)
+        for m in AUDIOVISUAL_RE.finditer(examples_masked):
             window = line[max(0, m.start() - 15):m.end() + 15]
             if "Audiovisual Rhythms" in window:
                 continue
             hits.append((lineno, "audiovisual", excerpt(line, m.start(), m.end())))
         for rx in (AUDIO_HYPHEN_RE, AUDITORY_HYPHEN_RE):
-            m = rx.search(line)
+            m = rx.search(examples_masked)
             if m:
                 hits.append((lineno, "audiovisual", excerpt(line, m.start(), m.end())))
 
-        # first-person singular (quotations excluded)
-        masked = mask_quotes(line)
-        for m in FIRST_PERSON_RE.finditer(masked):
+        # first-person singular (quoted or *italicised* examples excluded)
+        for m in FIRST_PERSON_RE.finditer(examples_masked):
             hits.append((lineno, "first-person", excerpt(line, m.start(), m.end())))
 
         # the lecturer's "we" (report-only)

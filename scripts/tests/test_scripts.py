@@ -164,6 +164,42 @@ def test_style_checker_accepts_clean_fixture():
         assert r.returncode == 0, r.stdout + r.stderr
 
 
+def test_style_checker_bold_titled_list_item_exempt_from_em_dash():
+    # A "- **Title** — description" item outside Further reading is still the
+    # reading-list/tool-list title-dash-description convention, not the
+    # mid-sentence drama dash rule 13 warns about.
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "ch.md")
+        open(src, "w").write("- **Title** — a description of the linked or cited work.\n")
+        r = subprocess.run([PY, os.path.join(ROOT, "scripts", "check-style.py"), "--files", src],
+                            capture_output=True, text=True)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert ": em-dash:" not in r.stdout, r.stdout
+
+
+def test_style_checker_italic_example_exempt_from_first_person():
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "ch.md")
+        open(src, "w").write("A hedge phrase to avoid is *I am not sure*, used here as an example.\n")
+        r = subprocess.run([PY, os.path.join(ROOT, "scripts", "check-style.py"), "--files", src],
+                            capture_output=True, text=True)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert ": first-person:" not in r.stdout, r.stdout
+
+
+def test_style_checker_quoted_audiovisual_exempt_but_bare_flagged():
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "ch.md")
+        open(src, "w").write(
+            'The style guide says not to write "audiovisual" in this book, '
+            "but audiovisual still appears here.\n"
+        )
+        r = subprocess.run([PY, os.path.join(ROOT, "scripts", "check-style.py"), "--files", src],
+                            capture_output=True, text=True)
+        assert r.returncode == 0, r.stdout + r.stderr
+        assert r.stdout.count(": audiovisual:") == 1, r.stdout
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):
