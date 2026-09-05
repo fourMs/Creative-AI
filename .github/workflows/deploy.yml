@@ -58,10 +58,15 @@ jobs:
           pip install "mystmd==1.6.0"
           pip install -r requirements.txt
 
+      - name: Check chapter template, citations, and figures
+        run: python scripts/check-chapters.py
+
       - name: Build Jupyter Book HTML
         run: |
           cd book
           myst build --html --execute
+          # Copy the bundled web apps to a stable top-level path (/apps/...).
+          cp -r apps _build/html/apps
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
