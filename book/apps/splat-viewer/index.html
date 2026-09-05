@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Splat viewer</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .stats { font-size: 1rem; margin: 10px 0; font-variant-numeric: tabular-nums; }
+    .stage {
+      position: relative; width: 100%; aspect-ratio: 4 / 3;
+      background: var(--canvas); border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; touch-action: none;
+    }
+    .stage canvas { display: block; width: 100%; height: 100%; }
+    .stage canvas:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+    .stage.drag-over { outline: 3px dashed var(--accent); outline-offset: -3px; }
+    #glUnavailable {
+      display: none; padding: 18px; text-align: center; color: var(--muted);
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    details {
+      border: 1px solid var(--border); border-radius: 8px; background: var(--panel);
+      padding: 8px 12px; margin: 14px 0 0;
+    }
+    details summary { cursor: pointer; font-weight: 600; }
+    details p, details ul { font-size: 0.92rem; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      padding: 0 4px; font-size: 0.88em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Splat viewer</h1>
+  <p class="intro">A Gaussian splat is a captured scene made of many small coloured, semi-transparent blobs floating in space rather than a mesh of triangles. This page renders one such scene, a synthetic still life, so you can orbit around it and thin out the blobs to see how little geometry is really there. Everything runs in your browser: the bundled scene and any file you drag in are read and drawn locally, and nothing leaves the browser.</p>
+
+  <div class="stage" id="stage">
+    <canvas id="glcanvas" tabindex="0" aria-label="Three-dimensional view of the splat scene. Drag or swipe to orbit, use the mouse wheel or a pinch gesture to zoom, and, once focused, use the arrow keys to orbit and the plus and minus keys to zoom."></canvas>
+    <p id="glUnavailable">WebGL is not available in this browser, so the splat viewer cannot run here. Try a recent version of Chrome, Firefox, Edge or Safari.</p>
+  </div>
+
+  <div class="stats" id="stats" aria-live="polite">Loading the bundled scene&hellip;</div>
+
+  <fieldset>
+    <legend>View</legend>
+    <div class="row">
+      <button type="button" id="resetBtn">Reset view</button>
+      <button type="button" id="autoRotateBtn" aria-pressed="false">Auto-rotate</button>
+      <button type="button" id="pointsBtn" aria-pressed="false">Show as points</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Thin the splats</legend>
+    <label for="thinRange">Splats shown <span class="vals" id="thinDisp">100 %</span></label>
+    <input type="range" id="thinRange" min="1" max="100" step="1" value="100" aria-describedby="thinDisp"/>
+    <p class="hint">A fixed random subset of the splats is kept at each setting, so lowering this slider always removes the same splats first rather than reshuffling the scene.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Load your own capture</legend>
+    <div class="row">
+      <button type="button" id="loadBtn">Load a .splat file&hellip;</button>
+      <input type="file" id="fileInput" accept=".splat" class="sr-only"/>
+    </div>
+    <p class="hint">You can also drag a <code>.splat</code> file straight onto the view above. Files from phone capture apps such as Polycam or Scaniverse work directly; scenes are capped at about 500 000 splats for performance, and larger files are thinned to that cap.</p>
+  </fieldset>
+
+  <p class="hint">Drag with the mouse, or swipe with one finger, to orbit; scroll the wheel, or pinch with two fingers, to zoom. Click the view first, then use the arrow keys to orbit and the plus and minus keys to zoom.</p>
+
+  <details>
+    <summary>How it works</summary>
+    <p>Each splat is drawn as a small camera-facing square (a point sprite) coloured with its own flat colour, with the alpha channel fading towards the edge of the square in a Gaussian curve, so a cluster of splats blends into a soft surface instead of showing hard squares. Squares are blended with standard, non-additive alpha blending, and are sorted from back to front by distance from the camera every few frames on the CPU, which keeps overlapping, semi-transparent splats in the right order as you orbit. The renderer ignores each splat's own rotation and treats it as round rather than stretched, which keeps the code short at the cost of some sharpness on stretched real-world splats.</p>
+    <p>The bundled scene, <code>scene.splat</code>, is a synthetic still life of a sphere, a torus and a cube standing on a plane that acts as a table, built from about 60 000 splats by <code>scripts/build-splat-viewer-data.py</code> using numpy. It was generated by the course team and is released under a CC-BY-4.0 licence. It is not a real capture; drop in a genuine one to see the difference.</p>
+    <p>The file format is the common 32-byte-per-splat <code>.splat</code> layout: position (x, y, z as float32), scale (x, y, z as float32), colour (r, g, b, a as one byte each) and a rotation quaternion (four bytes), all little-endian. "Thin the splats" keeps a fixed random subset by comparing a per-splat random number, generated once with a fixed seed when a scene loads, against the slider's percentage, so the same splats drop out first every time.</p>
+  </details>
+
+  <script>
+(function () {
+  'use strict';
+
+  // ---- constants ----
+  var MAX_SPLATS = 500000;
+  var THIN_SEED = 1337;
+  var SIZE_MULTIPLIER = 2.3;    // world-space splat "radius" -> screen diameter
+  var POINTS_MODE_PX = 3.0;     // fixed dot size (CSS px) when "show as points" is on
+  var FOV_Y = 50 * Math.PI / 180;
+  var NEAR = 0.02, FAR = 100;
+  var ROTATE_SPEED = 0.35;      // radians per second, auto-rotate
+  var DRAG_SPEED = 0.006;       // radians per pixel of drag
+  var KEY_ORBIT_STEP = 0.05;    // radians per key press
+  var KEY_ZOOM_FACTOR = 1.12;
+
+  // ---- DOM refs ----
+  var el = function (id) { return document.getElementById(id); };
+  var stage = el('stage');
+  var canvas = el('glcanvas');
+  var glUnavailableEl = el('glUnavailable');
+  var statsEl = el('stats');
+  var resetBtn = el('resetBtn'), autoRotateBtn = el('autoRotateBtn'), pointsBtn = el('pointsBtn');
+  var thinRange = el('thinRange'), thinDisp = el('thinDisp');
+  var loadBtn = el('loadBtn'), fileInput = el('fileInput');
+
+  // ============================================================
+  // Minimal column-major mat4 helpers (no library: gl-matrix-style layout).
+  // ============================================================
+  function mat4Perspective(fovy, aspect, near, far) {
+    var f = 1 / Math.tan(fovy / 2);
+    var nf = 1 / (near - far);
+    var out = new Float32Array(16);
+    out[0] = f / aspect;
+    out[5] = f;
+    out[10] = (far + near) * nf;
+    out[11] = -1;
+    out[14] = 2 * far * near * nf;
+    return out;
+  }
+
+  function mat4LookAt(eye, center, up) {
+    var zx = eye[0] - center[0], zy = eye[1] - center[1], zz = eye[2] - center[2];
+    var zl = Math.hypot(zx, zy, zz) || 1;
+    zx /= zl; zy /= zl; zz /= zl;
+    var xx = up[1] * zz - up[2] * zy, xy = up[2] * zx - up[0] * zz, xz = up[0] * zy - up[1] * zx;
+    var xl = Math.hypot(xx, xy, xz) || 1;
+    xx /= xl; xy /= xl; xz /= xl;
+    var yx = zy * xz - zz * xy, yy = zz * xx - zx * xz, yz = zx * xy - zy * xx;
+    var out = new Float32Array(16);
+    out[0] = xx; out[1] = yx; out[2] = zx; out[3] = 0;
+    out[4] = xy; out[5] = yy; out[6] = zy; out[7] = 0;
+    out[8] = xz; out[9] = yz; out[10] = zz; out[11] = 0;
+    out[12] = -(xx * eye[0] + xy * eye[1] + xz * eye[2]);
+    out[13] = -(yx * eye[0] + yy * eye[1] + yz * eye[2]);
+    out[14] = -(zx * eye[0] + zy * eye[1] + zz * eye[2]);
+    out[15] = 1;
+    return out;
+  }
+
+  // ---- seeded pseudo-random generator (linear congruential generator) ----
+  function makeLCG(seed) {
+    var state = seed >>> 0;
+    return function () {
+      state = (Math.imul(1103515245, state) + 12345) & 0x7fffffff;
+      return state / 0x7fffffff;
+    };
+  }
+
+  // ============================================================
+  // WebGL setup.
+  // ============================================================
+  var gl = canvas.getContext('webgl2', { antialias: true, alpha: false, depth: false })
+    || canvas.getContext('webgl', { antialias: true, alpha: false, depth: false })
+    || canvas.getContext('experimental-webgl', { antialias: true, alpha: false, depth: false });
+
+  if (!gl) {
+    glUnavailableEl.style.display = 'block';
+    canvas.style.display = 'none';
+    statsEl.textContent = 'WebGL is not available in this browser.';
+    resetBtn.disabled = true;
+    autoRotateBtn.disabled = true;
+    pointsBtn.disabled = true;
+    thinRange.disabled = true;
+    loadBtn.disabled = true;
+    return;
+  }
+
+  var VERTEX_SRC = [
+    'attribute vec3 aPosition;',
+    'attribute vec4 aColor;',
+    'attribute float aScale;',
+    'uniform mat4 uView;',
+    'uniform mat4 uProjection;',
+    'uniform float uViewportHeight;',
+    'uniform float uFovScale;',
+    'uniform float uSizeMultiplier;',
+    'uniform float uShowPoints;',
+    'uniform float uPointsPx;',
+    'uniform float uMinPointSize;',
+    'uniform float uMaxPointSize;',
+    'varying vec4 vColor;',
+    'varying float vShowPoints;',
+    'void main() {',
+    '  vec4 viewPos = uView * vec4(aPosition, 1.0);',
+    '  gl_Position = uProjection * viewPos;',
+    '  float dist = max(-viewPos.z, 0.001);',
+    '  float sizePx = (aScale * uSizeMultiplier * uViewportHeight * uFovScale) / dist;',
+    '  float finalSize = mix(sizePx, uPointsPx, uShowPoints);',
+    '  gl_PointSize = clamp(finalSize, uMinPointSize, uMaxPointSize);',
+    '  vColor = aColor;',
+    '  vShowPoints = uShowPoints;',
+    '}'
+  ].join('\n');
+
+  var FRAGMENT_SRC = [
+    'precision mediump float;',
+    'varying vec4 vColor;',
+    'varying float vShowPoints;',
+    'void main() {',
+    '  vec2 d = gl_PointCoord - vec2(0.5);',
+    '  float r2 = dot(d, d);',
+    '  if (r2 > 0.25) { discard; }',
+    '  float alpha;',
+    '  if (vShowPoints > 0.5) {',
+    '    alpha = vColor.a;',
+    '  } else {',
+    '    alpha = vColor.a * exp(-8.0 * r2 / 0.25);',
+    '  }',
+    '  gl_FragColor = vec4(vColor.rgb, alpha);',
+    '}'
+  ].join('\n');
+
+  function compileShader(type, src) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      var info = gl.getShaderInfoLog(s);
+      gl.deleteShader(s);
+      throw new Error('Shader compile error: ' + info);
+    }
+    return s;
+  }
+
+  var program;
+  try {
+    var vs = compileShader(gl.VERTEX_SHADER, VERTEX_SRC);
+    var fs = compileShader(gl.FRAGMENT_SHADER, FRAGMENT_SRC);
+    program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      throw new Error('Program link error: ' + gl.getProgramInfoLog(program));
+    }
+  } catch (err) {
+    glUnavailableEl.textContent = 'This browser could not set up WebGL rendering, so the splat viewer cannot run here.';
+    glUnavailableEl.style.display = 'block';
+    canvas.style.display = 'none';
+    statsEl.textContent = 'WebGL rendering could not be set up.';
+    return;
+  }
+
+  gl.useProgram(program);
+  var aPosition = gl.getAttribLocation(program, 'aPosition');
+  var aColor = gl.getAttribLocation(program, 'aColor');
+  var aScale = gl.getAttribLocation(program, 'aScale');
+  var uView = gl.getUniformLocation(program, 'uView');
+  var uProjection = gl.getUniformLocation(program, 'uProjection');
+  var uViewportHeight = gl.getUniformLocation(program, 'uViewportHeight');
+  var uFovScale = gl.getUniformLocation(program, 'uFovScale');
+  var uSizeMultiplier = gl.getUniformLocation(program, 'uSizeMultiplier');
+  var uShowPoints = gl.getUniformLocation(program, 'uShowPoints');
+  var uPointsPx = gl.getUniformLocation(program, 'uPointsPx');
+  var uMinPointSize = gl.getUniformLocation(program, 'uMinPointSize');
+  var uMaxPointSize = gl.getUniformLocation(program, 'uMaxPointSize');
+
+  var posBuffer = gl.createBuffer();
+  var colorBuffer = gl.createBuffer();
+  var scaleBuffer = gl.createBuffer();
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+  gl.enableVertexAttribArray(aPosition);
+  gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  gl.enableVertexAttribArray(aColor);
+  gl.vertexAttribPointer(aColor, 4, gl.UNSIGNED_BYTE, true, 0, 0);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, scaleBuffer);
+  gl.enableVertexAttribArray(aScale);
+  gl.vertexAttribPointer(aScale, 1, gl.FLOAT, false, 0, 0);
+
+  gl.disable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+  var pointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE) || [1, 64];
+
+  function isDark() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function applyClearColor() {
+    var c = isDark() ? [0x10 / 255, 0x12 / 255, 0x16 / 255] : [1, 1, 1];
+    gl.clearColor(c[0], c[1], c[2], 1);
+  }
+  applyClearColor();
+
+  // ============================================================
+  // Scene data: source arrays for the currently loaded splat set, plus a
+  // fixed-seed per-splat random number used by the thinning slider, and
+  // the subset of indices currently selected and depth-sorted for drawing.
+  // ============================================================
+  var scene = null;   // { count, positions, avgScale, colors, thinRand, fileName, capped }
+  var activeIndices = null;  // Uint32Array, indices into the scene arrays currently selected
+  var sortOrder = null;      // Uint32Array, permutation of activeIndices by depth
+  var depthScratch = null;   // Float32Array, view-space z per entry of activeIndices, same order
+
+  var stagePos = null, stageColor = null, stageScale = null; // GPU-upload staging arrays
+  var activeCount = 0;
+
+  var camera = { azimuth: 0.6, elevation: 0.35, distance: 5, target: [0, 0.4, 0] };
+  var defaultCamera = null;
+  var autoRotate = false;
+  var showPoints = false;
+
+  function parseSplatBuffer(buf) {
+    var BYTES = 32;
+    var totalInFile = Math.floor(buf.byteLength / BYTES);
+    var capped = totalInFile > MAX_SPLATS;
+    var n = capped ? MAX_SPLATS : totalInFile;
+    var dv = new DataView(buf);
+    var positions = new Float32Array(n * 3);
+    var avgScale = new Float32Array(n);
+    var colors = new Uint8Array(n * 4);
+    var i, o, sx, sy, sz;
+    for (i = 0; i < n; i++) {
+      o = i * BYTES;
+      positions[i * 3] = dv.getFloat32(o, true);
+      positions[i * 3 + 1] = dv.getFloat32(o + 4, true);
+      positions[i * 3 + 2] = dv.getFloat32(o + 8, true);
+      sx = dv.getFloat32(o + 12, true);
+      sy = dv.getFloat32(o + 16, true);
+      sz = dv.getFloat32(o + 20, true);
+      avgScale[i] = (Math.abs(sx) + Math.abs(sy) + Math.abs(sz)) / 3;
+      colors[i * 4] = dv.getUint8(o + 24);
+      colors[i * 4 + 1] = dv.getUint8(o + 25);
+      colors[i * 4 + 2] = dv.getUint8(o + 26);
+      colors[i * 4 + 3] = dv.getUint8(o + 27);
+      // bytes o+28..o+31 hold the rotation quaternion; this renderer draws
+      // round camera-facing splats and does not use it.
+    }
+    return { count: n, positions: positions, avgScale: avgScale, colors: colors, capped: capped, totalInFile: totalInFile };
+  }
+
+  function makeThinRand(n) {
+    var rng = makeLCG(THIN_SEED);
+    var arr = new Float32Array(n);
+    var i;
+    for (i = 0; i < n; i++) { arr[i] = rng(); }
+    return arr;
+  }
+
+  function computeBounds(positions, n) {
+    var minX = Infinity, minY = Infinity, minZ = Infinity;
+    var maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+    var i, x, y, z;
+    for (i = 0; i < n; i++) {
+      x = positions[i * 3]; y = positions[i * 3 + 1]; z = positions[i * 3 + 2];
+      if (x < minX) { minX = x; } if (x > maxX) { maxX = x; }
+      if (y < minY) { minY = y; } if (y > maxY) { maxY = y; }
+      if (z < minZ) { minZ = z; } if (z > maxZ) { maxZ = z; }
+    }
+    return { min: [minX, minY, minZ], max: [maxX, maxY, maxZ] };
+  }
+
+  function setScene(parsed, fileName) {
+    scene = {
+      count: parsed.count,
+      positions: parsed.positions,
+      avgScale: parsed.avgScale,
+      colors: parsed.colors,
+      thinRand: makeThinRand(parsed.count),
+      fileName: fileName,
+      capped: parsed.capped,
+      totalInFile: parsed.totalInFile
+    };
+    activeIndices = new Uint32Array(parsed.count);
+    sortOrder = new Uint32Array(parsed.count);
+    depthScratch = new Float32Array(parsed.count);
+    stagePos = new Float32Array(parsed.count * 3);
+    stageColor = new Uint8Array(parsed.count * 4);
+    stageScale = new Float32Array(parsed.count);
+
+    var bounds = computeBounds(parsed.positions, parsed.count);
+    var center = [
+      (bounds.min[0] + bounds.max[0]) / 2,
+      (bounds.min[1] + bounds.max[1]) / 2,
+      (bounds.min[2] + bounds.max[2]) / 2
+    ];
+    var size = Math.max(
+      bounds.max[0] - bounds.min[0],
+      bounds.max[1] - bounds.min[1],
+      bounds.max[2] - bounds.min[2],
+      0.5
+    );
+    defaultCamera = { azimuth: 0.6, elevation: 0.35, distance: size * 1.35, target: center };
+    camera = { azimuth: defaultCamera.azimuth, elevation: defaultCamera.elevation, distance: defaultCamera.distance, target: center.slice() };
+
+    thinRange.value = '100';
+    updateThinLabel();
+    recomputeActiveIndices();
+    frameCounter = 0;
+    updateStatus();
+  }
+
+  function recomputeActiveIndices() {
+    var pct = parseInt(thinRange.value, 10) / 100;
+    var n = scene.count, i, count = 0;
+    var thinRand = scene.thinRand;
+    for (i = 0; i < n; i++) {
+      if (thinRand[i] < pct) { activeIndices[count++] = i; }
+    }
+    activeCount = count;
+    // Force an immediate resort/upload on the next frame.
+    lastSortedCount = -1;
+  }
+
+  // ============================================================
+  // Depth sort and GPU upload. Runs every few frames rather than every
+  // frame; the interval grows with the splat count so very large dropped
+  // scenes stay responsive at the cost of slightly staler sort order.
+  // ============================================================
+  var frameCounter = 0;
+  var lastSortedCount = -1;
+
+  function sortIntervalFor(n) {
+    return Math.max(2, Math.min(45, Math.round(n / 12000) * 2));
+  }
+
+  function resortAndUpload(viewMatrix) {
+    if (!scene || activeCount === 0) { return; }
+    var n = activeCount, i, idx;
+    var positions = scene.positions;
+    var zx = viewMatrix[2], zy = viewMatrix[6], zz = viewMatrix[10], zw = viewMatrix[14];
+
+    for (i = 0; i < n; i++) {
+      idx = activeIndices[i];
+      depthScratch[i] = zx * positions[idx * 3] + zy * positions[idx * 3 + 1] + zz * positions[idx * 3 + 2] + zw;
+      sortOrder[i] = i;
+    }
+    var order = sortOrder.subarray(0, n);
+    Array.prototype.sort.call(order, function (a, b) { return depthScratch[a] - depthScratch[b]; });
+
+    var avgScale = scene.avgScale, colors = scene.colors;
+    var sp = stagePos, sc = stageColor, ss = stageScale;
+    var j, srcIdx;
+    for (i = 0; i < n; i++) {
+      srcIdx = activeIndices[order[i]];
+      j = i * 3;
+      sp[j] = positions[srcIdx * 3];
+      sp[j + 1] = positions[srcIdx * 3 + 1];
+      sp[j + 2] = positions[srcIdx * 3 + 2];
+      ss[i] = avgScale[srcIdx];
+      j = i * 4;
+      sc[j] = colors[srcIdx * 4];
+      sc[j + 1] = colors[srcIdx * 4 + 1];
+      sc[j + 2] = colors[srcIdx * 4 + 2];
+      sc[j + 3] = colors[srcIdx * 4 + 3];
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, sp.subarray(0, n * 3), gl.STREAM_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, sc.subarray(0, n * 4), gl.STREAM_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, scaleBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, ss.subarray(0, n), gl.STREAM_DRAW);
+
+    lastSortedCount = n;
+  }
+
+  // ============================================================
+  // Camera and canvas sizing.
+  // ============================================================
+  var ELEV_LIMIT = 1.5;
+
+  function clampCamera() {
+    if (camera.elevation > ELEV_LIMIT) { camera.elevation = ELEV_LIMIT; }
+    if (camera.elevation < -ELEV_LIMIT) { camera.elevation = -ELEV_LIMIT; }
+    var minDist = (defaultCamera ? defaultCamera.distance : 5) * 0.08;
+    var maxDist = (defaultCamera ? defaultCamera.distance : 5) * 8;
+    if (camera.distance < minDist) { camera.distance = minDist; }
+    if (camera.distance > maxDist) { camera.distance = maxDist; }
+  }
+
+  function eyeFromCamera() {
+    var ca = Math.cos(camera.azimuth), sa = Math.sin(camera.azimuth);
+    var ce = Math.cos(camera.elevation), se = Math.sin(camera.elevation);
+    return [
+      camera.target[0] + camera.distance * ce * sa,
+      camera.target[1] + camera.distance * se,
+      camera.target[2] + camera.distance * ce * ca
+    ];
+  }
+
+  function fitCanvas() {
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = canvas.clientWidth || 600;
+    var cssHeight = canvas.clientHeight || 450;
+    var w = Math.max(1, Math.round(cssWidth * dpr));
+    var h = Math.max(1, Math.round(cssHeight * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      gl.viewport(0, 0, w, h);
+    }
+  }
+
+  // ============================================================
+  // Status line and FPS.
+  // ============================================================
+  var fpsFrames = 0, fpsAccum = 0, fpsLast = 0, lastFrameTime = null;
+
+  function updateStatus() {
+    if (!scene) { return; }
+    var name = scene.fileName || 'scene.splat';
+    var totalTxt = scene.count.toLocaleString('en-GB');
+    var activeTxt = activeCount.toLocaleString('en-GB');
+    var msg = activeTxt + ' of ' + totalTxt + ' splats shown at ' + fpsLast + ' fps. File: ' + name + '.';
+    if (scene.capped) {
+      msg += ' The file held ' + scene.totalInFile.toLocaleString('en-GB') + ' splats; it was capped at ' + MAX_SPLATS.toLocaleString('en-GB') + ' for performance.';
+    }
+    statsEl.textContent = msg;
+  }
+
+  // ============================================================
+  // Pointer (mouse + touch) orbit and pinch zoom, wheel zoom, keyboard.
+  // ============================================================
+  var activePointers = new Map();
+  var pinchStartDist = null;
+  var pinchStartCameraDist = null;
+
+  function pointerDistance() {
+    var pts = Array.from(activePointers.values());
+    if (pts.length < 2) { return null; }
+    var dx = pts[0].x - pts[1].x, dy = pts[0].y - pts[1].y;
+    return Math.hypot(dx, dy);
+  }
+
+  canvas.addEventListener('pointerdown', function (e) {
+    canvas.setPointerCapture(e.pointerId);
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (activePointers.size === 2) {
+      pinchStartDist = pointerDistance();
+      pinchStartCameraDist = camera.distance;
+    }
+  });
+
+  canvas.addEventListener('pointermove', function (e) {
+    if (!activePointers.has(e.pointerId)) { return; }
+    var prev = activePointers.get(e.pointerId);
+    var cur = { x: e.clientX, y: e.clientY };
+
+    if (activePointers.size >= 2) {
+      activePointers.set(e.pointerId, cur);
+      var d = pointerDistance();
+      if (d && pinchStartDist) {
+        camera.distance = pinchStartCameraDist * (pinchStartDist / Math.max(1, d));
+        clampCamera();
+      }
+      return;
+    }
+
+    var dx = cur.x - prev.x, dy = cur.y - prev.y;
+    camera.azimuth -= dx * DRAG_SPEED;
+    camera.elevation += dy * DRAG_SPEED;
+    clampCamera();
+    activePointers.set(e.pointerId, cur);
+  });
+
+  function endPointer(e) {
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2) {
+      pinchStartDist = null;
+      pinchStartCameraDist = null;
+    }
+  }
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('pointerleave', function (e) {
+    if (e.pointerType !== 'touch') { return; }
+    endPointer(e);
+  });
+
+  canvas.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    camera.distance *= Math.pow(1.0015, e.deltaY);
+    clampCamera();
+  }, { passive: false });
+
+  canvas.addEventListener('keydown', function (e) {
+    var handled = true;
+    switch (e.key) {
+      case 'ArrowLeft': camera.azimuth -= KEY_ORBIT_STEP; break;
+      case 'ArrowRight': camera.azimuth += KEY_ORBIT_STEP; break;
+      case 'ArrowUp': camera.elevation += KEY_ORBIT_STEP; break;
+      case 'ArrowDown': camera.elevation -= KEY_ORBIT_STEP; break;
+      case '+': case '=': camera.distance /= KEY_ZOOM_FACTOR; break;
+      case '-': case '_': camera.distance *= KEY_ZOOM_FACTOR; break;
+      default: handled = false;
+    }
+    if (handled) {
+      e.preventDefault();
+      clampCamera();
+    }
+  });
+
+  stage.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    stage.classList.add('drag-over');
+  });
+  stage.addEventListener('dragleave', function () {
+    stage.classList.remove('drag-over');
+  });
+  stage.addEventListener('drop', function (e) {
+    e.preventDefault();
+    stage.classList.remove('drag-over');
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length) { loadFile(files[0]); }
+  });
+
+  loadBtn.addEventListener('click', function () { fileInput.click(); });
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files && fileInput.files.length) { loadFile(fileInput.files[0]); }
+    fileInput.value = '';
+  });
+
+  function loadFile(file) {
+    statsEl.textContent = 'Reading ' + file.name + '…';
+    var reader = new FileReader();
+    reader.onload = function () {
+      var parsed;
+      try {
+        parsed = parseSplatBuffer(reader.result);
+      } catch (err) {
+        statsEl.textContent = 'Could not read ' + file.name + ' as a .splat file.';
+        return;
+      }
+      if (parsed.count === 0) {
+        statsEl.textContent = file.name + ' does not look like a .splat file (no complete 32-byte splats found).';
+        return;
+      }
+      setScene(parsed, file.name);
+    };
+    reader.onerror = function () {
+      statsEl.textContent = 'Could not read ' + file.name + '.';
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ============================================================
+  // Buttons.
+  // ============================================================
+  resetBtn.addEventListener('click', function () {
+    if (!defaultCamera) { return; }
+    camera = { azimuth: defaultCamera.azimuth, elevation: defaultCamera.elevation, distance: defaultCamera.distance, target: defaultCamera.target.slice() };
+    clampCamera();
+  });
+
+  autoRotateBtn.addEventListener('click', function () {
+    autoRotate = !autoRotate;
+    autoRotateBtn.setAttribute('aria-pressed', String(autoRotate));
+    autoRotateBtn.textContent = autoRotate ? 'Stop auto-rotate' : 'Auto-rotate';
+  });
+
+  pointsBtn.addEventListener('click', function () {
+    showPoints = !showPoints;
+    pointsBtn.setAttribute('aria-pressed', String(showPoints));
+    pointsBtn.textContent = showPoints ? 'Show as splats' : 'Show as points';
+  });
+
+  function updateThinLabel() {
+    thinDisp.textContent = thinRange.value + ' %';
+  }
+  thinRange.addEventListener('input', function () {
+    updateThinLabel();
+    if (scene) { recomputeActiveIndices(); }
+  });
+
+  // ============================================================
+  // Main loop.
+  // ============================================================
+  function render(now) {
+    requestAnimationFrame(render);
+    fitCanvas();
+
+    if (lastFrameTime === null) { lastFrameTime = now; }
+    var dt = Math.min(0.1, (now - lastFrameTime) / 1000);
+    lastFrameTime = now;
+
+    if (autoRotate) {
+      camera.azimuth += ROTATE_SPEED * dt;
+    }
+
+    fpsFrames++;
+    fpsAccum += dt;
+    if (fpsAccum >= 0.5) {
+      fpsLast = Math.round(fpsFrames / fpsAccum);
+      fpsFrames = 0;
+      fpsAccum = 0;
+      updateStatus();
+    }
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    if (!scene || activeCount === 0) { return; }
+
+    var eye = eyeFromCamera();
+    var view = mat4LookAt(eye, camera.target, [0, 1, 0]);
+    var aspect = canvas.width / canvas.height;
+    var proj = mat4Perspective(FOV_Y, aspect, NEAR, FAR);
+
+    frameCounter++;
+    if (lastSortedCount !== activeCount || frameCounter % sortIntervalFor(activeCount) === 0) {
+      resortAndUpload(view);
+    }
+
+    gl.uniformMatrix4fv(uView, false, view);
+    gl.uniformMatrix4fv(uProjection, false, proj);
+    gl.uniform1f(uViewportHeight, canvas.height);
+    gl.uniform1f(uFovScale, 1 / Math.tan(FOV_Y / 2));
+    gl.uniform1f(uSizeMultiplier, SIZE_MULTIPLIER);
+    gl.uniform1f(uShowPoints, showPoints ? 1 : 0);
+    gl.uniform1f(uPointsPx, POINTS_MODE_PX * (window.devicePixelRatio || 1));
+    gl.uniform1f(uMinPointSize, pointSizeRange[0]);
+    gl.uniform1f(uMaxPointSize, pointSizeRange[1]);
+
+    gl.drawArrays(gl.POINTS, 0, activeCount);
+  }
+
+  var themeQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  if (themeQuery && themeQuery.addEventListener) {
+    themeQuery.addEventListener('change', applyClearColor);
+  }
+
+  // ============================================================
+  // Load the bundled scene, then start the render loop.
+  // ============================================================
+  fitCanvas();
+  fetch('scene.splat').then(function (resp) {
+    if (!resp.ok) { throw new Error('HTTP ' + resp.status); }
+    return resp.arrayBuffer();
+  }).then(function (buf) {
+    var parsed = parseSplatBuffer(buf);
+    setScene(parsed, 'scene.splat (bundled synthetic still life)');
+    requestAnimationFrame(render);
+  }).catch(function (err) {
+    statsEl.textContent = 'Could not load the bundled scene (' + err.message + '). Drag in your own .splat file to continue.';
+    requestAnimationFrame(render);
+  });
+
+  window.addEventListener('resize', fitCanvas);
+})();
+  </script>
+</body>
+</html>
