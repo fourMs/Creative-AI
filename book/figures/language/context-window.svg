@@ -22,8 +22,8 @@
   <text class="faint" x="115" y="68" text-anchor="middle">earlier turn</text>
   <rect class="gone" x="40" y="90" width="150" height="34"/>
   <text class="faint" x="115" y="112" text-anchor="middle">earlier turn</text>
-  <text class="small" x="115" y="146" text-anchor="middle" fill="#8a8598">not forgotten:</text>
-  <text class="small" x="115" y="164" text-anchor="middle" fill="#8a8598">never there</text>
+  <text class="small" x="115" y="146" text-anchor="middle" style="fill:#8a8598">not forgotten:</text>
+  <text class="small" x="115" y="164" text-anchor="middle" style="fill:#8a8598">never there</text>
 
   <text class="head" x="230" y="34">The context window</text>
   <rect class="win" x="230" y="46" width="330" height="230"/>

@@ -51,7 +51,7 @@
   <text class="label" x="64" y="287">purple</text>
 
   <path class="back" d="M 400 180 L 600 180 L 600 300 L 514 300 L 514 100"/>
-  <text class="small" x="690" y="240" fill="#e8556d">the chosen token is</text>
-  <text class="small" x="690" y="258" fill="#e8556d">appended, and the</text>
-  <text class="small" x="690" y="276" fill="#e8556d">model runs again</text>
+  <text class="small" x="690" y="240" style="fill:#e8556d">the chosen token is</text>
+  <text class="small" x="690" y="258" style="fill:#e8556d">appended, and the</text>
+  <text class="small" x="690" y="276" style="fill:#e8556d">model runs again</text>
 </svg>

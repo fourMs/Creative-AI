@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" role="img" aria-label="A line of live coding code above the signal chain it describes, with an arrow showing that editing the line changes the running sound">
+  <style>
+    .box { fill: #f4f1fa; stroke: #5a2a7a; stroke-width: 2; rx: 10; ry: 10; }
+    .out { fill: #fff0f3; stroke: #e8556d; stroke-width: 2; rx: 10; ry: 10; }
+    .code { fill: #1f2545; rx: 10; ry: 10; }
+    .mono { font: 600 16px "DejaVu Sans Mono", Consolas, monospace; fill: #f7f5fb; }
+    .label { font: 600 14px Helvetica, Arial, sans-serif; fill: #1f2545; }
+    .small { font: 500 12px Helvetica, Arial, sans-serif; fill: #444; }
+    .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
+    .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
+    .live { fill: none; stroke: #e8556d; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#a2); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+    </marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
+    </marker>
+  </defs>
+
+  <text class="head" x="40" y="34">The line on the projected screen</text>
+  <rect class="code" x="40" y="48" width="720" height="46"/>
+  <text class="mono" x="60" y="78">o: saw 220 &gt;&gt; lpf 800 1.0 &gt;&gt; mul 0.4</text>
+
+  <text class="head" x="40" y="140">The signal chain it names</text>
+  <rect class="box" x="40"  y="158" width="180" height="52"/>
+  <text class="label" x="130" y="182" text-anchor="middle">oscillator</text>
+  <text class="small" x="130" y="200" text-anchor="middle">a sawtooth at 220 Hz</text>
+  <rect class="box" x="290" y="158" width="180" height="52"/>
+  <text class="label" x="380" y="182" text-anchor="middle">filter</text>
+  <text class="small" x="380" y="200" text-anchor="middle">cutting above 800 Hz</text>
+  <rect class="out" x="540" y="158" width="180" height="52"/>
+  <text class="label" x="630" y="182" text-anchor="middle">output</text>
+  <text class="small" x="630" y="200" text-anchor="middle">at four tenths of full gain</text>
+  <path class="arrow" d="M 220 184 L 290 184"/>
+  <path class="arrow" d="M 470 184 L 540 184"/>
+
+  <text class="small" x="760" y="140" text-anchor="end" style="fill:#e8556d">each name in the line is a node in the chain</text>
+  <text class="small" x="400" y="264" text-anchor="middle">The program keeps running while it is edited, so a change to the line changes the sound in place.</text>
+</svg>

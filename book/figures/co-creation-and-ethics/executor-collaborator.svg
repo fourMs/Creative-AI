@@ -47,5 +47,5 @@
   <path class="arrow" d="M 380 229 L 420 229"/>
   <path class="arrow" d="M 570 229 L 610 229"/>
   <path class="back" d="M 685 258 L 685 310 L 115 310 L 115 258"/>
-  <text class="small" x="400" y="332" text-anchor="middle" fill="#e8556d">what the output revealed goes back into the brief</text>
+  <text class="small" x="400" y="332" text-anchor="middle" style="fill:#e8556d">what the output revealed goes back into the brief</text>
 </svg>

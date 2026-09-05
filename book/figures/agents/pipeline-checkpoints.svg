@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" role="img" aria-label="An eight-step animation pipeline with a human checkpoint after the story step and an arrow returning from animation to storyboard">
+  <style>
+    .step { fill: #f4f1fa; stroke: #5a2a7a; stroke-width: 2; rx: 10; ry: 10; }
+    .check { fill: #fff0f3; stroke: #e8556d; stroke-width: 2.5; rx: 10; ry: 10; }
+    .label { font: 600 13px Helvetica, Arial, sans-serif; fill: #1f2545; }
+    .small { font: 500 12px Helvetica, Arial, sans-serif; fill: #444; }
+    .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
+    .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
+    .back { fill: none; stroke: #e8556d; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#a2); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+    </marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
+    </marker>
+  </defs>
+
+  <text class="head" x="40" y="36">A creative pipeline an agent can run</text>
+
+  <rect class="step" x="40"  y="60" width="120" height="46"/>
+  <text class="label" x="100" y="88" text-anchor="middle">1 Story</text>
+  <rect class="step" x="200" y="60" width="120" height="46"/>
+  <text class="label" x="260" y="88" text-anchor="middle">2 Storyboard</text>
+  <rect class="step" x="360" y="60" width="120" height="46"/>
+  <text class="label" x="420" y="88" text-anchor="middle">3 Animation</text>
+  <rect class="step" x="520" y="60" width="120" height="46"/>
+  <text class="label" x="580" y="88" text-anchor="middle">4 Voice-over</text>
+  <rect class="step" x="660" y="60" width="100" height="46"/>
+  <text class="label" x="710" y="88" text-anchor="middle">5 Music</text>
+
+  <path class="arrow" d="M 160 83 L 200 83"/>
+  <path class="arrow" d="M 320 83 L 360 83"/>
+  <path class="arrow" d="M 480 83 L 520 83"/>
+  <path class="arrow" d="M 640 83 L 660 83"/>
+
+  <rect class="step" x="40"  y="176" width="120" height="46"/>
+  <text class="label" x="100" y="204" text-anchor="middle">6 Effects</text>
+  <rect class="step" x="200" y="176" width="120" height="46"/>
+  <text class="label" x="260" y="204" text-anchor="middle">7 Assembly</text>
+  <rect class="step" x="360" y="176" width="120" height="46"/>
+  <text class="label" x="420" y="204" text-anchor="middle">8 Render</text>
+  <path class="arrow" d="M 710 106 L 710 150 L 100 150 L 100 176"/>
+  <path class="arrow" d="M 160 199 L 200 199"/>
+  <path class="arrow" d="M 320 199 L 360 199"/>
+
+  <rect class="check" x="530" y="176" width="230" height="46"/>
+  <text class="label" x="645" y="196" text-anchor="middle">Human checkpoint</text>
+  <text class="small" x="645" y="214" text-anchor="middle">after step 1, before the taste is inherited</text>
+
+  <path class="back" d="M 420 106 L 420 130 L 260 130 L 260 106"/>
+  <text class="small" x="690" y="140" text-anchor="end" style="fill:#e8556d">a contradicting shot sends the brief back</text>
+  <text class="small" x="285" y="266" text-anchor="middle">Checkpoints belong before anything irreversible, anything public, and any choice of taste.</text>
+</svg>

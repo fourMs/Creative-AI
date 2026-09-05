@@ -42,6 +42,6 @@
   <text class="small" x="615" y="234" text-anchor="middle">a surface to collide with, cut, and deform</text>
 
   <path class="arrow" d="M 350 130 L 450 130"/>
-  <text class="small" x="400" y="120" text-anchor="middle" fill="#e8556d">lossy</text>
+  <text class="small" x="400" y="120" text-anchor="middle" style="fill:#e8556d">lossy</text>
   <text class="small" x="400" y="278" text-anchor="middle">If the destination is a viewer, a splat is excellent. If it is a game engine, budget for the conversion.</text>
 </svg>

@@ -42,6 +42,6 @@
   <path class="arrow" d="M 170 232 L 210 232"/>
   <path class="dashed" d="M 330 232 L 370 232"/>
   <path class="arrow" d="M 510 232 L 550 232"/>
-  <text class="small" x="350" y="288" text-anchor="middle" fill="#e8556d">mapping</text>
+  <text class="small" x="350" y="288" text-anchor="middle" style="fill:#e8556d">mapping</text>
   <text class="small" x="350" y="310" text-anchor="middle">chosen, and only learnable when it is continuous</text>
 </svg>

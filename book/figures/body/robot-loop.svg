@@ -39,7 +39,7 @@
   <text class="small" x="400" y="300" text-anchor="middle">in the same room</text>
 
   <path class="sound" d="M 660 116 L 660 285 L 500 285"/>
-  <text class="small" x="672" y="200" fill="#e8556d">sound in the air</text>
+  <text class="small" x="672" y="200" style="fill:#e8556d">sound in the air</text>
   <path class="arrow" d="M 300 285 L 140 285 L 140 116"/>
   <text class="small" x="128" y="200" text-anchor="end">playing, moving</text>
 
