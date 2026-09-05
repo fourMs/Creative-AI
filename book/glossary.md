@@ -237,6 +237,9 @@ Motion and movement
 Multimodal and multisensory
 : Multimodal describes models and data that combine several kinds of data, such as text with images or audio with video. People are multisensory rather than multimodal, since they combine senses rather than data types. Cross-modal correspondences, the reliable matches people make across the senses, keep their established name.
 
+Music question–answering (MQA)
+: A machine-learning task in which a system answers questions about a piece of music. Systems that work from audio alone miss what a performance shows, which is why datasets pair audio–video recordings with questions written against both.
+
 Musicking
 : Christopher Small's term for music as something people do together rather than as a work to be contemplated. A musicking robot is judged on the same terms, not on an inner musical understanding but on whether a human partner can perceive it, and play with it, as a partner.
 
