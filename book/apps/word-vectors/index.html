@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<!--
+  Bundled vectors (vectors.json), built offline by
+  scripts/build-word-vectors.py from GloVe 6B, 50-dimensional vectors,
+  Pennington, Socher, and Manning (2014), Stanford NLP Group,
+  https://nlp.stanford.edu/projects/glove/, released under the Public
+  Domain Dedication and License (PDDL) v1.0. Only the 7 000 most frequent
+  words are bundled; each vector component is quantised to one decimal.
+  This page makes exactly one network request, at load, for
+  ./vectors.json; everything after that runs locally.
+-->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Word-vector explorer</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+      --warn-bg: #fbeadf; --warn-fg: #8a3a10; --warn-border: #e0a877;
+      --point: #93a3b0; --highlight: #d1465a;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+        --warn-bg: #3a2416; --warn-fg: #f2b183; --warn-border: #7a4a22;
+        --point: #4a515a; --highlight: #e8828f;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    h2 { font-size: 1rem; margin: 0 0 6px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    input[type="text"] {
+      width: 100%; padding: 6px 8px; font-size: 1rem; font-family: inherit;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .anaRow { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+    .anaRow .field { flex: 1 1 140px; min-width: 0; }
+    .anaOp { font-weight: 700; padding: 0 2px 8px; color: var(--muted); align-self: flex-end; }
+    .warn {
+      display: none; margin: 10px 0; padding: 8px 12px; border-radius: 6px;
+      background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-border);
+      font-weight: 600;
+    }
+    .warn.shown { display: block; }
+    .result-panel {
+      margin: 10px 0 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--canvas); min-height: 1.4em;
+    }
+    .result-panel ol { margin: 4px 0 0; padding-left: 1.4em; }
+    .result-panel li { font-variant-numeric: tabular-nums; }
+    .mapWrap { position: relative; margin-top: 10px; }
+    canvas {
+      display: block; width: 100%; height: auto; border: 1px solid var(--border);
+      border-radius: 6px; background: var(--canvas);
+    }
+    canvas#mapCanvas:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .map-highlight {
+      position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px;
+      border: 2px solid var(--highlight); border-radius: 50%; pointer-events: none;
+    }
+    .axis-caption { font-size: 0.85rem; color: var(--muted); margin: 4px 0 0; }
+  </style>
+</head>
+<body>
+  <h1>Word-vector explorer</h1>
+  <p class="intro">Before transformers, language models learned a vector for every word. Vectors are how every model in this book represents meaning, and this small English set shows what that captures and what it gets wrong. Everything runs in this page after the one-time load of the bundled vectors: nothing you type leaves your browser.</p>
+
+  <div class="warn" id="loadError" role="alert"></div>
+
+  <fieldset>
+    <legend>Nearest neighbours</legend>
+    <label for="wordInput">Word</label>
+    <input type="text" id="wordInput" value="oslo" autocomplete="off" spellcheck="false"/>
+    <div class="row">
+      <button type="button" id="findBtn" class="primary">Find nearest neighbours</button>
+    </div>
+    <div class="result-panel" id="neighbourResult" aria-live="polite">Type a word and press "Find nearest neighbours".</div>
+    <p class="hint">The vocabulary holds the 7 000 most frequent words in the training corpus, so rare words, names, and most non-English words will not be found.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Analogy: A minus B plus C</legend>
+    <div class="anaRow">
+      <div class="field">
+        <label for="anaA">A</label>
+        <input type="text" id="anaA" value="king" autocomplete="off" spellcheck="false"/>
+      </div>
+      <div class="anaOp">minus</div>
+      <div class="field">
+        <label for="anaB">B</label>
+        <input type="text" id="anaB" value="man" autocomplete="off" spellcheck="false"/>
+      </div>
+      <div class="anaOp">plus</div>
+      <div class="field">
+        <label for="anaC">C</label>
+        <input type="text" id="anaC" value="woman" autocomplete="off" spellcheck="false"/>
+      </div>
+    </div>
+    <div class="row">
+      <button type="button" id="anaBtn" class="primary">Compute A minus B plus C</button>
+    </div>
+    <div class="result-panel" id="anaResult" aria-live="polite">Enter three words and press "Compute A minus B plus C".</div>
+    <p class="hint">The five closest words to the result, other than A, B, and C themselves. The classic example is king minus man plus woman, which lands near queen.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Map of the vocabulary</legend>
+    <label for="axisFrom">Axis start word</label>
+    <input type="text" id="axisFrom" value="man" autocomplete="off" spellcheck="false"/>
+    <label for="axisTo">Axis end word</label>
+    <input type="text" id="axisTo" value="woman" autocomplete="off" spellcheck="false"/>
+    <div class="row">
+      <button type="button" id="axisBtn">Set horizontal axis from these two words</button>
+      <button type="button" id="axisResetBtn">Reset to random projection</button>
+    </div>
+    <p class="axis-caption" id="axisCaption" aria-live="polite">Horizontal axis: a fixed random projection.</p>
+    <div class="mapWrap">
+      <canvas id="mapCanvas" tabindex="0" role="img"
+        aria-label="Scatter plot of the 7000-word vocabulary. Move the mouse over a point, or focus this canvas and use the left and right arrow keys, to read its word; press Enter or click to use it in the word box above."></canvas>
+      <div class="map-highlight" id="mapHighlight" hidden></div>
+    </div>
+    <div class="result-panel" id="mapLabel" aria-live="polite">Hover over a point, or focus the map and press the left/right arrow keys, to see its word.</div>
+    <p class="hint">The vertical axis always comes from the fixed random projection. Setting the axis words replaces only the horizontal axis with the direction from the first word to the second, so words further along that direction score higher on whatever the two words differ by. Try man to woman, then look at where nurse and engineer land.</p>
+  </fieldset>
+
+  <script>
+(function () {
+  'use strict';
+
+  var el = function (id) { return document.getElementById(id); };
+  var loadErrorEl = el('loadError');
+  var wordInputEl = el('wordInput'), findBtn = el('findBtn'), neighbourResultEl = el('neighbourResult');
+  var anaAEl = el('anaA'), anaBEl = el('anaB'), anaCEl = el('anaC'), anaBtn = el('anaBtn'), anaResultEl = el('anaResult');
+  var axisFromEl = el('axisFrom'), axisToEl = el('axisTo'), axisBtn = el('axisBtn'), axisResetBtn = el('axisResetBtn');
+  var axisCaptionEl = el('axisCaption');
+  var mapCanvas = el('mapCanvas'), mapCtx = mapCanvas.getContext('2d');
+  var mapHighlightEl = el('mapHighlight'), mapLabelEl = el('mapLabel');
+
+  var NUM_NEIGHBOURS = 10;
+  var NUM_ANALOGY = 5;
+  var PROJ_SEED = 20250905;
+  var HOVER_RADIUS_PX = 10;
+
+  var words = null;        // string[]
+  var vectors = null;      // number[][]
+  var wordIndex = null;    // Map lowercase word -> index
+  var dims = 0;
+  var dataReady = false;
+
+  // ---- seeded pseudo-random generator (linear congruential generator),
+  // used only to build the fixed vertical projection axis; identical on
+  // every load and every visitor ----
+  function makeLCG(seed) {
+    var state = seed >>> 0;
+    return function () {
+      state = (Math.imul(1103515245, state) + 12345) & 0x7fffffff;
+      return state / 0x7fffffff;
+    };
+  }
+  function gaussian(rng) {
+    var u1 = Math.max(rng(), 1e-12);
+    var u2 = rng();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  }
+  function randomUnitVector(rng, n) {
+    var v = new Array(n), i, norm = 0;
+    for (i = 0; i < n; i++) { v[i] = gaussian(rng); }
+    for (i = 0; i < n; i++) { norm += v[i] * v[i]; }
+    norm = Math.sqrt(norm) || 1;
+    for (i = 0; i < n; i++) { v[i] /= norm; }
+    return v;
+  }
+
+  var axisY = null;      // fixed random unit vector, vertical axis, never changes
+  var axisXDefault = null; // fixed random unit vector, default horizontal axis
+  var axisXCustom = null;  // unit difference vector when the user sets one, else null
+
+  // ---- vector maths ----
+  function dot(a, b) {
+    var s = 0, i;
+    for (i = 0; i < a.length; i++) { s += a[i] * b[i]; }
+    return s;
+  }
+  function norm(a) { return Math.sqrt(dot(a, a)); }
+  function cosineSim(a, b) {
+    var na = norm(a), nb = norm(b);
+    if (na === 0 || nb === 0) { return 0; }
+    return dot(a, b) / (na * nb);
+  }
+  function sub(a, b) {
+    var r = new Array(a.length), i;
+    for (i = 0; i < a.length; i++) { r[i] = a[i] - b[i]; }
+    return r;
+  }
+  function add(a, b) {
+    var r = new Array(a.length), i;
+    for (i = 0; i < a.length; i++) { r[i] = a[i] + b[i]; }
+    return r;
+  }
+
+  function lookup(word) {
+    var key = String(word || '').trim().toLowerCase();
+    if (key === '' || !wordIndex.has(key)) { return -1; }
+    return wordIndex.get(key);
+  }
+
+  function topKBySimilarity(target, excludeIdx, k) {
+    var sims = [], i, exclude = {};
+    for (i = 0; i < excludeIdx.length; i++) { exclude[excludeIdx[i]] = true; }
+    for (i = 0; i < vectors.length; i++) {
+      if (exclude[i]) { continue; }
+      sims.push({ index: i, sim: cosineSim(target, vectors[i]) });
+    }
+    sims.sort(function (p, q) { return q.sim - p.sim; });
+    return sims.slice(0, k);
+  }
+
+  function renderList(container, items, emptyMessage) {
+    if (items.length === 0) {
+      container.textContent = emptyMessage;
+      return;
+    }
+    container.innerHTML = '';
+    var ol = document.createElement('ol');
+    var i, li;
+    for (i = 0; i < items.length; i++) {
+      li = document.createElement('li');
+      li.textContent = words[items[i].index] + ' — ' + items[i].sim.toFixed(2);
+      ol.appendChild(li);
+    }
+    container.appendChild(ol);
+  }
+
+  function notFoundMessage(word) {
+    return 'The word "' + word + '" is not in the bundled 7 000-word vocabulary. Try a common English word.';
+  }
+
+  function findNeighbours() {
+    if (!dataReady) { return; }
+    var raw = wordInputEl.value;
+    var idx = lookup(raw);
+    if (idx === -1) {
+      neighbourResultEl.textContent = notFoundMessage(raw.trim());
+      return;
+    }
+    var top = topKBySimilarity(vectors[idx], [idx], NUM_NEIGHBOURS);
+    renderList(neighbourResultEl, top, 'No neighbours found.');
+  }
+
+  function computeAnalogy() {
+    if (!dataReady) { return; }
+    var rawA = anaAEl.value, rawB = anaBEl.value, rawC = anaCEl.value;
+    var iA = lookup(rawA), iB = lookup(rawB), iC = lookup(rawC);
+    var missing = [];
+    if (iA === -1) { missing.push(rawA.trim()); }
+    if (iB === -1) { missing.push(rawB.trim()); }
+    if (iC === -1) { missing.push(rawC.trim()); }
+    if (missing.length > 0) {
+      anaResultEl.textContent = 'Not in the bundled vocabulary: ' + missing.join(', ') + '.';
+      return;
+    }
+    var target = add(sub(vectors[iA], vectors[iB]), vectors[iC]);
+    var top = topKBySimilarity(target, [iA, iB, iC], NUM_ANALOGY);
+    renderList(anaResultEl, top, 'No results found.');
+  }
+
+  // ---- 2D map: projected once per state change (initial load, axis
+  // change, or resize), never per animation frame ----
+  var pointPixels = null;   // {x, y}[] in CSS-pixel canvas coordinates, current draw
+  var sortedByX = null;     // word indices sorted by pointPixels[i].x
+  var focusCursor = -1;     // index into sortedByX, current keyboard position
+  var mapSize = { w: 720, h: 420 };
+
+  function fitMapCanvas() {
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = mapCanvas.getBoundingClientRect().width || mapCanvas.clientWidth || 720;
+    var cssHeight = Math.round(cssWidth * (420 / 720));
+    mapCanvas.width = Math.round(cssWidth * dpr);
+    mapCanvas.height = Math.round(cssHeight * dpr);
+    mapCanvas.style.height = cssHeight + 'px';
+    mapCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    mapSize = { w: cssWidth, h: cssHeight };
+  }
+
+  function theme() {
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return dark
+      ? { bg: '#101216', point: '#4a515a' }
+      : { bg: '#ffffff', point: '#93a3b0' };
+  }
+
+  function currentAxisX() { return axisXCustom || axisXDefault; }
+
+  function computePointsAndDraw() {
+    if (!dataReady) { return; }
+    var ax = currentAxisX(), ay = axisY;
+    var n = vectors.length, i;
+    var rawX = new Array(n), rawY = new Array(n);
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (i = 0; i < n; i++) {
+      rawX[i] = dot(vectors[i], ax);
+      rawY[i] = dot(vectors[i], ay);
+      if (rawX[i] < minX) { minX = rawX[i]; }
+      if (rawX[i] > maxX) { maxX = rawX[i]; }
+      if (rawY[i] < minY) { minY = rawY[i]; }
+      if (rawY[i] > maxY) { maxY = rawY[i]; }
+    }
+    var pad = 14;
+    var w = mapSize.w, h = mapSize.h;
+    var spanX = (maxX - minX) || 1, spanY = (maxY - minY) || 1;
+    pointPixels = new Array(n);
+    for (i = 0; i < n; i++) {
+      pointPixels[i] = {
+        x: pad + (rawX[i] - minX) / spanX * (w - 2 * pad),
+        y: pad + (1 - (rawY[i] - minY) / spanY) * (h - 2 * pad)
+      };
+    }
+    sortedByX = [];
+    for (i = 0; i < n; i++) { sortedByX.push(i); }
+    sortedByX.sort(function (p, q) { return pointPixels[p].x - pointPixels[q].x; });
+
+    var th = theme();
+    mapCtx.fillStyle = th.bg;
+    mapCtx.fillRect(0, 0, w, h);
+    mapCtx.fillStyle = th.point;
+    for (i = 0; i < n; i++) {
+      mapCtx.beginPath();
+      mapCtx.arc(pointPixels[i].x, pointPixels[i].y, 1.6, 0, 2 * Math.PI);
+      mapCtx.fill();
+    }
+  }
+
+  function hideHighlight() {
+    mapHighlightEl.hidden = true;
+    mapLabelEl.textContent = 'Hover over a point, or focus the map and press the left/right arrow keys, to see its word.';
+  }
+
+  function showHighlightAt(index) {
+    if (index < 0 || index >= words.length || !pointPixels) { return; }
+    var p = pointPixels[index];
+    mapHighlightEl.style.left = p.x + 'px';
+    mapHighlightEl.style.top = p.y + 'px';
+    mapHighlightEl.hidden = false;
+    mapLabelEl.textContent = words[index];
+  }
+
+  function nearestPointToPixel(x, y) {
+    if (!pointPixels) { return -1; }
+    var best = -1, bestDist = HOVER_RADIUS_PX * HOVER_RADIUS_PX, i, dx, dy, d2;
+    for (i = 0; i < pointPixels.length; i++) {
+      dx = pointPixels[i].x - x;
+      dy = pointPixels[i].y - y;
+      d2 = dx * dx + dy * dy;
+      if (d2 < bestDist) { bestDist = d2; best = i; }
+    }
+    return best;
+  }
+
+  var hoveredIndex = -1;
+
+  function onMapMouseMove(evt) {
+    var rect = mapCanvas.getBoundingClientRect();
+    var x = evt.clientX - rect.left, y = evt.clientY - rect.top;
+    var idx = nearestPointToPixel(x, y);
+    hoveredIndex = idx;
+    if (idx === -1) { hideHighlight(); } else { showHighlightAt(idx); }
+  }
+  function onMapMouseLeave() {
+    hoveredIndex = -1;
+    hideHighlight();
+  }
+  function onMapClick() {
+    var idx = hoveredIndex !== -1 ? hoveredIndex : (focusCursor !== -1 ? sortedByX[focusCursor] : -1);
+    if (idx === -1) { return; }
+    useWord(words[idx]);
+  }
+  function useWord(word) {
+    wordInputEl.value = word;
+    findNeighbours();
+    wordInputEl.focus();
+  }
+
+  function onMapFocus() {
+    if (focusCursor === -1 && sortedByX && sortedByX.length > 0) {
+      focusCursor = Math.floor(sortedByX.length / 2);
+    }
+    if (focusCursor !== -1) { showHighlightAt(sortedByX[focusCursor]); }
+  }
+  function onMapBlur() {
+    if (hoveredIndex === -1) { hideHighlight(); }
+  }
+  function onMapKeyDown(evt) {
+    if (!sortedByX || sortedByX.length === 0) { return; }
+    if (evt.key === 'ArrowRight') {
+      focusCursor = Math.min(sortedByX.length - 1, (focusCursor === -1 ? 0 : focusCursor + 1));
+      showHighlightAt(sortedByX[focusCursor]);
+      evt.preventDefault();
+    } else if (evt.key === 'ArrowLeft') {
+      focusCursor = Math.max(0, (focusCursor === -1 ? 0 : focusCursor - 1));
+      showHighlightAt(sortedByX[focusCursor]);
+      evt.preventDefault();
+    } else if (evt.key === 'Enter' || evt.key === ' ') {
+      if (focusCursor !== -1) { useWord(words[sortedByX[focusCursor]]); }
+      evt.preventDefault();
+    }
+  }
+
+  function setAxisFromWords() {
+    if (!dataReady) { return; }
+    var rawFrom = axisFromEl.value, rawTo = axisToEl.value;
+    var iFrom = lookup(rawFrom), iTo = lookup(rawTo);
+    if (iFrom === -1 || iTo === -1) {
+      var missing = [];
+      if (iFrom === -1) { missing.push(rawFrom.trim()); }
+      if (iTo === -1) { missing.push(rawTo.trim()); }
+      axisCaptionEl.textContent = 'Not in the bundled vocabulary: ' + missing.join(', ') + '. Horizontal axis unchanged.';
+      return;
+    }
+    var diff = sub(vectors[iTo], vectors[iFrom]);
+    var n = norm(diff) || 1, i;
+    for (i = 0; i < diff.length; i++) { diff[i] /= n; }
+    axisXCustom = diff;
+    axisCaptionEl.textContent = 'Horizontal axis: from "' + rawFrom.trim() + '" to "' + rawTo.trim() + '".';
+    focusCursor = -1;
+    hideHighlight();
+    computePointsAndDraw();
+  }
+
+  function resetAxis() {
+    axisXCustom = null;
+    axisCaptionEl.textContent = 'Horizontal axis: a fixed random projection.';
+    focusCursor = -1;
+    hideHighlight();
+    computePointsAndDraw();
+  }
+
+  function showLoadError(message) {
+    loadErrorEl.textContent = message;
+    loadErrorEl.classList.add('shown');
+  }
+
+  function init(data) {
+    words = data.words;
+    vectors = data.vectors;
+    dims = vectors.length > 0 ? vectors[0].length : 0;
+    wordIndex = new Map();
+    var i;
+    for (i = 0; i < words.length; i++) { wordIndex.set(words[i].toLowerCase(), i); }
+
+    var rng = makeLCG(PROJ_SEED);
+    axisXDefault = randomUnitVector(rng, dims);
+    axisY = randomUnitVector(rng, dims);
+
+    dataReady = true;
+    fitMapCanvas();
+    computePointsAndDraw();
+    findNeighbours();
+    computeAnalogy();
+  }
+
+  findBtn.addEventListener('click', findNeighbours);
+  wordInputEl.addEventListener('keydown', function (evt) { if (evt.key === 'Enter') { findNeighbours(); } });
+  anaBtn.addEventListener('click', computeAnalogy);
+  [anaAEl, anaBEl, anaCEl].forEach(function (input) {
+    input.addEventListener('keydown', function (evt) { if (evt.key === 'Enter') { computeAnalogy(); } });
+  });
+  axisBtn.addEventListener('click', setAxisFromWords);
+  axisResetBtn.addEventListener('click', resetAxis);
+  [axisFromEl, axisToEl].forEach(function (input) {
+    input.addEventListener('keydown', function (evt) { if (evt.key === 'Enter') { setAxisFromWords(); } });
+  });
+
+  mapCanvas.addEventListener('mousemove', onMapMouseMove);
+  mapCanvas.addEventListener('mouseleave', onMapMouseLeave);
+  mapCanvas.addEventListener('click', onMapClick);
+  mapCanvas.addEventListener('focus', onMapFocus);
+  mapCanvas.addEventListener('blur', onMapBlur);
+  mapCanvas.addEventListener('keydown', onMapKeyDown);
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(function () {
+      fitMapCanvas();
+      computePointsAndDraw();
+      if (hoveredIndex !== -1) { showHighlightAt(hoveredIndex); }
+      else if (focusCursor !== -1) { showHighlightAt(sortedByX[focusCursor]); }
+    }, 120);
+  });
+
+  fetch('vectors.json')
+    .then(function (resp) {
+      if (!resp.ok) { throw new Error('HTTP ' + resp.status); }
+      return resp.json();
+    })
+    .then(init)
+    .catch(function (err) {
+      showLoadError('Could not load the bundled vectors (vectors.json): ' + err.message +
+        '. This page needs to be served over http(s) -- opening it directly as a local ' +
+        'file:// page blocks the request in most browsers. Try the copy on the book website, ' +
+        'or serve this folder with a local static file server.');
+    });
+})();
+  </script>
+</body>
+</html>

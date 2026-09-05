@@ -18,3 +18,4 @@ leaves the browser. Bundled data files list their licence here.
 | diffusion-explorer | 2, 5 | sample.jpg (course cover render, CC-BY-4.0) |
 | energy-estimator | 3 | none (defaults cite Luccioni et al. 2024) |
 | provenance-inspector | 3 | none |
+| word-vectors | 4 | vectors.json from GloVe 6B 50d (PDDL), first 7 000 words |
