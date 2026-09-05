@@ -11,7 +11,7 @@ Everything listed here is a tool rather than a model. Every tool wraps one or mo
 
 ## Apps made for this book
 
-The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. The eleven below are ready to use, and a few more are still in preparation, labelled as such where the chapters link to them.
+The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. The sixteen below are ready to use.
 
 - [Training loop playground](https://fourms.github.io/Creative-AI/apps/training-loop/): watch a tiny model's loss fall step by step as it trains.
 - [Next-token sampler](https://fourms.github.io/Creative-AI/apps/next-token-sampler/): compare greedy, temperature, and top-p sampling on the same next-token distribution.
@@ -24,6 +24,11 @@ The book also ships with its own small apps: single-page, self-contained tools b
 - [Agent loop simulator](https://fourms.github.io/Creative-AI/apps/agent-loop/): step through an agent's plan, act, and observe loop one tool call at a time.
 - [Rhythm-bot](https://fourms.github.io/Creative-AI/apps/rhythm-bot/): map a tapped rhythm onto a simple generative pattern, live in the browser.
 - [Evolve a picture](https://fourms.github.io/Creative-AI/apps/evolve/): breed a drawing by choosing favourites, biomorph style.
+- [Seed and guidance grid viewer](https://fourms.github.io/Creative-AI/apps/grid-viewer/): step through a grid of generations that vary one knob at a time, with the settings shown beside each cell.
+- [Frame-consistency inspector](https://fourms.github.io/Creative-AI/apps/frame-consistency/): step through a generated clip frame by frame with a difference view beside it, so you can see exactly when and where the drift begins.
+- [Splat viewer](https://fourms.github.io/Creative-AI/apps/splat-viewer/): load a Gaussian splat capture and orbit it, with a control that thins the splats so you can see how little geometry is actually there.
+- [Translation sketchpad](https://fourms.github.io/Creative-AI/apps/translation-sketchpad/): draw a line and hear it as pitch and loudness, then sing or play into the microphone and see the contour drawn back, with a rule-based text description as a third data type.
+- [Sensor-to-sound mapper](https://fourms.github.io/Creative-AI/apps/sensor-mapper/): connect a phone or laptop sensor to a sound parameter, and compare a mapping you can learn with one you cannot.
 
 ## Tool categories
 
