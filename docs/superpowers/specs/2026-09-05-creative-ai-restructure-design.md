@@ -7,7 +7,7 @@ Status: approved in discussion, awaiting spec review
 
 Rework the *Creative AI* open textbook so that it
 
-- stands on its own as a 12-week bachelor course open to all UiO faculties, with one lecture hour and a two-hour lab each week;
+- stands on its own as a 12-week bachelor course open to all UiO faculties, taught in 45-minute blocks: one 45-minute lecture and a 90-minute lab (two blocks) each week;
 - is complementary to *Sensing Sound and Music* (MUS2640) without depending on it, since many but not all students will arrive from that course;
 - adopts the writing style, chapter template, tooling, and standalone web apps of *Sensing Sound and Music*;
 - is visibly research-led, building on RITMO, the fourMs Lab, and the MishMash Centre for AI and Creativity while covering the wider state of the art;
@@ -15,7 +15,7 @@ Rework the *Creative AI* open textbook so that it
 
 ## 2. Constraints
 
-- 12 teaching weeks, each with a 1 h lecture and a 2 h lab. The Synthetic Gallery showcase is held in the exam period, outside the 12 weeks.
+- 12 teaching weeks, each with three 45-minute blocks: a 45-minute lecture and a 90-minute lab. The Synthetic Gallery showcase is held in the exam period, outside the 12 weeks.
 - No programming prerequisite. Code appears only in collapsible "Dig deeper" notes and in optional exercises.
 - Open education: CC-BY-4.0, source on GitHub, open tools preferred, paid tools named with an open alternative.
 - Everything must build with `myst build --html --execute`. Executed code cells must run offline in CI in under a minute each and need no GPU, API key, or network access. Heavy or paid code stays as non-executed fenced listings.
@@ -37,7 +37,7 @@ The three course concepts stay as they are: **intentionality**, **aesthetic cont
 
 ## 4. Course schedule
 
-| Week | File | Chapter | Layer | Lecture (1 h) | Lab (2 h) | Milestone |
+| Week | File | Chapter | Layer | Lecture (45 min) | Lab (90 min) | Milestone |
 | ---: | --- | --- | --- | --- | --- | --- |
 | 1 | `introduction.ipynb` | What is Creative AI? | culture | History from Dada to diffusion; definitions; the five layers; RITMO, fourMs, MishMash context | First generations in one text and one image tool; start the practice log | A1 starts |
 | 2 | `how-it-works.ipynb` | How generative AI works | data, model | Data, models, training, inference; distributions, sampling, conditioning; model families | Model card reading; same prompt three samplers; training-loop and sampler apps | A1 due |
@@ -61,9 +61,9 @@ Files to delete: `foundations.ipynb`, `generative-ai.ipynb`, `ai-language.ipynb`
 
 Every lab runs in the same order, and every chapter's lab section uses the same three subheadings.
 
-1. **Explore (about 40 min).** Controlled experiments with the week's tool: vary one thing, compare two tools, break something on purpose. This is where the model surprises you.
-2. **Reflect (about 20 min).** A structured pair or plenary discussion, not a writing block. It ends with each student stating one intention for what they will make. This is where you decide.
-3. **Create (about 60 min).** Make the artefact you stand behind, and carry it over into the portfolio at home. This is where you exert your will.
+1. **Explore (about 30 min).** Controlled experiments with the week's tool: vary one thing, compare two tools, break something on purpose. This is where the model surprises you.
+2. **Reflect (about 15 min).** A structured pair or plenary discussion, not a writing block. It ends with each student stating one intention for what they will make. This is where you decide.
+3. **Create (about 45 min).** Make the artefact you stand behind, and carry it over into the portfolio at home. This is where you exert your will.
 4. **Log (at home).** The three-paragraph weekly entry, Explore / Reflect / Create, closes the loop as the retrospective.
 
 The order maps onto the two process-memo questions, surprise and will, with reflection between them. The cycle diagram in the overview is redrawn as Explore → Reflect → Create → Log → Explore. Weeks 3 and 12 bend the timings (ethics is reflect-heavy; week 12 reserves time for project rehearsal) but keep the order.
