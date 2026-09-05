@@ -91,7 +91,7 @@ The book also ships with its own small apps: single-page, self-contained tools b
 
 ## Hardware to borrow
 
-The following equipment is available through the fourMs Lab, ask the course coordinator:
+The following equipment is available through the fourMs Lab. Ask the course coordinator:
 
 - a VR headset
 - a 360 camera
@@ -100,5 +100,5 @@ The following equipment is available through the fourMs Lab, ask the course coor
 - a small robot platform
 
 :::{warning} Tool turnover
-Specific products listed above will appear, merge, and disappear during the semester. Treat the list as a starting point, not a syllabus. In every practice session we will use whatever currently works well enough for the task at hand.
+Specific products listed above will appear, merge, and disappear during the semester. Treat the list as a starting point, not a syllabus. In every practice session the course uses whatever currently works well enough for the task at hand.
 :::

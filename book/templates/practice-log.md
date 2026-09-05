@@ -1,4 +1,4 @@
-# Practice log — week N
+# Practice log: week N
 
 **Brief.** One sentence on what you set out to do this week.
 

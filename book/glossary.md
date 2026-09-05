@@ -229,7 +229,7 @@ Multimodal and multisensory
 : Multimodal describes models and data that combine several kinds of data, such as text with images or audio with video. People are multisensory rather than multimodal, since they combine senses rather than data types. Cross-modal correspondences, the reliable matches people make across the senses, keep their established name.
 
 Musicking
-: A term for machines that make music together with a person, treated as a design target. A robot or model is judged not on an inner musical understanding but on whether a human partner can perceive it, and play with it, as a partner.
+: Christopher Small's term for music as something people do together rather than as a work to be contemplated. A musicking robot is judged on the same terms, not on an inner musical understanding but on whether a human partner can perceive it, and play with it, as a partner.
 
 Negative prompt
 : Text describing what a maker does not want in a generated image, used to suppress recurring failure modes such as blurring or extra fingers. It is often more powerful than expected, and not supported by every tool.
@@ -322,7 +322,7 @@ Sycophancy
 : A model's tendency to agree with or flatter whoever is prompting it rather than to give an accurate or challenging answer, one of the recurring failure modes of language models.
 
 Talking head
-: A video of a person, driven from a single photograph or short clip, made to say synthetic speech in that person's likeness. Multilingual versions of the same presenter are a routine feature.
+: A video of a person, driven from a single photograph or short clip, made to say synthetic speech in that person's likeness. Multilingual versions of the same presenter are a routine feature, and because the technique puts words in an identifiable person's mouth it is a consent and impersonation problem before it is a video problem.
 
 Temperature
 : A setting, in text and audio models, that flattens or sharpens the probability distribution before a draw. High temperature makes output more varied and stranger; low temperature makes it safer and more predictable; at zero it stops being random at all.
