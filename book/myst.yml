@@ -24,8 +24,8 @@ project:
     - file: images.ipynb
     - file: sound.ipynb
     - file: video.ipynb
-    - file: ai-code.ipynb
     - file: spatial.ipynb
+    - file: code.ipynb
     - file: multimodal-agents.ipynb
     - file: futures.ipynb
     - file: tips-and-tricks.ipynb
