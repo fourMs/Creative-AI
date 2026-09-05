@@ -14,8 +14,8 @@
   ],
   "timeout": "20s",
   "retryOn429": true,
-  "retryCount": 3,
-  "fallbackRetryDelay": "30s",
+  "retryCount": 5,
+  "fallbackRetryDelay": "20s",
   "ignorePatterns": [
     {
       "pattern": "^https://fourms\\.github\\.io/Creative-AI/"
@@ -31,6 +31,18 @@
     },
     {
       "pattern": "^https://www\\.krea\\.ai/"
+    }
+  ],
+  "httpHeaders": [
+    {
+      "urls": [
+        "https://www.arj.no/",
+        "https://arj.no/"
+      ],
+      "headers": {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept": "text/html"
+      }
     }
   ]
 }
