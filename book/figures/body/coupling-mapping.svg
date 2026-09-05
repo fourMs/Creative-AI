@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" role="img" aria-label="Action-sound coupling compared with action-sound mapping">
+  <style>
+    .box { fill: #f4f1fa; stroke: #5a2a7a; stroke-width: 2; rx: 12; ry: 12; }
+    .out { fill: #fff0f3; stroke: #e8556d; stroke-width: 2; rx: 12; ry: 12; }
+    .label { font: 600 15px Helvetica, Arial, sans-serif; fill: #1f2545; }
+    .small { font: 500 13px Helvetica, Arial, sans-serif; fill: #444; }
+    .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
+    .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
+    .dashed { fill: none; stroke: #e8556d; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#a2); }
+    .rule { stroke: #cfc7dd; stroke-width: 1; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+    </marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
+    </marker>
+  </defs>
+
+  <text class="head" x="40" y="34">Action-sound coupling: fixed by physics</text>
+  <rect class="box" x="40"  y="52" width="150" height="60"/>
+  <text class="label" x="115" y="88" text-anchor="middle">Body</text>
+  <rect class="out" x="420" y="52" width="180" height="60"/>
+  <text class="label" x="510" y="88" text-anchor="middle">Sound source</text>
+  <path class="arrow" d="M 190 82 L 420 82"/>
+  <text class="small" x="305" y="72" text-anchor="middle">coupling</text>
+  <text class="small" x="305" y="104" text-anchor="middle">lawful, continuous, learnable</text>
+
+  <line class="rule" x1="40" y1="146" x2="760" y2="146"/>
+
+  <text class="head" x="40" y="184">Action-sound mapping: invented by a designer</text>
+  <rect class="box" x="40"  y="202" width="130" height="60"/>
+  <text class="label" x="105" y="238" text-anchor="middle">Body</text>
+  <rect class="box" x="210" y="202" width="120" height="60"/>
+  <text class="label" x="270" y="238" text-anchor="middle">Sensor</text>
+  <rect class="box" x="370" y="202" width="140" height="60"/>
+  <text class="label" x="440" y="238" text-anchor="middle">Computer</text>
+  <rect class="out" x="550" y="202" width="130" height="60"/>
+  <text class="label" x="615" y="238" text-anchor="middle">Speaker</text>
+  <path class="arrow" d="M 170 232 L 210 232"/>
+  <path class="dashed" d="M 330 232 L 370 232"/>
+  <path class="arrow" d="M 510 232 L 550 232"/>
+  <text class="small" x="350" y="288" text-anchor="middle" fill="#e8556d">mapping</text>
+  <text class="small" x="350" y="310" text-anchor="middle">chosen, and only learnable when it is continuous</text>
+</svg>
