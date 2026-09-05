@@ -268,6 +268,33 @@ def test_style_checker_ignores_fenced_code_cell_body():
     assert ": long-sentence:" not in out, out
 
 
+# Five lines of front matter, then a violation on line 9. Blanking the front
+# matter rather than deleting it keeps the reported line number honest.
+FRONT_MATTER_MD = """---
+title: "9. Test chapter"
+subtitle: "A fixture"
+author: "Nobody"
+---
+
+Opening paragraph.
+
+This line uses a contraction, so it isn't clean prose.
+"""
+
+
+def test_style_checker_line_numbers_survive_front_matter():
+    assert FRONT_MATTER_MD.split("\n")[8].startswith("This line uses a contraction")
+    out = _style_stdout(FRONT_MATTER_MD)
+    assert ":9: contraction:" in out, out
+
+
+def test_style_checker_full_stop_after_bare_url_ends_sentence():
+    mod = _load_check_style()
+    line = "See https://example.com. Next sentence."
+    sentences = mod.sentences_of(mod.normalise_links(line))
+    assert len(sentences) == 2, sentences
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):

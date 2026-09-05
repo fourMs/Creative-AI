@@ -131,7 +131,10 @@ LINK_WORD = "link"
 IMAGE_SUB_RE = re.compile(r"!\[[^\]]*\]\((?:[^()]|\([^()]*\))*\)")
 LINK_SUB_RE = re.compile(r"\[([^\]]+)\]\((?:[^()]|\([^()]*\))*\)")
 ROLE_SUB_RE = re.compile(r"\{(?:ref|numref|doc|term|abbr|cite(?::[a-z]+)?)\}`[^`]*`")
-BARE_URL_RE = re.compile(r"(?:https?://|www\.)[^\s<>)\]]+")
+BARE_URL_RE = re.compile(r"(?:https?://|www\.)[^\s<>)\]]*[^\s<>)\].,;:]")
+# The trailing character class keeps a sentence-ending ".", ",", ";" or ":"
+# outside the match, so a full stop right after a bare URL still ends the
+# sentence.
 
 # A single, unnested *italic* span (never the "*" of a "**bold**" pair).
 ITALIC_RE = re.compile(r"(?<!\*)\*(?!\*)([^*\n]*?)(?<!\*)\*(?!\*)")
@@ -140,6 +143,17 @@ CATEGORIES = [
     "contraction", "bold-in-sentence", "paragraph-opener", "long-sentence",
     "audiovisual", "first-person", "lecturer-we", "exclamation", "em-dash",
 ]
+
+
+def blank_front_matter(text):
+    """Replace YAML front matter with the same number of blank lines.
+
+    Deleting the block would shift every later line, so each reported line
+    number would no longer match the line number in `text_of` output."""
+    m = FRONT_MATTER_RE.match(text)
+    if not m:
+        return text
+    return "\n" * m.group(0).count("\n") + text[m.end():]
 
 
 def strip_non_prose(text):
@@ -151,7 +165,7 @@ def strip_non_prose(text):
     its fence lines and the option lines directly after the opener go, and
     its body stays. Nested fences are not expected; an inner fence is
     treated as the end of the outer block, as before."""
-    text = FRONT_MATTER_RE.sub("", text)
+    text = blank_front_matter(text)
     lines = text.split("\n")
     out = []
     i = 0
