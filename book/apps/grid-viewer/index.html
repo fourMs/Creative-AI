@@ -175,7 +175,6 @@
   var titleEl = el('gridTitle'), variableEl = el('variableName'), constantEl = el('constantLine');
   var canvas = el('gridCanvas'), ctx = canvas.getContext('2d');
   var saveBtn = el('saveBtn'), copyMdBtn = el('copyMdBtn'), saveStatusEl = el('saveStatus');
-  var compareFieldset = el('compareFieldset');
   var compareImg = el('compareImg'), compareCaptionEl = el('compareCaption'), compareCounterEl = el('compareCounter');
   var compareSlider = el('compareSlider'), prevBtn = el('prevBtn'), nextBtn = el('nextBtn'), compareStatusEl = el('compareStatus');
 
@@ -260,22 +259,53 @@
     return -1;
   }
 
+  // Remember which control (by image id and role: "up", "down", "remove",
+  // or "caption") has keyboard focus before the list is rebuilt, so focus
+  // can be put back on the equivalent control afterwards instead of being
+  // dropped back to the top of the page.
+  function captureListFocus() {
+    var activeEl = document.activeElement;
+    if (!activeEl || !activeEl.getAttribute) { return null; }
+    var id = activeEl.getAttribute('data-id');
+    var role = activeEl.getAttribute('data-role');
+    if (id === null || role === null) { return null; }
+    return { id: parseInt(id, 10), role: role };
+  }
+
+  function focusListControl(id, role) {
+    var target = imageListEl.querySelector('[data-id="' + id + '"][data-role="' + role + '"]');
+    if (!target || target.disabled) { target = imageListEl.querySelector('[data-id="' + id + '"][data-role="caption"]'); }
+    if (target) { target.focus(); } else { dropZone.focus(); }
+  }
+
   function moveImage(id, delta) {
     var i = findIndexById(id);
     var j = i + delta;
     if (i < 0 || j < 0 || j >= images.length) { return; }
+    var saved = captureListFocus();
     var tmp = images[i];
     images[i] = images[j];
     images[j] = tmp;
     onImagesChanged();
+    if (saved) { focusListControl(saved.id, saved.role); }
   }
 
   function removeImage(id) {
     var i = findIndexById(id);
     if (i < 0) { return; }
+    var saved = captureListFocus();
     URL.revokeObjectURL(images[i].url);
     images.splice(i, 1);
     onImagesChanged();
+    if (!saved) { return; }
+    if (saved.id !== id) {
+      focusListControl(saved.id, saved.role);
+    } else if (images.length > 0) {
+      var newIdx = Math.min(i, images.length - 1);
+      focusListControl(images[newIdx].id, saved.role);
+    } else {
+      dropZone.focus();
+    }
   }
 
   var dragSourceId = null;
@@ -300,10 +330,12 @@
         var from = findIndexById(dragSourceId);
         var to = findIndexById(entry.id);
         if (from < 0 || to < 0) { return; }
+        var saved = captureListFocus();
         var moved = images.splice(from, 1)[0];
         images.splice(to, 0, moved);
         dragSourceId = null;
         onImagesChanged();
+        if (saved) { focusListControl(saved.id, saved.role); }
       });
 
       var indexSpan = document.createElement('span');
@@ -328,6 +360,8 @@
       input.id = 'cap-' + entry.id;
       input.value = entry.caption;
       input.maxLength = 80;
+      input.setAttribute('data-id', String(entry.id));
+      input.setAttribute('data-role', 'caption');
       input.addEventListener('input', function () {
         entry.caption = input.value;
         thumb.alt = entry.caption;
@@ -344,18 +378,24 @@
       upBtn.type = 'button';
       upBtn.textContent = 'Up';
       upBtn.setAttribute('aria-label', 'Move image ' + (i + 1) + ' earlier');
+      upBtn.setAttribute('data-id', String(entry.id));
+      upBtn.setAttribute('data-role', 'up');
       upBtn.disabled = i === 0;
       upBtn.addEventListener('click', function () { moveImage(entry.id, -1); });
       var downBtn = document.createElement('button');
       downBtn.type = 'button';
       downBtn.textContent = 'Down';
       downBtn.setAttribute('aria-label', 'Move image ' + (i + 1) + ' later');
+      downBtn.setAttribute('data-id', String(entry.id));
+      downBtn.setAttribute('data-role', 'down');
       downBtn.disabled = i === images.length - 1;
       downBtn.addEventListener('click', function () { moveImage(entry.id, 1); });
       var removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.textContent = 'Remove';
       removeBtn.setAttribute('aria-label', 'Remove image ' + (i + 1));
+      removeBtn.setAttribute('data-id', String(entry.id));
+      removeBtn.setAttribute('data-role', 'remove');
       removeBtn.addEventListener('click', function () { removeImage(entry.id); });
       actions.appendChild(upBtn);
       actions.appendChild(downBtn);
@@ -569,14 +609,21 @@
     var offCtx = off.getContext('2d');
     offCtx.setTransform(EXPORT_SCALE, 0, 0, EXPORT_SCALE, 0, 0);
     drawGridOnContext(offCtx, layout, theme());
-    var dataUrl = off.toDataURL('image/png');
-    var a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = 'grid.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    saveStatusEl.textContent = 'Grid saved as grid.png.';
+    off.toBlob(function (blob) {
+      if (!blob) {
+        saveStatusEl.textContent = 'Saving the grid failed. Try again, or take a screenshot instead.';
+        return;
+      }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'grid.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      saveStatusEl.textContent = 'Grid saved as grid.png.';
+    }, 'image/png');
   });
 
   // ============================================================
@@ -653,10 +700,13 @@
     if (!target) { return false; }
     if (target.isContentEditable) { return true; }
     var tag = target.tagName;
-    return tag === 'INPUT' || tag === 'TEXTAREA';
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
   }
 
-  compareFieldset.addEventListener('keydown', function (e) {
+  // Bound on the document, like the other apps' keyboard shortcuts, so the
+  // arrow keys step through compare mode regardless of which control on the
+  // page currently has focus, as long as the student is not typing.
+  document.addEventListener('keydown', function (e) {
     if (e.target === compareSlider) { return; }
     if (isTypingTarget(e.target)) { return; }
     if (e.key === 'ArrowLeft') { e.preventDefault(); setCompareIndex(compareIndex - 1); }
