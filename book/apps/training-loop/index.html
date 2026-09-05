@@ -94,6 +94,7 @@
   </div>
 
   <div class="stats" id="stats" aria-live="polite">Step 0. Loss: —</div>
+  <div class="stats" id="statsExtra" aria-live="polite" hidden></div>
   <div class="warn" id="warn" role="alert">Loss is growing: the learning rate is too high.</div>
 
   <canvas id="chart" width="720" height="280" role="img" aria-label="Data points and the current model curve"></canvas>
@@ -107,6 +108,7 @@
   var N = 200;
   var X_RANGE = 1.5;
   var DATA_SEED = 12345;
+  var NOISE_SEED = 998877;
   var NET_SEED = 987654321;
   var HIDDEN = 8;
   var Y_FLOOR = 1e-6;
@@ -115,9 +117,30 @@
   var targetEl = el('target'), noiseEl = el('noise'), modelEl = el('model');
   var lrEl = el('lr'), speedEl = el('speed');
   var runBtn = el('run'), stepBtn = el('step'), resetBtn = el('resetBtn');
-  var statsEl = el('stats'), warnEl = el('warn');
+  var statsEl = el('stats'), statsExtraEl = el('statsExtra'), warnEl = el('warn');
   var chart = el('chart'), chartCtx = chart.getContext('2d');
   var lossChart = el('losschart'), lossCtx = lossChart.getContext('2d');
+
+  // ---- canvases sized for devicePixelRatio, drawn in CSS-pixel units ----
+  var CHART_ASPECT = 280 / 720;
+  var LOSS_ASPECT = 160 / 720;
+  var chartSize = { w: 720, h: 280 };
+  var lossSize = { w: 720, h: 160 };
+
+  function fitCanvas(canvas, ctx, aspect) {
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = canvas.getBoundingClientRect().width || canvas.clientWidth || 720;
+    var cssHeight = Math.round(cssWidth * aspect);
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    canvas.style.height = cssHeight + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: cssWidth, h: cssHeight };
+  }
+  function fitCanvases() {
+    chartSize = fitCanvas(chart, chartCtx, CHART_ASPECT);
+    lossSize = fitCanvas(lossChart, lossCtx, LOSS_ASPECT);
+  }
 
   // ---- seeded pseudo-random generator (linear congruential generator) ----
   function makeLCG(seed) {
@@ -151,16 +174,18 @@
   var rafId = null;
 
   function generateData() {
-    var rng = makeLCG(DATA_SEED);
+    // x positions and noise draws come from independent LCG streams, so moving
+    // the noise slider changes only the noise added, never the x positions.
+    var rngX = makeLCG(DATA_SEED);
+    var rngNoise = makeLCG(NOISE_SEED);
     var noise = parseFloat(noiseEl.value);
     var tgt = targetEl.value;
     xs = new Array(N);
     ys = new Array(N);
     var i, x, y;
     for (i = 0; i < N; i++) {
-      x = -X_RANGE + 2 * X_RANGE * rng();
-      y = targetValue(tgt, x);
-      if (noise > 0) { y += noise * gaussian(rng); }
+      x = -X_RANGE + 2 * X_RANGE * rngX();
+      y = targetValue(tgt, x) + noise * gaussian(rngNoise);
       xs[i] = x;
       ys[i] = y;
     }
@@ -307,9 +332,31 @@
     return '25 parameters (8 hidden tanh units)';
   }
 
+  // Compact numeric summary for the network: the 9 output-layer parameters
+  // (8 weights + 1 bias) in full, and the norm of the 16 hidden-layer values
+  // (8 weights + 8 biases) standing in for the ones too many to list.
+  function netParamsText() {
+    var i, w2parts = [];
+    for (i = 0; i < HIDDEN; i++) { w2parts.push(params.w2[i].toFixed(3)); }
+    var hiddenNormSq = 0;
+    for (i = 0; i < HIDDEN; i++) {
+      hiddenNormSq += params.w1[i] * params.w1[i] + params.b1[i] * params.b1[i];
+    }
+    var hiddenNorm = Math.sqrt(hiddenNormSq);
+    return 'Output layer: w2 = [' + w2parts.join(', ') + '], b2 = ' + params.b2.toFixed(3) +
+      '. Hidden-layer weight norm (16 values): ' + hiddenNorm.toFixed(3) + '.';
+  }
+
   function updateStats(loss) {
     var l = isFinite(loss) ? loss.toFixed(3) : 'diverged';
     statsEl.textContent = 'Step ' + step + '. Loss: ' + l + '. ' + paramText();
+    if (modelEl.value === 'net') {
+      statsExtraEl.textContent = netParamsText();
+      statsExtraEl.hidden = false;
+    } else {
+      statsExtraEl.textContent = '';
+      statsExtraEl.hidden = true;
+    }
   }
 
   function theme() {
@@ -319,20 +366,35 @@
       : { bg: '#ffffff', grid: '#e3e5e8', point: '#5a6069', curve: '#0b6e99', text: '#5a6069' };
   }
 
+  // ---- helpers shared by both draw functions ----
+  // Linear interpolation from an input range to an output (pixel) range;
+  // used for both plain axes and, applied to log10(value), a log axis.
+  function mapLinear(v, inLo, inHi, outLo, outHi) {
+    if (inHi === inLo) { return outLo; }
+    return outLo + (v - inLo) / (inHi - inLo) * (outHi - outLo);
+  }
+  function paintPanel(ctx, w, h, th) {
+    ctx.fillStyle = th.bg;
+    ctx.fillRect(0, 0, w, h);
+  }
+  function setLabelFont(ctx, th) {
+    ctx.fillStyle = th.text;
+    ctx.font = '12px system-ui, sans-serif';
+  }
+
   function drawChart() {
     var th = theme();
-    var w = chart.width, h = chart.height;
+    var w = chartSize.w, h = chartSize.h;
     var mL = 34, mR = 10, mT = 10, mB = 26;
     var pw = w - mL - mR, ph = h - mT - mB;
-    chartCtx.fillStyle = th.bg;
-    chartCtx.fillRect(0, 0, w, h);
+    paintPanel(chartCtx, w, h, th);
 
     var yMin = -2.2, yMax = 2.2;
     var i;
     for (i = 0; i < xs.length; i++) { if (ys[i] < yMin) { yMin = ys[i] - 0.2; } if (ys[i] > yMax) { yMax = ys[i] + 0.2; } }
 
-    function xPix(x) { return mL + (x + X_RANGE) / (2 * X_RANGE) * pw; }
-    function yPix(y) { return mT + ph - (y - yMin) / (yMax - yMin) * ph; }
+    function xPix(x) { return mapLinear(x, -X_RANGE, X_RANGE, mL, mL + pw); }
+    function yPix(y) { return mapLinear(y, yMin, yMax, mT + ph, mT); }
 
     // grid + zero lines
     chartCtx.strokeStyle = th.grid;
@@ -363,19 +425,17 @@
     }
     chartCtx.stroke();
 
-    chartCtx.fillStyle = th.text;
-    chartCtx.font = '12px system-ui, sans-serif';
+    setLabelFont(chartCtx, th);
     chartCtx.fillText(yMax.toFixed(1), 2, mT + 10);
     chartCtx.fillText(yMin.toFixed(1), 2, mT + ph);
   }
 
   function drawLossChart() {
     var th = theme();
-    var w = lossChart.width, h = lossChart.height;
+    var w = lossSize.w, h = lossSize.h;
     var mL = 44, mR = 10, mT = 10, mB = 22;
     var pw = w - mL - mR, ph = h - mT - mB;
-    lossCtx.fillStyle = th.bg;
-    lossCtx.fillRect(0, 0, w, h);
+    paintPanel(lossCtx, w, h, th);
 
     if (lossHistory.length === 0) { return; }
     var finite = [];
@@ -387,13 +447,12 @@
     if (maxL <= minL) { maxL = minL * 10; }
     var logMin = Math.log10(minL), logMax = Math.log10(maxL);
 
-    function xPix(idx) { return mL + (lossHistory.length <= 1 ? 0 : idx / (lossHistory.length - 1) * pw); }
+    function xPix(idx) { return mapLinear(idx, 0, lossHistory.length - 1, mL, mL + pw); }
     function yPix(loss) {
       var l = loss;
       if (!isFinite(l) || l <= 0) { l = maxL; }
       l = Math.max(minL, Math.min(maxL, l));
-      var t = (Math.log10(l) - logMin) / (logMax - logMin || 1);
-      return mT + ph - t * ph;
+      return mapLinear(Math.log10(l), logMin, logMax, mT + ph, mT);
     }
 
     lossCtx.strokeStyle = th.grid;
@@ -408,8 +467,7 @@
     }
     lossCtx.stroke();
 
-    lossCtx.fillStyle = th.text;
-    lossCtx.font = '12px system-ui, sans-serif';
+    setLabelFont(lossCtx, th);
     lossCtx.fillText(maxL.toExponential(1), 2, mT + 10);
     lossCtx.fillText(minL.toExponential(1), 2, mT + ph);
     lossCtx.fillText('step ' + (lossHistory.length - 1), w - mR - 60, h - 6);
@@ -456,13 +514,13 @@
   }
 
   function updateLabels() {
-    noiseEl_display();
-    lrEl_display();
-    speedEl_display();
+    updateNoiseLabel();
+    updateLrLabel();
+    updateSpeedLabel();
   }
-  function noiseEl_display() { el('noiseDisp').textContent = parseFloat(noiseEl.value).toFixed(2); }
-  function lrEl_display() { el('lrDisp').textContent = Math.pow(10, parseFloat(lrEl.value)).toFixed(3); }
-  function speedEl_display() { el('speedDisp').textContent = speedEl.value + ' step' + (speedEl.value === '1' ? '' : 's') + '/frame'; }
+  function updateNoiseLabel() { el('noiseDisp').textContent = parseFloat(noiseEl.value).toFixed(2); }
+  function updateLrLabel() { el('lrDisp').textContent = Math.pow(10, parseFloat(lrEl.value)).toFixed(3); }
+  function updateSpeedLabel() { el('speedDisp').textContent = speedEl.value + ' step' + (speedEl.value === '1' ? '' : 's') + '/frame'; }
 
   runBtn.addEventListener('click', function () { if (running) { stop(); } else { start(); } });
   stepBtn.addEventListener('click', function () {
@@ -474,13 +532,23 @@
   resetBtn.addEventListener('click', reset);
 
   targetEl.addEventListener('change', reset);
-  noiseEl.addEventListener('input', noiseEl_display);
+  noiseEl.addEventListener('input', updateNoiseLabel);
   noiseEl.addEventListener('change', reset);
   modelEl.addEventListener('change', reset);
-  lrEl.addEventListener('input', lrEl_display);
-  speedEl.addEventListener('input', speedEl_display);
+  lrEl.addEventListener('input', updateLrLabel);
+  speedEl.addEventListener('input', updateSpeedLabel);
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(function () {
+      fitCanvases();
+      redraw(currentLoss());
+    }, 120);
+  });
 
   updateLabels();
+  fitCanvases();
   reset();
 })();
   </script>
