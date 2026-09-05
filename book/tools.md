@@ -7,6 +7,8 @@ description: "The tool categories used in the course, with current examples and 
 
 Across the semester you will meet many tools. The list below is not exhaustive, and any of it may change as the field moves. The point is to *learn the categories*, so that you can evaluate the next tool that appears.
 
+Everything listed here is a tool rather than a model. Every tool wraps one or more models and adds an interface, a system prompt, safety filters, a data policy, and a price. The model behind a tool can change without the name changing. The entries below therefore name only the tool, while your practice log names both, with the model's version or the date. Chapter [2](how-it-works.ipynb#models-and-tools) sets out the difference.
+
 ## Apps made for this book
 
 The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. The eleven below are ready to use, and a few more are still in preparation, labelled as such where the chapters link to them.

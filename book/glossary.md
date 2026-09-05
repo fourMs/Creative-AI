@@ -228,6 +228,9 @@ MIDI
 Modality
 : In this book, a kind of data a model takes in or puts out: text, image, audio, video, 3D geometry, motion data. Psychology uses the same word for a sense, and where this book means perception it says sensory modality, or names the sense as auditory, visual, or tactile.
 
+Model
+: The trained artefact: a network plus one specific set of parameter values, frozen in a file and published under a family name, a version, and often a size. A model maps an input to an output, and it has no interface, no memory of you, and no data policy of its own.
+
 Model card
 : A document a model's creators publish describing what dataset it was trained on, how many parameters it has, what licence it carries, and what limitations they admit to.
 
@@ -351,6 +354,9 @@ Token
 Tokeniser
 : The component that splits text into the tokens a language model reads and writes. Tokenisers are fitted to their training text, so languages far from the dominant training language are chopped into more, smaller, costlier pieces.
 
+Tool (AI product)
+: A product built around one or more models, adding an interface, a system prompt, safety filters, and often retrieval, stored memory, or tool calls, together with a data policy and a price. The tool, rather than the model inside it, decides what happens to what you type.
+
 Top-k and top-p
 : Settings, in text models, that restrict a draw to the most likely candidates, either the best k of them or the smallest set whose probabilities sum to p. This stops a model from occasionally sampling nonsense from the far tail.
 
@@ -362,6 +368,9 @@ Training
 
 Transformer
 : An architecture, introduced in 2017, that lets every element of a sequence look at every other element directly. It became the dominant architecture for language and, soon after, for audio, image, and code.
+
+Version (of a model)
+: The label that fixes which trained artefact a claim is about, since a family name is reused across retrainings. A claim about a model's behaviour carries a version or a date, because the same commercial name in March and in October need not name the same model.
 
 Videogram and motiongram
 : A videogram is a single still image built by collapsing a video's frame-to-frame pixels into a strip, with one axis as time and the other as space. A motiongram does the same with frame-to-frame differences rather than the original pixels, so that movement shows up as visible bands.
