@@ -20,5 +20,6 @@ cd book
 echo "Running: myst build --html --execute (same as CI deploy)..."
 myst build --html --execute
 # Mirror the deploy workflow: copy bundled web apps to a stable top-level path.
+rm -rf _build/html/apps
 cp -r apps _build/html/apps
 echo "OK: book built with all notebooks executed."
