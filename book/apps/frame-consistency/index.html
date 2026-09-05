@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<!--
+  This page makes no network requests. The video you choose is opened only
+  in this browser tab, analysed locally, and never uploaded or sent anywhere.
+-->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Frame-consistency inspector</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    input[type="range"]:disabled { opacity: 0.5; }
+    input[type="file"] {
+      display: block; width: 100%; padding: 6px 0; font-size: 0.95rem;
+      color: var(--fg);
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .stats { font-size: 1rem; margin: 10px 0; font-variant-numeric: tabular-nums; }
+    video {
+      display: block; width: 100%; max-height: 320px; border-radius: 6px;
+      border: 1px solid var(--border); background: #000; margin-top: 8px;
+    }
+    canvas#timeline {
+      display: block; width: 100%; height: auto; border: 1px solid var(--border);
+      border-radius: 6px; margin-top: 10px; background: var(--canvas); cursor: crosshair;
+    }
+    canvas#timeline:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .peakCard { margin-bottom: 10px; }
+    .peakGrid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px;
+    }
+    .peakGrid figure { margin: 0; }
+    .peakGrid canvas {
+      display: block; width: 100%; height: auto; border: 1px solid var(--border);
+      border-radius: 4px; background: var(--canvas);
+    }
+    .peakGrid figcaption { font-size: 0.78rem; color: var(--muted); text-align: center; margin-top: 3px; }
+  </style>
+</head>
+<body>
+  <h1>Frame-consistency inspector</h1>
+  <p class="intro">This app inspects a short generated video clip for temporal coherence: how much the picture changes from one sampled frame to the next. A large jump marks flicker, a morphing object or a cut; a smooth curve marks steady motion. The video is opened only in this browser tab, and nothing you load is uploaded or sent anywhere.</p>
+
+  <fieldset>
+    <legend>Load a video</legend>
+    <label for="videoFile">Video file (MP4, WebM or MOV, up to about 30 seconds)</label>
+    <input type="file" id="videoFile" accept="video/mp4,video/webm,video/quicktime,video/*"/>
+    <video id="preview" muted controls playsinline></video>
+    <p class="hint" id="loadInfo">No video loaded yet.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Analyse</legend>
+    <div class="row">
+      <button type="button" id="analyseBtn" class="primary" disabled>Analyse frame differences</button>
+    </div>
+    <div class="stats" id="status" aria-live="polite">Choose a video file to begin.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Timeline</legend>
+    <label for="threshold">Peak threshold <span class="vals" id="thresholdDisp">20</span></label>
+    <input type="range" id="threshold" min="0" max="100" step="1" value="20" aria-describedby="thresholdDisp" disabled/>
+    <canvas id="timeline" width="720" height="200" tabindex="0" aria-label="Timeline of frame-to-frame difference over time. Move the mouse over the timeline, or focus it and press the left and right arrow keys, to move a cursor; the status line above reports the time and difference at the cursor. Click a point on the timeline to seek the video there."></canvas>
+    <p class="hint">The dashed line is the peak threshold. Dots mark local peaks above it. Click anywhere on the timeline to seek the video to that point.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Top peaks</legend>
+    <div id="peaks">
+      <p class="hint">Peaks appear here once you analyse a video.</p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>What the curve tells you</legend>
+    <p class="hint">A steady camera pan usually gives a smooth, gently raised curve, since most pixels shift a little from frame to frame. A hard cut between two different shots usually gives a single sharp spike, since almost every pixel changes at once. Flicker from a generative video model often gives a jagged, uneven floor: the difference never settles low, because small details are redrawn slightly differently in every frame even when nothing in the scene truly moves. These are patterns to watch for, not fixed numbers, since the right scale depends on the clip, its resolution and the amount of motion in it.</p>
+  </fieldset>
+
+  <details>
+    <summary>How it works</summary>
+    <p>The app pauses the video and moves its playback position forward in steps of a tenth of a second (seeking). After each move, it waits for the browser to report that the seek is complete, or for a short fallback delay if that report does not arrive. At each step, the current picture is drawn onto a small hidden canvas, about 160 pixels wide, and read back as grey values, a weighted average of red, green and blue chosen to match how the eye judges brightness. The plotted difference at each point is the average size of the change in every pixel between that frame and the one before it, on a scale of 0 to 255. The difference image in the peaks panel is the same per-pixel change, made brighter so that small changes are visible, not a claim about the true size of the change.</p>
+    <p>The app bundles no data of its own and calls no external service. The video file you choose stays in this browser tab and is discarded when you reload the page or choose another file.</p>
+  </details>
+
+  <script>
+(function () {
+  'use strict';
+
+  var el = function (id) { return document.getElementById(id); };
+
+  var fileInput = el('videoFile');
+  var video = el('preview');
+  var loadInfo = el('loadInfo');
+  var analyseBtn = el('analyseBtn');
+  var statusEl = el('status');
+  var thresholdEl = el('threshold');
+  var thresholdDisp = el('thresholdDisp');
+  var timelineCanvas = el('timeline');
+  var tctx = timelineCanvas.getContext('2d');
+  var peaksEl = el('peaks');
+
+  var SAMPLE_INTERVAL = 0.1;   // seconds between sampled frames
+  var MAX_DURATION = 30;       // seconds of a clip analysed at most
+  var SAMPLE_WIDTH = 160;      // px, width of the offscreen analysis frame
+  var SEEK_TIMEOUT_MS = 300;   // fallback if the "seeked" event does not fire
+  var DIFF_AMPLIFY = 4;        // brightening factor for the difference thumbnail
+  var TOP_PEAKS = 5;
+
+  var objectUrl = null;
+  var frames = [];       // { t, w, h, data: Uint8ClampedArray } one per sampled frame
+  var diffs = [];        // { t, value } one per consecutive pair, t = time of the later frame
+  var cursorIndex = -1;  // index into diffs, or -1 for none
+  var analysing = false;
+  var summaryText = 'Choose a video file to begin.';
+
+  var sampleCanvas = document.createElement('canvas');
+  var sctx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+
+  // ============================================================
+  // Loading a video file.
+  // ============================================================
+  function resetState() {
+    frames = [];
+    diffs = [];
+    cursorIndex = -1;
+    analyseBtn.disabled = true;
+    thresholdEl.disabled = true;
+    peaksEl.innerHTML = '';
+    var emptyMsg = document.createElement('p');
+    emptyMsg.className = 'hint';
+    emptyMsg.textContent = 'Peaks appear here once you analyse a video.';
+    peaksEl.appendChild(emptyMsg);
+    drawTimeline();
+  }
+
+  function revokeObjectUrl() {
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+      objectUrl = null;
+    }
+  }
+
+  fileInput.addEventListener('change', function () {
+    var f = fileInput.files && fileInput.files[0];
+    if (!f) { return; }
+    resetState();
+    revokeObjectUrl();
+    objectUrl = URL.createObjectURL(f);
+    video.src = objectUrl;
+    video.load();
+    loadInfo.textContent = 'Loading “' + f.name + '”…';
+    setStatus('Loading video…');
+  });
+
+  video.addEventListener('loadedmetadata', function () {
+    var dur = video.duration;
+    var w = video.videoWidth, h = video.videoHeight;
+    var durText = isFinite(dur) ? dur.toFixed(1) + ' s' : 'unknown';
+    var capNote = (isFinite(dur) && dur > MAX_DURATION) ? ' Only the first ' + MAX_DURATION + ' s will be analysed.' : '';
+    loadInfo.textContent = 'Duration ' + durText + ', dimensions ' + w + '×' + h + ' px.' + capNote;
+    if (w > 0 && h > 0) {
+      sampleCanvas.width = SAMPLE_WIDTH;
+      sampleCanvas.height = Math.max(1, Math.round(SAMPLE_WIDTH * h / w));
+    }
+    if (isFinite(dur) && dur > 0 && w > 0 && h > 0) {
+      analyseBtn.disabled = false;
+      setStatus('Video loaded. Press “Analyse frame differences” to begin.');
+    } else {
+      setStatus('This file has no usable duration or dimensions. Try another file.');
+    }
+  });
+
+  video.addEventListener('error', function () {
+    loadInfo.textContent = 'This file could not be loaded as a video.';
+    setStatus('This file could not be loaded as a video. Try another file.');
+    analyseBtn.disabled = true;
+  });
+
+  function setStatus(text) {
+    summaryText = text;
+    statusEl.textContent = text;
+  }
+
+  // ============================================================
+  // Sampling: seek, draw to the hidden canvas, read grey values back.
+  // ============================================================
+  function seekTo(t) {
+    return new Promise(function (resolve) {
+      var settled = false;
+      var timer = null;
+      function finish() {
+        if (settled) { return; }
+        settled = true;
+        video.removeEventListener('seeked', onSeeked);
+        clearTimeout(timer);
+        resolve();
+      }
+      function onSeeked() { finish(); }
+      video.addEventListener('seeked', onSeeked);
+      timer = setTimeout(finish, SEEK_TIMEOUT_MS);
+      video.currentTime = t;
+    });
+  }
+
+  function captureFrame(t) {
+    sctx.drawImage(video, 0, 0, sampleCanvas.width, sampleCanvas.height);
+    var img = sctx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height);
+    return { t: t, w: sampleCanvas.width, h: sampleCanvas.height, data: img.data };
+  }
+
+  function meanAbsGreyDiff(a, b) {
+    var n = a.length, sum = 0, count = 0, i, ga, gb;
+    for (i = 0; i < n; i += 4) {
+      ga = 0.299 * a[i] + 0.587 * a[i + 1] + 0.114 * a[i + 2];
+      gb = 0.299 * b[i] + 0.587 * b[i + 1] + 0.114 * b[i + 2];
+      sum += Math.abs(ga - gb);
+      count += 1;
+    }
+    return count > 0 ? sum / count : 0;
+  }
+
+  function runAnalysis() {
+    if (analysing) { return; }
+    analysing = true;
+    analyseBtn.disabled = true;
+    fileInput.disabled = true;
+    frames = [];
+    diffs = [];
+    cursorIndex = -1;
+    video.pause();
+
+    var duration = Math.min(video.duration, MAX_DURATION);
+    var total = Math.max(1, Math.floor(duration / SAMPLE_INTERVAL) + 1);
+    var i = 0;
+
+    function step() {
+      if (i >= total) { finishAnalysis(); return; }
+      var t = Math.min(i * SAMPLE_INTERVAL, duration);
+      setStatus('Sampling frame ' + (i + 1) + ' of ' + total + ' (' + t.toFixed(1) + ' s)…');
+      seekTo(t).then(function () {
+        var frame = captureFrame(t);
+        frames.push(frame);
+        if (frames.length > 1) {
+          var prev = frames[frames.length - 2];
+          diffs.push({ t: t, value: meanAbsGreyDiff(prev.data, frame.data) });
+        }
+        i += 1;
+        step();
+      });
+    }
+    step();
+  }
+
+  function finishAnalysis() {
+    analysing = false;
+    fileInput.disabled = false;
+    analyseBtn.disabled = false;
+
+    if (diffs.length === 0) {
+      setStatus('Not enough frames to compare. Try a longer clip.');
+      drawTimeline();
+      return;
+    }
+
+    var maxVal = 0, i;
+    for (i = 0; i < diffs.length; i++) {
+      if (diffs[i].value > maxVal) { maxVal = diffs[i].value; }
+    }
+    thresholdEl.max = String(Math.max(20, Math.ceil(maxVal * 1.15)));
+    thresholdEl.value = String(suggestThreshold(diffs));
+    thresholdEl.disabled = false;
+    updateThresholdDisp();
+
+    renderPeaks(computeTopPeaks(diffs, TOP_PEAKS));
+    drawTimeline();
+    setStatus('Analysed ' + frames.length + ' frames (' + diffs.length + ' comparisons). Largest difference ' + maxVal.toFixed(1) + '.');
+  }
+
+  function mean(arr) {
+    var s = 0, i;
+    for (i = 0; i < arr.length; i++) { s += arr[i]; }
+    return arr.length ? s / arr.length : 0;
+  }
+
+  function stddev(arr, m) {
+    var s = 0, i;
+    for (i = 0; i < arr.length; i++) { s += (arr[i] - m) * (arr[i] - m); }
+    return arr.length ? Math.sqrt(s / arr.length) : 0;
+  }
+
+  function suggestThreshold(diffArr) {
+    var vals = diffArr.map(function (d) { return d.value; });
+    var m = mean(vals);
+    var sd = stddev(vals, m);
+    return Math.max(1, Math.round(m + 2 * sd));
+  }
+
+  // A local peak is a sample strictly higher than both neighbours (or its
+  // one neighbour, at either end of the clip).
+  function localMaximaIndices(diffArr) {
+    var idxs = [], i, n = diffArr.length;
+    for (i = 0; i < n; i++) {
+      var leftOk = (i === 0) || diffArr[i].value > diffArr[i - 1].value;
+      var rightOk = (i === n - 1) || diffArr[i].value > diffArr[i + 1].value;
+      if (leftOk && rightOk) { idxs.push(i); }
+    }
+    return idxs;
+  }
+
+  function computeTopPeaks(diffArr, k) {
+    var idxs = localMaximaIndices(diffArr);
+    idxs.sort(function (a, b) { return diffArr[b].value - diffArr[a].value; });
+    var top = idxs.slice(0, k);
+    top.sort(function (a, b) { return a - b; });
+    return top.map(function (idx) { return { idx: idx, t: diffArr[idx].t, value: diffArr[idx].value }; });
+  }
+
+  // ============================================================
+  // Peaks panel: before, after and amplified-difference thumbnails.
+  // ============================================================
+  function frameToImageData(frame) {
+    return new ImageData(new Uint8ClampedArray(frame.data), frame.w, frame.h);
+  }
+
+  function buildDiffImageData(before, after) {
+    var w = before.w, h = before.h;
+    var out = sctx.createImageData(w, h);
+    var od = out.data, bd = before.data, ad = after.data, i, gb, ga, d;
+    for (i = 0; i < bd.length; i += 4) {
+      gb = 0.299 * bd[i] + 0.587 * bd[i + 1] + 0.114 * bd[i + 2];
+      ga = 0.299 * ad[i] + 0.587 * ad[i + 1] + 0.114 * ad[i + 2];
+      d = Math.min(255, Math.abs(ga - gb) * DIFF_AMPLIFY);
+      od[i] = d; od[i + 1] = d; od[i + 2] = d; od[i + 3] = 255;
+    }
+    return out;
+  }
+
+  function paintThumb(canvas, imageData) {
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    canvas.getContext('2d').putImageData(imageData, 0, 0);
+  }
+
+  function makeThumbFigure(imageData, caption, altText) {
+    var fig = document.createElement('figure');
+    var canvas = document.createElement('canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    fig.appendChild(canvas);
+    var cap = document.createElement('figcaption');
+    cap.textContent = caption;
+    fig.appendChild(cap);
+    var sr = document.createElement('span');
+    sr.className = 'hint';
+    sr.style.display = 'none';
+    sr.textContent = altText;
+    fig.appendChild(sr);
+    paintThumb(canvas, imageData);
+    return fig;
+  }
+
+  function renderPeaks(peaks) {
+    peaksEl.innerHTML = '';
+    if (peaks.length === 0) {
+      var p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = 'No clear peaks were found above the noise floor of this clip.';
+      peaksEl.appendChild(p);
+      return;
+    }
+    peaks.forEach(function (peak, n) {
+      var before = frames[peak.idx];
+      var after = frames[peak.idx + 1];
+      var card = document.createElement('fieldset');
+      card.className = 'peakCard';
+      var legend = document.createElement('legend');
+      legend.textContent = 'Peak ' + (n + 1) + ': ' + peak.t.toFixed(2) + ' s, difference ' + peak.value.toFixed(1);
+      card.appendChild(legend);
+
+      var grid = document.createElement('div');
+      grid.className = 'peakGrid';
+      grid.appendChild(makeThumbFigure(
+        frameToImageData(before),
+        'Before, ' + before.t.toFixed(2) + ' s',
+        'Frame before the peak, at ' + before.t.toFixed(2) + ' seconds.'
+      ));
+      grid.appendChild(makeThumbFigure(
+        frameToImageData(after),
+        'After, ' + after.t.toFixed(2) + ' s',
+        'Frame after the peak, at ' + after.t.toFixed(2) + ' seconds.'
+      ));
+      grid.appendChild(makeThumbFigure(
+        buildDiffImageData(before, after),
+        'Difference (×' + DIFF_AMPLIFY + ')',
+        'Amplified absolute difference between the two frames; brighter areas moved or changed more.'
+      ));
+      card.appendChild(grid);
+
+      var seekBtn = document.createElement('button');
+      seekBtn.type = 'button';
+      seekBtn.textContent = 'Seek video here';
+      seekBtn.addEventListener('click', function () { seekVideoTo(peak.t); });
+      card.appendChild(seekBtn);
+
+      peaksEl.appendChild(card);
+    });
+  }
+
+  // ============================================================
+  // Timeline canvas: line plot, threshold line, peak markers, cursor.
+  // ============================================================
+  function theme() {
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return dark
+      ? { canvasBg: '#101216', fg: '#e6e7e9', muted: '#9aa0a8', border: '#3a3f47', accent: '#4da3c7' }
+      : { canvasBg: '#ffffff', fg: '#1c1e21', muted: '#5a6069', border: '#c9ccd1', accent: '#0b6e99' };
+  }
+
+  function updateThresholdDisp() {
+    thresholdDisp.textContent = thresholdEl.value;
+  }
+
+  var timelineLayout = null; // set on every draw, reused for hit-testing
+
+  function drawTimeline() {
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = timelineCanvas.getBoundingClientRect().width || timelineCanvas.clientWidth || 720;
+    var cssHeight = Math.round(cssWidth * (200 / 720));
+    timelineCanvas.width = Math.round(cssWidth * dpr);
+    timelineCanvas.height = Math.round(cssHeight * dpr);
+    timelineCanvas.style.height = cssHeight + 'px';
+    tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    var th = theme();
+    var w = cssWidth, h = cssHeight;
+    tctx.fillStyle = th.canvasBg;
+    tctx.fillRect(0, 0, w, h);
+
+    if (diffs.length === 0) {
+      timelineLayout = null;
+      tctx.fillStyle = th.muted;
+      tctx.font = '13px system-ui, sans-serif';
+      tctx.textBaseline = 'middle';
+      tctx.fillText('Load and analyse a video to see the timeline.', 10, h / 2);
+      return;
+    }
+
+    var duration = diffs[diffs.length - 1].t;
+    var maxVal = 0, i;
+    for (i = 0; i < diffs.length; i++) {
+      if (diffs[i].value > maxVal) { maxVal = diffs[i].value; }
+    }
+    var threshold = parseFloat(thresholdEl.value);
+    maxVal = Math.max(maxVal, threshold, 1);
+
+    var padding = 26;
+    var plotW = w - padding * 2;
+    var plotH = h - padding * 2;
+    function xFor(t) { return padding + (duration > 0 ? (t / duration) * plotW : 0); }
+    function yFor(v) { return padding + plotH - (v / maxVal) * plotH; }
+    timelineLayout = { padding: padding, plotW: plotW, duration: duration };
+
+    tctx.strokeStyle = th.border;
+    tctx.lineWidth = 1;
+    tctx.beginPath();
+    tctx.moveTo(padding, padding);
+    tctx.lineTo(padding, h - padding);
+    tctx.lineTo(w - padding, h - padding);
+    tctx.stroke();
+
+    tctx.strokeStyle = th.accent;
+    tctx.setLineDash([4, 4]);
+    tctx.beginPath();
+    tctx.moveTo(padding, yFor(threshold));
+    tctx.lineTo(w - padding, yFor(threshold));
+    tctx.stroke();
+    tctx.setLineDash([]);
+
+    tctx.strokeStyle = th.fg;
+    tctx.lineWidth = 1.5;
+    tctx.beginPath();
+    for (i = 0; i < diffs.length; i++) {
+      var x = xFor(diffs[i].t), y = yFor(diffs[i].value);
+      if (i === 0) { tctx.moveTo(x, y); } else { tctx.lineTo(x, y); }
+    }
+    tctx.stroke();
+
+    tctx.fillStyle = th.accent;
+    var maxima = localMaximaIndices(diffs);
+    for (i = 0; i < maxima.length; i++) {
+      var idx = maxima[i];
+      if (diffs[idx].value > threshold) {
+        var mx = xFor(diffs[idx].t), my = yFor(diffs[idx].value);
+        tctx.beginPath();
+        tctx.arc(mx, my, 4, 0, Math.PI * 2);
+        tctx.fill();
+      }
+    }
+
+    if (cursorIndex >= 0 && cursorIndex < diffs.length) {
+      var cx = xFor(diffs[cursorIndex].t);
+      tctx.strokeStyle = th.fg;
+      tctx.lineWidth = 1;
+      tctx.beginPath();
+      tctx.moveTo(cx, padding);
+      tctx.lineTo(cx, h - padding);
+      tctx.stroke();
+    }
+  }
+
+  function nearestIndexForClientX(clientX) {
+    if (!timelineLayout || diffs.length === 0) { return -1; }
+    var rect = timelineCanvas.getBoundingClientRect();
+    var relX = clientX - rect.left - timelineLayout.padding;
+    var frac = Math.min(1, Math.max(0, relX / timelineLayout.plotW));
+    var t = frac * timelineLayout.duration;
+    var best = 0, bestD = Infinity, i;
+    for (i = 0; i < diffs.length; i++) {
+      var d = Math.abs(diffs[i].t - t);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return best;
+  }
+
+  function setCursor(idx, doSeek) {
+    if (idx < 0 || idx >= diffs.length) { return; }
+    cursorIndex = idx;
+    drawTimeline();
+    var d = diffs[idx];
+    statusEl.textContent = 'Cursor at ' + d.t.toFixed(2) + ' s, difference ' + d.value.toFixed(1) + '.' + (doSeek ? ' Seeking the video there.' : '');
+    if (doSeek) { seekVideoTo(d.t); }
+  }
+
+  function seekVideoTo(t) {
+    try { video.currentTime = t; } catch (e) { /* ignore, e.g. before metadata is ready */ }
+  }
+
+  timelineCanvas.addEventListener('mousemove', function (e) {
+    var idx = nearestIndexForClientX(e.clientX);
+    if (idx >= 0) { setCursor(idx, false); }
+  });
+  timelineCanvas.addEventListener('mouseleave', function () {
+    statusEl.textContent = summaryText;
+  });
+  timelineCanvas.addEventListener('click', function (e) {
+    var idx = nearestIndexForClientX(e.clientX);
+    if (idx >= 0) { setCursor(idx, true); }
+  });
+  timelineCanvas.addEventListener('keydown', function (e) {
+    if (diffs.length === 0) { return; }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setCursor(cursorIndex < 0 ? 0 : Math.min(diffs.length - 1, cursorIndex + 1), false);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setCursor(cursorIndex < 0 ? 0 : Math.max(0, cursorIndex - 1), false);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (cursorIndex >= 0) { setCursor(cursorIndex, true); }
+    }
+  });
+
+  analyseBtn.addEventListener('click', runAnalysis);
+  thresholdEl.addEventListener('input', function () {
+    updateThresholdDisp();
+    drawTimeline();
+  });
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(drawTimeline, 120);
+  });
+  var themeQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  if (themeQuery && themeQuery.addEventListener) {
+    themeQuery.addEventListener('change', drawTimeline);
+  }
+
+  window.addEventListener('pagehide', revokeObjectUrl);
+
+  updateThresholdDisp();
+  drawTimeline();
+})();
+  </script>
+</body>
+</html>
