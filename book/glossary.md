@@ -9,6 +9,9 @@ Agent
 Anarchive
 : A computational memory that holds no fixed documents but continuously reorganises cultural traces into new generative forms, a term proposed by Pierre Cassou-Noguès and Gwenola Wagon. Chapter 3 uses it for the latent space of a trained model, where provenance is unstable and meaning is relational rather than documentary.
 
+Audio–video and auditory–visual
+: Audio and video name data, the recorded, transmitted, or generated signal; auditory and visual name perception and processing, whether in a person or in a machine. A film is an audio–video artefact, and watching it is auditory–visual. The book keeps the two apart rather than folding them into a single word that means both.
+
 Cellular automaton
 : A grid of cells whose states update together at each step according to a rule that looks only at each cell's neighbours. Simple rules can produce elaborate patterns, as in Conway's Game of Life.
 
@@ -41,6 +44,12 @@ L-system
 
 Large language model (LLM)
 : A transformer trained to predict the next token in text, on which chat, coding, and reasoning behaviours are built.
+
+Modality
+: In this book, a kind of data a model takes in or puts out: text, image, audio, video, 3D geometry, motion data. Psychology uses the same word for a sense, and where this book means perception it says sensory modality, or names the sense as auditory, visual, or tactile.
+
+Multimodal and multisensory
+: Multimodal describes models and data that combine several kinds of data, such as text with images or audio with video. People are multisensory rather than multimodal, since they combine senses rather than data types. Cross-modal correspondences, the reliable matches people make across the senses, keep their established name.
 
 Procedural generation
 : Building content such as terrain, levels, textures, or music from an algorithm and a seed rather than authoring every element by hand.
