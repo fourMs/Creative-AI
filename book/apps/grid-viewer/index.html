@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<!--
+  This page makes no network requests. Image files are read locally with
+  the File API, drawn onto a canvas element in the browser, and are never
+  uploaded, recorded, or sent anywhere.
+-->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Grid viewer</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    input[type="text"], input[type="number"] {
+      width: 100%; padding: 6px 8px; margin: 2px 0 4px; font-size: 1rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .stats { font-size: 1rem; margin: 10px 0; font-variant-numeric: tabular-nums; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--border); border-radius: 10px; padding: 18px;
+      text-align: center; color: var(--muted); margin: 4px 0 10px; cursor: pointer;
+    }
+    .dropzone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .dropzone.dragover { border-color: var(--accent); color: var(--fg); background: var(--bg); }
+    .dropzone p { margin: 0; }
+    input[type="file"] { display: block; margin: 0 0 10px; font-size: 0.9rem; color: var(--fg); }
+
+    .image-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .image-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    }
+    .image-item.dragging { opacity: 0.5; }
+    .image-item .thumb {
+      width: 56px; height: 56px; object-fit: contain; flex: 0 0 auto;
+      background: var(--canvas); border: 1px solid var(--border); border-radius: 6px;
+    }
+    .image-item .cap-field { flex: 1 1 auto; min-width: 0; }
+    .image-item .cap-field input[type="text"] { margin: 0; }
+    .image-item .item-index { flex: 0 0 auto; width: 1.6em; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .image-item .item-actions { display: flex; gap: 4px; flex: 0 0 auto; }
+    .image-item .item-actions button { padding: 4px 8px; font-size: 0.85rem; }
+
+    .canvas-wrap { margin: 10px 0; }
+    canvas#gridCanvas {
+      display: block; width: 100%; height: auto;
+      border: 1px solid var(--border); border-radius: 6px; background: var(--canvas);
+    }
+
+    .compare-img-frame {
+      display: flex; align-items: center; justify-content: center;
+      background: var(--canvas); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px; min-height: 180px; margin: 0 0 8px;
+    }
+    .compare-img-frame img { max-width: 100%; max-height: 340px; display: block; }
+    .compare-caption { font-weight: 600; margin: 4px 0; text-align: center; }
+    .compare-counter { color: var(--muted); font-size: 0.9rem; margin: 0 0 8px; text-align: center; }
+
+    details {
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 12px; background: var(--panel); margin: 14px 0 0;
+    }
+    summary { font-weight: 600; cursor: pointer; }
+    details p { margin: 8px 0 0; }
+  </style>
+</head>
+<body>
+  <h1>Grid viewer</h1>
+  <p class="intro">This app lays out four to sixteen images that you generated elsewhere into one labelled grid, so that you can compare a controlled experiment, such as different seeds or guidance scales, side by side. Add your images below, name the variable that changes between them, and then save the grid as a picture or copy its captions as a table for your practice log. Everything happens on this device: images are read locally, never uploaded, and the state disappears when you leave the page.</p>
+
+  <fieldset>
+    <legend>Images</legend>
+    <div class="dropzone" id="dropZone" role="button" tabindex="0" aria-label="Drop image files here, or press Enter to choose files">
+      <p>Drop four to sixteen images here (PNG, JPEG, or WebP), or use the button below.</p>
+    </div>
+    <label for="fileInput">Choose image files</label>
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple/>
+    <div class="stats" id="imageStatus" aria-live="polite">No images added yet. Drop or choose four to sixteen images to build a grid.</div>
+    <ul class="image-list" id="imageList"></ul>
+  </fieldset>
+
+  <fieldset>
+    <legend>Grid settings</legend>
+    <label for="columns">Columns <span class="vals" id="columnsDisp">3</span></label>
+    <input type="range" id="columns" min="2" max="4" step="1" value="3" aria-describedby="columnsDisp"/>
+    <label for="gridTitle">Grid title</label>
+    <input type="text" id="gridTitle" maxlength="80" placeholder="For example, Guidance scale comparison"/>
+    <label for="variableName">Variable that changes</label>
+    <input type="text" id="variableName" maxlength="60" placeholder="For example, guidance scale"/>
+    <label for="constantLine">Constant line (optional)</label>
+    <input type="text" id="constantLine" maxlength="120" placeholder="For example, prompt, seed, and steps held constant"/>
+    <p class="hint">Name the variable that you changed between the images, for example &ldquo;guidance scale&rdquo; or &ldquo;prompt wording&rdquo;. Leave the constant line blank if you do not need it, or use it to record what stayed fixed.</p>
+    <div class="canvas-wrap">
+      <canvas id="gridCanvas" width="720" height="360" role="img" aria-label="Preview of the labelled image grid"></canvas>
+    </div>
+    <div class="row">
+      <button type="button" id="saveBtn" class="primary" disabled>Save grid as PNG</button>
+      <button type="button" id="copyMdBtn" disabled>Copy captions as Markdown table</button>
+    </div>
+    <div class="stats" id="saveStatus" aria-live="polite"></div>
+  </fieldset>
+
+  <fieldset id="compareFieldset">
+    <legend>Compare mode</legend>
+    <div class="compare-img-frame">
+      <img id="compareImg" alt=""/>
+    </div>
+    <div class="compare-caption" id="compareCaption"></div>
+    <div class="compare-counter" id="compareCounter"></div>
+    <label for="compareSlider" class="sr-only">Cell to show in compare mode</label>
+    <input type="range" id="compareSlider" min="0" max="0" step="1" value="0" disabled/>
+    <div class="row">
+      <button type="button" id="prevBtn" disabled>Previous</button>
+      <button type="button" id="nextBtn" disabled>Next</button>
+    </div>
+    <div class="stats" id="compareStatus" aria-live="polite">Add images above to use compare mode.</div>
+    <p class="hint">Use the slider, the buttons, or the left and right arrow keys to step through the images one at a time and flick between two settings.</p>
+  </fieldset>
+
+  <p class="hint">A fair comparison changes one variable at a time and holds everything else fixed, including the seed, unless the seed itself is the variable under test. Write the exact settings for each image in your practice log, so that the comparison can be repeated later.</p>
+
+  <details>
+    <summary>How it works</summary>
+    <p>Each image file that you drop or choose stays in your browser&rsquo;s memory. It is decoded locally and drawn onto a canvas element together with the title, captions, and footer text, without ever being sent anywhere. The Save button turns that canvas into a PNG file and offers it as a direct download. The Markdown button copies a small table of image numbers and captions to your clipboard, ready for pasting into a lab notebook or practice log. This app bundles no data files, so there is no licence to name.</p>
+  </details>
+
+  <script>
+(function () {
+  'use strict';
+
+  var el = function (id) { return document.getElementById(id); };
+
+  var dropZone = el('dropZone'), fileInput = el('fileInput');
+  var imageStatusEl = el('imageStatus'), imageListEl = el('imageList');
+  var columnsEl = el('columns'), columnsDisp = el('columnsDisp');
+  var titleEl = el('gridTitle'), variableEl = el('variableName'), constantEl = el('constantLine');
+  var canvas = el('gridCanvas'), ctx = canvas.getContext('2d');
+  var saveBtn = el('saveBtn'), copyMdBtn = el('copyMdBtn'), saveStatusEl = el('saveStatus');
+  var compareFieldset = el('compareFieldset');
+  var compareImg = el('compareImg'), compareCaptionEl = el('compareCaption'), compareCounterEl = el('compareCounter');
+  var compareSlider = el('compareSlider'), prevBtn = el('prevBtn'), nextBtn = el('nextBtn'), compareStatusEl = el('compareStatus');
+
+  var MAX_IMAGES = 16;
+  var MIN_IMAGES = 4;
+  var ACCEPTED_TYPES = { 'image/png': true, 'image/jpeg': true, 'image/webp': true };
+
+  // ============================================================
+  // State: each entry is { id, file, url, caption, img, ready }.
+  // "img" is an HTMLImageElement whose src is a local object URL; it is
+  // used to draw the grid and the large compare view, and it is never
+  // read back or uploaded anywhere.
+  // ============================================================
+  var images = [];
+  var nextId = 1;
+  var compareIndex = 0;
+
+  function nameToCaption(name) {
+    var stem = name.replace(/\.[^/.]+$/, '');
+    stem = stem.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return stem || name;
+  }
+
+  // ============================================================
+  // Adding files, from the file input or from a drop.
+  // ============================================================
+  function addFiles(fileList) {
+    var accepted = [];
+    var rejectedType = 0;
+    var i, f;
+    for (i = 0; i < fileList.length; i++) {
+      f = fileList[i];
+      if (ACCEPTED_TYPES[f.type]) { accepted.push(f); } else { rejectedType++; }
+    }
+    var room = MAX_IMAGES - images.length;
+    var overflow = Math.max(0, accepted.length - room);
+    var toAdd = accepted.slice(0, Math.max(0, room));
+    for (i = 0; i < toAdd.length; i++) {
+      f = toAdd[i];
+      var url = URL.createObjectURL(f);
+      var entry = { id: nextId++, file: f, url: url, caption: nameToCaption(f.name), img: new Image(), ready: false };
+      entry.img.onload = function () { onImagesChanged(); };
+      entry.img.src = url;
+      images.push(entry);
+    }
+    var notes = [];
+    if (rejectedType > 0) { notes.push(rejectedType + ' file' + (rejectedType === 1 ? '' : 's') + ' skipped because the type was not PNG, JPEG, or WebP.'); }
+    if (overflow > 0) { notes.push(overflow + ' file' + (overflow === 1 ? '' : 's') + ' skipped because the grid holds at most ' + MAX_IMAGES + ' images.'); }
+    onImagesChanged(notes.join(' '));
+  }
+
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files && fileInput.files.length) { addFiles(fileInput.files); }
+    fileInput.value = '';
+  });
+
+  dropZone.addEventListener('click', function () { fileInput.click(); });
+  dropZone.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+  dropZone.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', function () { dropZone.classList.remove('dragover'); });
+  dropZone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      addFiles(e.dataTransfer.files);
+    }
+  });
+
+  // ============================================================
+  // Image list: captions, reordering, removal.
+  // ============================================================
+  function findIndexById(id) {
+    for (var i = 0; i < images.length; i++) { if (images[i].id === id) { return i; } }
+    return -1;
+  }
+
+  function moveImage(id, delta) {
+    var i = findIndexById(id);
+    var j = i + delta;
+    if (i < 0 || j < 0 || j >= images.length) { return; }
+    var tmp = images[i];
+    images[i] = images[j];
+    images[j] = tmp;
+    onImagesChanged();
+  }
+
+  function removeImage(id) {
+    var i = findIndexById(id);
+    if (i < 0) { return; }
+    URL.revokeObjectURL(images[i].url);
+    images.splice(i, 1);
+    onImagesChanged();
+  }
+
+  var dragSourceId = null;
+
+  function renderImageList() {
+    imageListEl.innerHTML = '';
+    images.forEach(function (entry, i) {
+      var li = document.createElement('li');
+      li.className = 'image-item';
+      li.draggable = true;
+      li.dataset.id = String(entry.id);
+
+      li.addEventListener('dragstart', function () {
+        dragSourceId = entry.id;
+        li.classList.add('dragging');
+      });
+      li.addEventListener('dragend', function () { li.classList.remove('dragging'); });
+      li.addEventListener('dragover', function (e) { e.preventDefault(); });
+      li.addEventListener('drop', function (e) {
+        e.preventDefault();
+        if (dragSourceId === null || dragSourceId === entry.id) { return; }
+        var from = findIndexById(dragSourceId);
+        var to = findIndexById(entry.id);
+        if (from < 0 || to < 0) { return; }
+        var moved = images.splice(from, 1)[0];
+        images.splice(to, 0, moved);
+        dragSourceId = null;
+        onImagesChanged();
+      });
+
+      var indexSpan = document.createElement('span');
+      indexSpan.className = 'item-index';
+      indexSpan.textContent = String(i + 1);
+      li.appendChild(indexSpan);
+
+      var thumb = document.createElement('img');
+      thumb.className = 'thumb';
+      thumb.src = entry.url;
+      thumb.alt = entry.caption;
+      li.appendChild(thumb);
+
+      var capWrap = document.createElement('div');
+      capWrap.className = 'cap-field';
+      var label = document.createElement('label');
+      label.className = 'sr-only';
+      label.setAttribute('for', 'cap-' + entry.id);
+      label.textContent = 'Caption for image ' + (i + 1);
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.id = 'cap-' + entry.id;
+      input.value = entry.caption;
+      input.maxLength = 80;
+      input.addEventListener('input', function () {
+        entry.caption = input.value;
+        thumb.alt = entry.caption;
+        scheduleRender();
+        updateCompareView();
+      });
+      capWrap.appendChild(label);
+      capWrap.appendChild(input);
+      li.appendChild(capWrap);
+
+      var actions = document.createElement('div');
+      actions.className = 'item-actions';
+      var upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.textContent = 'Up';
+      upBtn.setAttribute('aria-label', 'Move image ' + (i + 1) + ' earlier');
+      upBtn.disabled = i === 0;
+      upBtn.addEventListener('click', function () { moveImage(entry.id, -1); });
+      var downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.textContent = 'Down';
+      downBtn.setAttribute('aria-label', 'Move image ' + (i + 1) + ' later');
+      downBtn.disabled = i === images.length - 1;
+      downBtn.addEventListener('click', function () { moveImage(entry.id, 1); });
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = 'Remove';
+      removeBtn.setAttribute('aria-label', 'Remove image ' + (i + 1));
+      removeBtn.addEventListener('click', function () { removeImage(entry.id); });
+      actions.appendChild(upBtn);
+      actions.appendChild(downBtn);
+      actions.appendChild(removeBtn);
+      li.appendChild(actions);
+
+      imageListEl.appendChild(li);
+    });
+  }
+
+  function updateImageStatus(extraNote) {
+    var n = images.length;
+    var txt;
+    if (n === 0) {
+      txt = 'No images added yet. Drop or choose four to sixteen images to build a grid.';
+    } else if (n < MIN_IMAGES) {
+      txt = n + ' image' + (n === 1 ? '' : 's') + ' added. Add at least ' + MIN_IMAGES + ' for a fair comparison grid.';
+    } else {
+      txt = n + ' image' + (n === 1 ? '' : 's') + ' added, ready to compare.';
+    }
+    if (extraNote) { txt += ' ' + extraNote; }
+    imageStatusEl.textContent = txt;
+  }
+
+  function onImagesChanged(extraNote) {
+    renderImageList();
+    updateImageStatus(extraNote);
+    var ready = images.length > 0;
+    saveBtn.disabled = !ready;
+    copyMdBtn.disabled = !ready;
+    compareSlider.max = String(Math.max(0, images.length - 1));
+    compareSlider.disabled = !ready;
+    prevBtn.disabled = !ready;
+    nextBtn.disabled = !ready;
+    if (compareIndex >= images.length) { compareIndex = Math.max(0, images.length - 1); }
+    compareSlider.value = String(compareIndex);
+    updateCompareView();
+    scheduleRender();
+  }
+
+  // ============================================================
+  // Grid layout and drawing. All measurements are in CSS pixels; the
+  // caller sets a devicePixelRatio transform before drawing, so the same
+  // layout code serves both the on-screen preview and the PNG export.
+  // ============================================================
+  var PADDING = 20, CELL_GAP = 14, CAPTION_HEIGHT = 40, TITLE_HEIGHT = 34;
+  var SUBTITLE_HEIGHT = 24, HEADER_GAP = 12, CONSTANT_HEIGHT = 30, FOOTER_HEIGHT = 26;
+
+  function theme() {
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return dark
+      ? { bg: '#101216', fg: '#e6e7e9', muted: '#9aa0a8', panel: '#20242b', border: '#3a3f47', accent: '#4da3c7' }
+      : { bg: '#ffffff', fg: '#1c1e21', muted: '#5a6069', panel: '#f1f2f4', border: '#c9ccd1', accent: '#0b6e99' };
+  }
+
+  function wrapLines(context, text, maxWidth, maxLines) {
+    var words = (text || '').split(/\s+/).filter(function (w) { return w.length > 0; });
+    var lines = [];
+    var current = '';
+    var i;
+    for (i = 0; i < words.length; i++) {
+      var attempt = current ? current + ' ' + words[i] : words[i];
+      if (context.measureText(attempt).width <= maxWidth || !current) {
+        current = attempt;
+      } else {
+        lines.push(current);
+        current = words[i];
+        if (lines.length === maxLines) { break; }
+      }
+    }
+    if (lines.length < maxLines && current) { lines.push(current); }
+    if (lines.length === maxLines) {
+      var last = lines[maxLines - 1];
+      while (context.measureText(last + '…').width > maxWidth && last.length > 1) {
+        last = last.slice(0, -1);
+      }
+      var consumed = lines.slice(0, maxLines - 1).join(' ').length + last.length;
+      if (consumed < text.replace(/\s+/g, ' ').trim().length) { last += '…'; }
+      lines[maxLines - 1] = last;
+    }
+    return lines;
+  }
+
+  function computeLayout(cssWidth, count, cols, hasTitle, hasVariable, hasConstant) {
+    var rows = count > 0 ? Math.ceil(count / cols) : 1;
+    var cellSize = (cssWidth - PADDING * 2 - CELL_GAP * (cols - 1)) / cols;
+    var headerHeight = (hasTitle ? TITLE_HEIGHT : 0) + (hasVariable ? SUBTITLE_HEIGHT : 0) + ((hasTitle || hasVariable) ? HEADER_GAP : 0);
+    var gridHeight = rows * (cellSize + CAPTION_HEIGHT) + (rows - 1) * CELL_GAP;
+    var constantHeight = hasConstant ? CONSTANT_HEIGHT : 0;
+    var height = PADDING * 2 + headerHeight + gridHeight + constantHeight + FOOTER_HEIGHT;
+    return { width: cssWidth, height: height, cellSize: cellSize, rows: rows, cols: cols, headerHeight: headerHeight, gridHeight: gridHeight, constantHeight: constantHeight };
+  }
+
+  function drawGridOnContext(context, layout, th) {
+    var title = titleEl.value.trim();
+    var variable = variableEl.value.trim();
+    var constant = constantEl.value.trim();
+    var w = layout.width, h = layout.height;
+
+    context.fillStyle = th.bg;
+    context.fillRect(0, 0, w, h);
+
+    var y = PADDING;
+    context.textAlign = 'left';
+    context.textBaseline = 'top';
+    if (title) {
+      context.fillStyle = th.fg;
+      context.font = '700 22px system-ui, sans-serif';
+      context.fillText(title, PADDING, y, w - PADDING * 2);
+      y += TITLE_HEIGHT;
+    }
+    if (variable) {
+      context.fillStyle = th.muted;
+      context.font = '15px system-ui, sans-serif';
+      context.fillText('Variable: ' + variable, PADDING, y, w - PADDING * 2);
+      y += SUBTITLE_HEIGHT;
+    }
+    if (title || variable) { y += HEADER_GAP; }
+
+    var gridTop = y;
+    images.forEach(function (entry, i) {
+      var col = i % layout.cols;
+      var row = Math.floor(i / layout.cols);
+      var cellX = PADDING + col * (layout.cellSize + CELL_GAP);
+      var cellY = gridTop + row * (layout.cellSize + CAPTION_HEIGHT + CELL_GAP);
+
+      context.fillStyle = th.panel;
+      context.fillRect(cellX, cellY, layout.cellSize, layout.cellSize);
+      context.strokeStyle = th.border;
+      context.lineWidth = 1;
+      context.strokeRect(cellX + 0.5, cellY + 0.5, layout.cellSize - 1, layout.cellSize - 1);
+
+      if (entry.img && entry.img.naturalWidth) {
+        var iw = entry.img.naturalWidth, ih = entry.img.naturalHeight;
+        var scale = Math.min(layout.cellSize / iw, layout.cellSize / ih);
+        var dw = iw * scale, dh = ih * scale;
+        var dx = cellX + (layout.cellSize - dw) / 2;
+        var dy = cellY + (layout.cellSize - dh) / 2;
+        context.drawImage(entry.img, dx, dy, dw, dh);
+      }
+
+      context.fillStyle = th.fg;
+      context.font = '13px system-ui, sans-serif';
+      var lines = wrapLines(context, (i + 1) + '. ' + entry.caption, layout.cellSize, 2);
+      lines.forEach(function (line, li) {
+        context.fillText(line, cellX, cellY + layout.cellSize + 6 + li * 16, layout.cellSize);
+      });
+    });
+
+    var afterGridY = gridTop + layout.gridHeight;
+    if (constant) {
+      context.fillStyle = th.muted;
+      context.font = 'italic 13px system-ui, sans-serif';
+      context.fillText(constant, PADDING, afterGridY + 10, w - PADDING * 2);
+    }
+
+    context.strokeStyle = th.border;
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(PADDING, h - FOOTER_HEIGHT + 2);
+    context.lineTo(w - PADDING, h - FOOTER_HEIGHT + 2);
+    context.stroke();
+    context.fillStyle = th.muted;
+    context.font = '11px system-ui, sans-serif';
+    context.textAlign = 'right';
+    context.fillText('made with the Creative AI grid viewer', w - PADDING, h - FOOTER_HEIGHT + 9);
+    context.textAlign = 'left';
+  }
+
+  function currentColumns() { return parseInt(columnsEl.value, 10); }
+
+  function fitCanvasAndDraw() {
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = canvas.parentElement.getBoundingClientRect().width || canvas.clientWidth || 720;
+    var cols = currentColumns();
+    var layout = computeLayout(cssWidth, images.length, cols, !!titleEl.value.trim(), !!variableEl.value.trim(), !!constantEl.value.trim());
+    canvas.width = Math.round(layout.width * dpr);
+    canvas.height = Math.round(layout.height * dpr);
+    canvas.style.height = Math.round(layout.height) + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawGridOnContext(ctx, layout, theme());
+  }
+
+  var renderTimer = null;
+  function scheduleRender() {
+    if (renderTimer) { clearTimeout(renderTimer); }
+    renderTimer = setTimeout(fitCanvasAndDraw, 30);
+  }
+
+  [columnsEl, titleEl, variableEl, constantEl].forEach(function (input) {
+    input.addEventListener('input', function () {
+      if (input === columnsEl) { columnsDisp.textContent = columnsEl.value; }
+      scheduleRender();
+    });
+  });
+
+  // ============================================================
+  // Save as PNG: redraw the same layout at a higher fixed resolution on
+  // an offscreen canvas, then offer it through a download link.
+  // ============================================================
+  var EXPORT_SCALE = 2;
+
+  saveBtn.addEventListener('click', function () {
+    if (images.length === 0) { return; }
+    var cssWidth = canvas.parentElement.getBoundingClientRect().width || canvas.clientWidth || 720;
+    var cols = currentColumns();
+    var layout = computeLayout(cssWidth, images.length, cols, !!titleEl.value.trim(), !!variableEl.value.trim(), !!constantEl.value.trim());
+    var off = document.createElement('canvas');
+    off.width = Math.round(layout.width * EXPORT_SCALE);
+    off.height = Math.round(layout.height * EXPORT_SCALE);
+    var offCtx = off.getContext('2d');
+    offCtx.setTransform(EXPORT_SCALE, 0, 0, EXPORT_SCALE, 0, 0);
+    drawGridOnContext(offCtx, layout, theme());
+    var dataUrl = off.toDataURL('image/png');
+    var a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'grid.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    saveStatusEl.textContent = 'Grid saved as grid.png.';
+  });
+
+  // ============================================================
+  // Copy captions as a Markdown table.
+  // ============================================================
+  function captionsMarkdown() {
+    var lines = ['| Index | Caption |', '| --- | --- |'];
+    images.forEach(function (entry, i) {
+      var safe = entry.caption.replace(/\|/g, '\\|');
+      lines.push('| ' + (i + 1) + ' | ' + safe + ' |');
+    });
+    return lines.join('\n');
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  copyMdBtn.addEventListener('click', function () {
+    if (images.length === 0) { return; }
+    var md = captionsMarkdown();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).then(function () {
+        saveStatusEl.textContent = 'Captions copied as a Markdown table.';
+      }).catch(function () {
+        saveStatusEl.textContent = fallbackCopy(md) ? 'Captions copied as a Markdown table.' : 'Copying failed. Select and copy the table by hand instead.';
+      });
+    } else {
+      saveStatusEl.textContent = fallbackCopy(md) ? 'Captions copied as a Markdown table.' : 'Copying failed. Select and copy the table by hand instead.';
+    }
+  });
+
+  // ============================================================
+  // Compare mode.
+  // ============================================================
+  function updateCompareView() {
+    if (images.length === 0) {
+      compareImg.removeAttribute('src');
+      compareImg.alt = '';
+      compareCaptionEl.textContent = '';
+      compareCounterEl.textContent = '';
+      compareStatusEl.textContent = 'Add images above to use compare mode.';
+      return;
+    }
+    var entry = images[compareIndex];
+    compareImg.src = entry.url;
+    compareImg.alt = entry.caption;
+    compareCaptionEl.textContent = entry.caption;
+    compareCounterEl.textContent = (compareIndex + 1) + ' of ' + images.length;
+    compareStatusEl.textContent = 'Showing image ' + (compareIndex + 1) + ' of ' + images.length + ': ' + entry.caption + '.';
+  }
+
+  function setCompareIndex(i) {
+    if (images.length === 0) { return; }
+    compareIndex = Math.max(0, Math.min(images.length - 1, i));
+    compareSlider.value = String(compareIndex);
+    updateCompareView();
+  }
+
+  compareSlider.addEventListener('input', function () { setCompareIndex(parseInt(compareSlider.value, 10)); });
+  prevBtn.addEventListener('click', function () { setCompareIndex(compareIndex - 1); });
+  nextBtn.addEventListener('click', function () { setCompareIndex(compareIndex + 1); });
+
+  function isTypingTarget(target) {
+    if (!target) { return false; }
+    if (target.isContentEditable) { return true; }
+    var tag = target.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA';
+  }
+
+  compareFieldset.addEventListener('keydown', function (e) {
+    if (e.target === compareSlider) { return; }
+    if (isTypingTarget(e.target)) { return; }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); setCompareIndex(compareIndex - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); setCompareIndex(compareIndex + 1); }
+  });
+
+  // ============================================================
+  // Resize and theme changes.
+  // ============================================================
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(fitCanvasAndDraw, 120);
+  });
+  var themeQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  if (themeQuery && themeQuery.addEventListener) {
+    themeQuery.addEventListener('change', fitCanvasAndDraw);
+  }
+
+  columnsDisp.textContent = columnsEl.value;
+  onImagesChanged();
+})();
+  </script>
+</body>
+</html>
