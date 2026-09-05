@@ -17,3 +17,4 @@ leaves the browser. Bundled data files list their licence here.
 | tokeniser-explorer | 4 | vocab.json trained on Gutenberg (public domain) and Wikipedia (CC-BY-SA 4.0) text |
 | diffusion-explorer | 2, 5 | sample.jpg (course cover render, CC-BY-4.0) |
 | energy-estimator | 3 | none (defaults cite Luccioni et al. 2024) |
+| provenance-inspector | 3 | none |

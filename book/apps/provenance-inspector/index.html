@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Provenance inspector</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+      --warn-bg: #fbeadf; --warn-fg: #8a3a10; --warn-border: #e0a877;
+      --tag-bg: #e6eef2; --tag-fg: #0b6e99;
+      --ok-bg: #e6f2ea; --ok-fg: #1f6d3f; --ok-border: #a9d3ba;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+        --warn-bg: #3a2416; --warn-fg: #f2b183; --warn-border: #7a4a22;
+        --tag-bg: #1f2e35; --tag-fg: #8fc7de;
+        --ok-bg: #163325; --ok-fg: #8fd3ab; --ok-border: #2f5c42;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    h2 { font-size: 1.05rem; margin: 0 0 6px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    input[type="file"] {
+      display: block; width: 100%; margin: 2px 0 4px; font-size: 0.95rem;
+      color: var(--fg);
+    }
+    a { color: var(--accent); }
+    .fileInfo {
+      font-size: 0.92rem; margin: 4px 0 0; font-variant-numeric: tabular-nums;
+    }
+    .verdict {
+      font-size: 1.05rem; font-weight: 700; margin: 12px 0; padding: 10px 12px;
+      border-radius: 8px; background: var(--tag-bg); color: var(--tag-fg);
+      border: 1px solid var(--border);
+    }
+    .verdict.none { background: var(--panel); color: var(--muted); }
+    .errorBox {
+      margin: 12px 0; padding: 10px 12px; border-radius: 8px;
+      background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-border);
+    }
+    section.group {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    table.fields {
+      width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 4px 0 0;
+    }
+    table.fields th, table.fields td {
+      border: 1px solid var(--border); padding: 6px 8px; vertical-align: top; text-align: left;
+      word-break: break-word;
+    }
+    table.fields thead th { background: var(--bg); font-weight: 700; }
+    table.fields th[scope="row"] { width: 34%; white-space: nowrap; }
+    tr.highlight td, tr.highlight th { background: var(--ok-bg); color: var(--ok-fg); }
+    code { font-size: 0.88em; }
+  </style>
+</head>
+<body>
+  <h1>Provenance inspector</h1>
+  <p class="intro">Files carry traces of how they were made, and sometimes a signed provenance manifest. Drop in an image to see what it says about itself, and what it does not. Everything happens in this browser tab: the file is read locally with the FileReader API and is never uploaded anywhere.</p>
+  <p class="hint">This tool only reads and displays what a file already contains, such as EXIF camera fields, PNG text chunks, or a <a href="https://c2pa.org/specifications/specifications/2.1/specs/C2PA_Specification.html" target="_blank" rel="noopener">C2PA</a> manifest's plain-text strings. It does not verify any cryptographic signature, so a "C2PA manifest present" result is a statement about presence, not authenticity.</p>
+
+  <fieldset>
+    <legend>Image file</legend>
+    <label for="fileInput">Choose a JPEG, PNG, or WebP file (stays on this device)</label>
+    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp"/>
+    <p class="hint">Nothing is uploaded. Reloading or closing this page discards everything; loading a new file replaces the report below.</p>
+  </fieldset>
+
+  <div class="fileInfo" id="fileInfo" aria-live="polite"></div>
+  <div class="verdict none" id="verdict" aria-live="polite">Load a file to see what it reveals.</div>
+  <div class="errorBox" id="errorBox" role="alert" hidden></div>
+
+  <div id="report"></div>
+
+  <p class="hint">What this does not tell you: the absence of camera or generator metadata does not mean a picture is unedited or human-made&#8212;metadata is easy to strip and easy to fake. A present C2PA manifest is not verified here either; treat every result as a clue, not a proof.</p>
+
+  <script>
+(function () {
+  'use strict';
+
+  // ======================================================================
+  // Parsing core (hand-written, no libraries). Given a DataView over the
+  // raw file bytes, walk the container format's own structure: JPEG marker
+  // segments, PNG chunks, or RIFF/WebP chunks.
+  // ======================================================================
+
+  function latin1String(view, offset, length) {
+    var end = Math.min(offset + length, view.byteLength);
+    var s = '';
+    for (var i = offset; i < end; i++) { s += String.fromCharCode(view.getUint8(i)); }
+    return s;
+  }
+
+  function bytesMatchAscii(view, offset, str) {
+    if (offset < 0 || offset + str.length > view.byteLength) { return false; }
+    for (var i = 0; i < str.length; i++) {
+      if (view.getUint8(offset + i) !== str.charCodeAt(i)) { return false; }
+    }
+    return true;
+  }
+
+  function utf8Decode(view, offset, length) {
+    var end = Math.min(offset + length, view.byteLength);
+    var bytes = new Uint8Array(end - offset);
+    for (var i = 0; i < bytes.length; i++) { bytes[i] = view.getUint8(offset + i); }
+    if (typeof TextDecoder !== 'undefined') {
+      try { return new TextDecoder('utf-8', { fatal: false }).decode(bytes); } catch (e) { /* fall through */ }
+    }
+    var out = '', i2 = 0;
+    while (i2 < bytes.length) {
+      var b0 = bytes[i2];
+      if (b0 < 0x80) { out += String.fromCharCode(b0); i2++; }
+      else if ((b0 & 0xE0) === 0xC0 && i2 + 1 < bytes.length) {
+        out += String.fromCharCode(((b0 & 0x1F) << 6) | (bytes[i2 + 1] & 0x3F)); i2 += 2;
+      } else if ((b0 & 0xF0) === 0xE0 && i2 + 2 < bytes.length) {
+        out += String.fromCharCode(((b0 & 0x0F) << 12) | ((bytes[i2 + 1] & 0x3F) << 6) | (bytes[i2 + 2] & 0x3F)); i2 += 3;
+      } else { out += String.fromCharCode(b0); i2++; }
+    }
+    return out;
+  }
+
+  function findNul(view, offset, limit) {
+    for (var i = offset; i < limit; i++) { if (view.getUint8(i) === 0) { return i; } }
+    return limit;
+  }
+
+  function trimTrailingNuls(s) {
+    var end = s.length;
+    while (end > 0 && s.charCodeAt(end - 1) === 0) { end--; }
+    return s.slice(0, end);
+  }
+
+  function latin1FromBytes(bytes) {
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) { s += String.fromCharCode(bytes[i]); }
+    return s;
+  }
+
+  // ---- TIFF / EXIF --------------------------------------------------
+  var TIFF_TYPE_SIZE = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8, 11: 4, 12: 8 };
+
+  var EXIF_TAGS = {
+    MAKE: 0x010F,
+    MODEL: 0x0110,
+    SOFTWARE: 0x0131,
+    IMAGE_DESCRIPTION: 0x010E,
+    ARTIST: 0x013B,
+    EXIF_IFD_POINTER: 0x8769,
+    DATE_TIME_ORIGINAL: 0x9003,
+    USER_COMMENT: 0x9286
+  };
+
+  function readIFDEntries(view, base, ifdOffset, little) {
+    if (ifdOffset < 0 || base + ifdOffset + 2 > view.byteLength) { return { entries: [] }; }
+    var absIfd = base + ifdOffset;
+    var count = view.getUint16(absIfd, little);
+    var entries = [];
+    var entryStart = absIfd + 2;
+    for (var i = 0; i < count; i++) {
+      var e = entryStart + i * 12;
+      if (e + 12 > view.byteLength) { break; }
+      var tag = view.getUint16(e, little);
+      var type = view.getUint16(e + 2, little);
+      var num = view.getUint32(e + 4, little);
+      var typeSize = TIFF_TYPE_SIZE[type] || 1;
+      var byteSize = typeSize * num;
+      var valueAbs, inline;
+      if (byteSize <= 4) { valueAbs = e + 8; inline = true; }
+      else { valueAbs = base + view.getUint32(e + 8, little); inline = false; }
+      entries.push({ tag: tag, type: type, count: num, valueAbs: valueAbs, inline: inline, byteSize: byteSize });
+    }
+    return { entries: entries };
+  }
+
+  function readAsciiValue(view, entry) {
+    if (entry.valueAbs + entry.byteSize > view.byteLength) { return null; }
+    var raw = latin1String(view, entry.valueAbs, entry.byteSize);
+    return trimTrailingNuls(raw);
+  }
+
+  function readUndefinedBytes(view, entry) {
+    var len = Math.min(entry.byteSize, Math.max(0, view.byteLength - entry.valueAbs));
+    var out = new Uint8Array(len);
+    for (var i = 0; i < len; i++) { out[i] = view.getUint8(entry.valueAbs + i); }
+    return out;
+  }
+
+  function readLongValue(view, entry, little) {
+    if (entry.valueAbs + 4 > view.byteLength) { return null; }
+    return view.getUint32(entry.valueAbs, little);
+  }
+
+  function decodeUserComment(bytes, little) {
+    if (bytes.length < 8) { return trimTrailingNuls(latin1FromBytes(bytes)); }
+    var prefix = latin1FromBytes(bytes.slice(0, 8));
+    var rest = bytes.slice(8);
+    if (prefix.indexOf('ASCII') === 0) { return trimTrailingNuls(latin1FromBytes(rest)); }
+    if (prefix.indexOf('UNICODE') === 0) {
+      var s = '';
+      for (var i = 0; i + 1 < rest.length; i += 2) {
+        var code = little ? (rest[i] | (rest[i + 1] << 8)) : ((rest[i] << 8) | rest[i + 1]);
+        s += String.fromCharCode(code);
+      }
+      return trimTrailingNuls(s);
+    }
+    if (prefix.indexOf('JIS') === 0) { return '[JIS-encoded comment, not decoded]'; }
+    var text = trimTrailingNuls(latin1FromBytes(rest));
+    return text || null;
+  }
+
+  // Parses a TIFF header at `base` (byte-order bytes 'II'/'MM' sit at base)
+  // and returns the EXIF fields this tool reports, or null if unreadable.
+  function parseTIFF(view, base) {
+    if (base + 8 > view.byteLength) { return null; }
+    var b0 = view.getUint8(base), b1 = view.getUint8(base + 1);
+    var little;
+    if (b0 === 0x49 && b1 === 0x49) { little = true; }
+    else if (b0 === 0x4D && b1 === 0x4D) { little = false; }
+    else { return null; }
+    var magic = view.getUint16(base + 2, little);
+    if (magic !== 0x002A) { return null; }
+    var ifd0Offset = view.getUint32(base + 4, little);
+
+    var fields = {};
+    var ifd0 = readIFDEntries(view, base, ifd0Offset, little);
+    var exifIfdOffset = null;
+
+    ifd0.entries.forEach(function (entry) {
+      switch (entry.tag) {
+        case EXIF_TAGS.MAKE: fields.Make = readAsciiValue(view, entry); break;
+        case EXIF_TAGS.MODEL: fields.Model = readAsciiValue(view, entry); break;
+        case EXIF_TAGS.SOFTWARE: fields.Software = readAsciiValue(view, entry); break;
+        case EXIF_TAGS.IMAGE_DESCRIPTION: fields.ImageDescription = readAsciiValue(view, entry); break;
+        case EXIF_TAGS.ARTIST: fields.Artist = readAsciiValue(view, entry); break;
+        case EXIF_TAGS.EXIF_IFD_POINTER: exifIfdOffset = readLongValue(view, entry, little); break;
+        default: break;
+      }
+    });
+
+    if (exifIfdOffset != null) {
+      var exifIfd = readIFDEntries(view, base, exifIfdOffset, little);
+      exifIfd.entries.forEach(function (entry) {
+        if (entry.tag === EXIF_TAGS.DATE_TIME_ORIGINAL) {
+          fields.DateTimeOriginal = readAsciiValue(view, entry);
+        } else if (entry.tag === EXIF_TAGS.USER_COMMENT) {
+          var raw = readUndefinedBytes(view, entry);
+          fields.UserComment = decodeUserComment(raw, little);
+        }
+      });
+    }
+
+    var any = Object.keys(fields).some(function (k) { return fields[k]; });
+    return any ? fields : null;
+  }
+
+  // ---- C2PA / JUMBF plain-text scan ----------------------------------
+  // No signature verification happens here: this only looks for the
+  // plain-text strings a JUMBF/C2PA box carries alongside its binary and
+  // CBOR-encoded parts, exactly as they would appear to a text search.
+  var C2PA_MARKERS = ['c2pa.actions', 'c2pa.hash.data', 'softwareAgent', 'claim_generator', 'c2pa'];
+
+  function scanC2PAText(view, start, length) {
+    var text = latin1String(view, start, length);
+    var found = [];
+    C2PA_MARKERS.forEach(function (m) { if (text.indexOf(m) !== -1) { found.push(m); } });
+    var snippets = {};
+    ['claim_generator', 'softwareAgent'].forEach(function (key) {
+      var idx = text.indexOf(key);
+      if (idx !== -1) {
+        var windowStr = text.substr(idx + key.length, 200);
+        var match = windowStr.match(/[ -~]{3,}/);
+        if (match) { snippets[key] = match[0].trim(); }
+      }
+    });
+    return { found: found, snippets: snippets };
+  }
+
+  // ---- XMP plain-text search ------------------------------------------
+  function scanXMPText(view, start, length) {
+    var text = utf8Decode(view, start, length);
+    var out = {};
+    var m = text.match(/xmp:CreatorTool=(["'])([^"']*)\1/) ||
+      text.match(/<xmp:CreatorTool>([^<]*)<\/xmp:CreatorTool>/);
+    if (m) { out.CreatorTool = m[2] || m[1]; }
+    var mAttr = text.match(/dc:creator=(["'])([^"']*)\1/);
+    if (mAttr) {
+      out.Creator = mAttr[2];
+    } else {
+      var idx = text.indexOf('dc:creator');
+      if (idx !== -1) {
+        var tail = text.substr(idx, 400);
+        var li = tail.match(/<rdf:li[^>]*>([^<]*)<\/rdf:li>/);
+        if (li) { out.Creator = li[1]; }
+      }
+    }
+    return (out.CreatorTool || out.Creator) ? out : null;
+  }
+
+  var XMP_HEADER = 'http://ns.adobe.com/xap/1.0/';
+
+  // ---- JPEG: walk marker segments from FFD8, stop at SOS -------------
+  function parseJPEG(view) {
+    var result = { width: null, height: null, exif: null, xmp: null, jumbf: null, errors: [] };
+    if (view.byteLength < 4 || view.getUint16(0) !== 0xFFD8) {
+      result.errors.push('Not a JPEG file (missing SOI marker).');
+      return result;
+    }
+    var offset = 2;
+    var guard = 0;
+    while (offset + 1 < view.byteLength) {
+      if (++guard > 20000) { result.errors.push('Too many segments; stopped early.'); break; }
+      if (view.getUint8(offset) !== 0xFF) {
+        result.errors.push('Marker sync lost at byte ' + offset + '.');
+        break;
+      }
+      var markerByte = view.getUint8(offset + 1);
+      while (markerByte === 0xFF && offset + 2 < view.byteLength) {
+        offset++;
+        markerByte = view.getUint8(offset + 1);
+      }
+      offset += 2;
+      if (markerByte === 0xD9) { break; } // EOI
+      if (markerByte === 0x01 || (markerByte >= 0xD0 && markerByte <= 0xD7)) { continue; } // no payload
+      if (offset + 2 > view.byteLength) { result.errors.push('Truncated file (segment length missing).'); break; }
+      var segLen = view.getUint16(offset);
+      if (segLen < 2 || offset + segLen > view.byteLength) {
+        result.errors.push('Truncated or malformed segment.');
+        break;
+      }
+      var dataStart = offset + 2;
+      var dataLen = segLen - 2;
+
+      if (markerByte === 0xE1) { // APP1: Exif or XMP
+        if (bytesMatchAscii(view, dataStart, 'Exif  ')) {
+          var tiff = parseTIFF(view, dataStart + 6);
+          if (tiff) { result.exif = tiff; }
+        } else if (bytesMatchAscii(view, dataStart, XMP_HEADER)) {
+          var xmpStart = dataStart + XMP_HEADER.length + 1; // skip trailing NUL
+          var xmp = scanXMPText(view, xmpStart, dataLen - (xmpStart - dataStart));
+          if (xmp) { result.xmp = xmp; }
+        }
+      } else if (markerByte === 0xEB) { // APP11: JUMBF / C2PA
+        if (bytesMatchAscii(view, dataStart, 'JP')) {
+          result.jumbf = scanC2PAText(view, dataStart, dataLen);
+        }
+      } else if (markerByte === 0xC0 || markerByte === 0xC1 || markerByte === 0xC2 || markerByte === 0xC3) {
+        // SOF0/1/2/3: precision(1) height(2) width(2)
+        if (dataLen >= 5) {
+          result.height = view.getUint16(dataStart + 1);
+          result.width = view.getUint16(dataStart + 3);
+        }
+      } else if (markerByte === 0xDA) { // SOS: entropy-coded data follows, stop
+        break;
+      }
+      offset = dataStart + dataLen;
+    }
+    return result;
+  }
+
+  // ---- PNG: verify signature, walk chunks -----------------------------
+  var PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+
+  function parsePNG(view) {
+    var result = { width: null, height: null, exif: null, xmp: null, jumbf: null, textChunks: [], errors: [] };
+    if (view.byteLength < 8) { result.errors.push('File too short to be a PNG.'); return result; }
+    for (var i = 0; i < 8; i++) {
+      if (view.getUint8(i) !== PNG_SIGNATURE[i]) {
+        result.errors.push('Not a PNG file (bad signature).');
+        return result;
+      }
+    }
+    var offset = 8;
+    var guard = 0;
+    while (offset + 8 <= view.byteLength) {
+      if (++guard > 20000) { result.errors.push('Too many chunks; stopped early.'); break; }
+      var length = view.getUint32(offset);
+      var type = latin1String(view, offset + 4, 4);
+      var dataStart = offset + 8;
+      if (dataStart + length + 4 > view.byteLength) {
+        result.errors.push('Truncated chunk "' + type + '".');
+        break;
+      }
+      if (type === 'IHDR') {
+        result.width = view.getUint32(dataStart);
+        result.height = view.getUint32(dataStart + 4);
+      } else if (type === 'tEXt') {
+        var nul = findNul(view, dataStart, dataStart + length);
+        var keyword = latin1String(view, dataStart, nul - dataStart);
+        var text = latin1String(view, nul + 1, dataStart + length - (nul + 1));
+        result.textChunks.push({ type: 'tEXt', keyword: keyword, value: text });
+      } else if (type === 'zTXt') {
+        var nulz = findNul(view, dataStart, dataStart + length);
+        var keywordz = latin1String(view, dataStart, nulz - dataStart);
+        result.textChunks.push({ type: 'zTXt', keyword: keywordz, value: 'compressed, not shown' });
+      } else if (type === 'iTXt') {
+        var p = dataStart;
+        var end = dataStart + length;
+        var nul1 = findNul(view, p, end);
+        var keywordi = latin1String(view, p, nul1 - p);
+        p = nul1 + 1;
+        var compressionFlag = view.getUint8(p); p += 1;
+        p += 1; // compression method, ignored
+        var nul2 = findNul(view, p, end); p = nul2 + 1; // language tag
+        var nul3 = findNul(view, p, end); p = nul3 + 1; // translated keyword
+        var value;
+        if (compressionFlag === 1) { value = 'compressed, not shown'; }
+        else { value = utf8Decode(view, p, end - p); }
+        result.textChunks.push({ type: 'iTXt', keyword: keywordi, value: value });
+      } else if (type === 'eXIf') {
+        var tiff = parseTIFF(view, dataStart);
+        if (tiff) { result.exif = tiff; }
+      } else if (type === 'caBX') {
+        result.jumbf = scanC2PAText(view, dataStart, length);
+      } else if (type === 'IEND') {
+        break;
+      }
+      offset = dataStart + length + 4; // skip CRC
+    }
+    return result;
+  }
+
+  // ---- WebP: verify RIFF....WEBP, walk chunks -------------------------
+  function parseWebP(view) {
+    var result = { width: null, height: null, exif: null, xmp: null, jumbf: null, errors: [] };
+    if (view.byteLength < 12 || !bytesMatchAscii(view, 0, 'RIFF') || !bytesMatchAscii(view, 8, 'WEBP')) {
+      result.errors.push('Not a WebP file (missing RIFF/WEBP header).');
+      return result;
+    }
+    var offset = 12;
+    var guard = 0;
+    while (offset + 8 <= view.byteLength) {
+      if (++guard > 20000) { result.errors.push('Too many chunks; stopped early.'); break; }
+      var fourcc = latin1String(view, offset, 4);
+      var chunkSize = view.getUint32(offset + 4, true);
+      var dataStart = offset + 8;
+      if (dataStart + chunkSize > view.byteLength) {
+        result.errors.push('Truncated chunk "' + fourcc + '".');
+        break;
+      }
+      if (fourcc === 'VP8X' && chunkSize >= 10) {
+        result.width = 1 + (view.getUint8(dataStart + 4) | (view.getUint8(dataStart + 5) << 8) | (view.getUint8(dataStart + 6) << 16));
+        result.height = 1 + (view.getUint8(dataStart + 7) | (view.getUint8(dataStart + 8) << 8) | (view.getUint8(dataStart + 9) << 16));
+      } else if (fourcc === 'VP8L' && chunkSize >= 5 && view.getUint8(dataStart) === 0x2F) {
+        var bits = view.getUint32(dataStart + 1, true);
+        result.width = (bits & 0x3FFF) + 1;
+        result.height = ((bits >>> 14) & 0x3FFF) + 1;
+      } else if (fourcc === 'VP8 ' && chunkSize >= 10 &&
+        view.getUint8(dataStart + 3) === 0x9D && view.getUint8(dataStart + 4) === 0x01 && view.getUint8(dataStart + 5) === 0x2A) {
+        var wField = view.getUint16(dataStart + 6, true);
+        var hField = view.getUint16(dataStart + 8, true);
+        result.width = wField & 0x3FFF;
+        result.height = hField & 0x3FFF;
+      } else if (fourcc === 'EXIF') {
+        var tiffBase = dataStart;
+        if (bytesMatchAscii(view, dataStart, 'Exif  ')) { tiffBase = dataStart + 6; }
+        var tiff = parseTIFF(view, tiffBase);
+        if (tiff) { result.exif = tiff; }
+      } else if (fourcc === 'XMP ') {
+        var xmp = scanXMPText(view, dataStart, chunkSize);
+        if (xmp) { result.xmp = xmp; }
+      } else if (fourcc === 'C2PA') {
+        result.jumbf = scanC2PAText(view, dataStart, chunkSize);
+      }
+      offset = dataStart + chunkSize + (chunkSize % 2); // chunks are padded to even size
+    }
+    return result;
+  }
+
+  // ---- dispatch ---------------------------------------------------------
+  function detectFormat(view) {
+    if (view.byteLength >= 2 && view.getUint16(0) === 0xFFD8) { return 'jpeg'; }
+    if (view.byteLength >= 8) {
+      var isPng = true;
+      for (var i = 0; i < 8; i++) { if (view.getUint8(i) !== PNG_SIGNATURE[i]) { isPng = false; break; } }
+      if (isPng) { return 'png'; }
+    }
+    if (view.byteLength >= 12 && bytesMatchAscii(view, 0, 'RIFF') && bytesMatchAscii(view, 8, 'WEBP')) { return 'webp'; }
+    return null;
+  }
+
+  function parseImageBuffer(view) {
+    var format = detectFormat(view);
+    if (!format) {
+      return { format: null, errors: ['This does not look like a JPEG, PNG, or WebP file (or the file is corrupted).'] };
+    }
+    var parsed;
+    try {
+      if (format === 'jpeg') { parsed = parseJPEG(view); }
+      else if (format === 'png') { parsed = parsePNG(view); }
+      else { parsed = parseWebP(view); }
+    } catch (err) {
+      return { format: format, errors: ['Could not fully parse this file: ' + err.message] };
+    }
+    parsed.format = format;
+    return parsed;
+  }
+
+  function buildVerdict(parsed) {
+    var verdicts = [];
+    var exif = parsed.exif || {};
+    var hasCamera = !!(exif.Make || exif.Model);
+    var hasSoftware = !!exif.Software;
+    var hasGenParams = (parsed.textChunks || []).some(function (c) { return c.keyword === 'parameters'; });
+    var hasC2PA = !!parsed.jumbf;
+
+    if (hasCamera) { verdicts.push('Camera metadata found'); }
+    if (hasSoftware) { verdicts.push('Software field present: ' + exif.Software); }
+    if (hasGenParams) { verdicts.push('Generation parameters found (PNG text)'); }
+    if (hasC2PA) { verdicts.push('C2PA manifest present (signature not verified here)'); }
+
+    if (verdicts.length === 0) { return { text: 'No provenance data found', empty: true }; }
+    return { text: verdicts.join('. ') + '.', empty: false };
+  }
+
+  // ======================================================================
+  // UI wiring
+  // ======================================================================
+
+  var el = function (id) { return document.getElementById(id); };
+  var fileInput = el('fileInput');
+  var fileInfoEl = el('fileInfo');
+  var verdictEl = el('verdict');
+  var errorBoxEl = el('errorBox');
+  var reportEl = el('report');
+
+  function formatBytes(n) {
+    if (n < 1024) { return n + ' B'; }
+    if (n < 1024 * 1024) { return (n / 1024).toFixed(1) + ' KB'; }
+    return (n / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function truncateForDisplay(s) {
+    if (s == null) { return ''; }
+    s = String(s);
+    return s.length > 400 ? s.slice(0, 400) + '…' : s;
+  }
+
+  function clearChildren(node) {
+    while (node.firstChild) { node.removeChild(node.firstChild); }
+  }
+
+  function makeGroup(title) {
+    var section = document.createElement('section');
+    section.className = 'group';
+    var h2 = document.createElement('h2');
+    h2.textContent = title;
+    section.appendChild(h2);
+    var table = document.createElement('table');
+    table.className = 'fields';
+    var thead = document.createElement('thead');
+    var headRow = document.createElement('tr');
+    var th1 = document.createElement('th'); th1.scope = 'col'; th1.textContent = 'Field';
+    var th2 = document.createElement('th'); th2.scope = 'col'; th2.textContent = 'Value';
+    headRow.appendChild(th1); headRow.appendChild(th2);
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+    section.appendChild(table);
+    return { section: section, tbody: tbody };
+  }
+
+  function addRow(tbody, label, value, opts) {
+    var tr = document.createElement('tr');
+    if (opts && opts.highlight) { tr.className = 'highlight'; }
+    var th = document.createElement('th');
+    th.scope = 'row';
+    th.textContent = label;
+    var td = document.createElement('td');
+    td.textContent = truncateForDisplay(value);
+    tr.appendChild(th); tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+
+  function renderReport(parsed, file) {
+    clearChildren(reportEl);
+    errorBoxEl.hidden = true;
+    clearChildren(errorBoxEl);
+
+    // --- file info line: type, size, dimensions ---
+    clearChildren(fileInfoEl);
+    var lines = [];
+    lines.push((file.type || parsed.format || 'unknown type'));
+    lines.push(formatBytes(file.size));
+    if (parsed.width && parsed.height) {
+      lines.push(parsed.width + ' × ' + parsed.height + ' px');
+    } else {
+      lines.push('dimensions: pending…');
+    }
+    fileInfoEl.textContent = file.name + ' — ' + lines.join(', ');
+
+    // --- unrecognised format or hard parse failure ---
+    if (!parsed.format) {
+      errorBoxEl.hidden = false;
+      errorBoxEl.textContent = (parsed.errors && parsed.errors[0]) || 'Could not read this file.';
+      verdictEl.className = 'verdict none';
+      verdictEl.textContent = 'No provenance data found';
+      return;
+    }
+
+    // --- EXIF group ---
+    if (parsed.exif) {
+      var exifGroup = makeGroup('EXIF (camera / software metadata)');
+      var exif = parsed.exif;
+      if (exif.Make) { addRow(exifGroup.tbody, 'Make', exif.Make); }
+      if (exif.Model) { addRow(exifGroup.tbody, 'Model', exif.Model); }
+      if (exif.Software) { addRow(exifGroup.tbody, 'Software', exif.Software, { highlight: true }); }
+      if (exif.DateTimeOriginal) { addRow(exifGroup.tbody, 'DateTimeOriginal', exif.DateTimeOriginal); }
+      if (exif.ImageDescription) { addRow(exifGroup.tbody, 'ImageDescription', exif.ImageDescription); }
+      if (exif.UserComment) { addRow(exifGroup.tbody, 'UserComment', exif.UserComment); }
+      if (exif.Artist) { addRow(exifGroup.tbody, 'Artist', exif.Artist); }
+      reportEl.appendChild(exifGroup.section);
+    }
+
+    // --- XMP group ---
+    if (parsed.xmp) {
+      var xmpGroup = makeGroup('XMP');
+      if (parsed.xmp.CreatorTool) { addRow(xmpGroup.tbody, 'xmp:CreatorTool', parsed.xmp.CreatorTool, { highlight: true }); }
+      if (parsed.xmp.Creator) { addRow(xmpGroup.tbody, 'dc:creator', parsed.xmp.Creator); }
+      reportEl.appendChild(xmpGroup.section);
+    }
+
+    // --- PNG text chunks group ---
+    if (parsed.textChunks && parsed.textChunks.length) {
+      var textGroup = makeGroup('PNG text chunks');
+      parsed.textChunks.forEach(function (chunk) {
+        var label = chunk.keyword + ' (' + chunk.type + ')';
+        addRow(textGroup.tbody, label, chunk.value, { highlight: chunk.keyword === 'parameters' });
+      });
+      reportEl.appendChild(textGroup.section);
+    }
+
+    // --- C2PA / JUMBF group ---
+    if (parsed.jumbf) {
+      var c2paGroup = makeGroup('C2PA / JUMBF (signature not verified)');
+      addRow(c2paGroup.tbody, 'Box present', 'yes (JUMBF/C2PA box found, contents scanned as text only)');
+      addRow(c2paGroup.tbody, 'Strings found', parsed.jumbf.found.length ? parsed.jumbf.found.join(', ') : 'none of the known markers');
+      if (parsed.jumbf.snippets.claim_generator) {
+        addRow(c2paGroup.tbody, 'claim_generator text', parsed.jumbf.snippets.claim_generator, { highlight: true });
+      }
+      if (parsed.jumbf.snippets.softwareAgent) {
+        addRow(c2paGroup.tbody, 'softwareAgent text', parsed.jumbf.snippets.softwareAgent, { highlight: true });
+      }
+      reportEl.appendChild(c2paGroup.section);
+    }
+
+    // --- non-fatal parse notes ---
+    if (parsed.errors && parsed.errors.length) {
+      errorBoxEl.hidden = false;
+      errorBoxEl.textContent = 'Note: ' + parsed.errors.join(' ');
+    }
+
+    // --- verdict ---
+    var verdict = buildVerdict(parsed);
+    verdictEl.className = verdict.empty ? 'verdict none' : 'verdict';
+    verdictEl.textContent = verdict.text;
+  }
+
+  function updateDimensionsFromImage(file) {
+    // Fallback for files this parser could not find a SOF0/SOF2/IHDR/VP8
+    // header in (e.g. an unusual encoder layout): ask the browser to decode
+    // the image itself, purely to read its pixel size.
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () {
+      URL.revokeObjectURL(url);
+      if (img.naturalWidth && img.naturalHeight) {
+        var current = fileInfoEl.textContent;
+        fileInfoEl.textContent = current.replace('dimensions: pending…', img.naturalWidth + ' × ' + img.naturalHeight + ' px');
+      }
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); };
+    img.src = url;
+  }
+
+  fileInput.addEventListener('change', function () {
+    var file = fileInput.files && fileInput.files[0];
+    if (!file) { return; }
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      try {
+        var view = new DataView(ev.target.result);
+        var parsed = parseImageBuffer(view);
+        renderReport(parsed, file);
+        if (parsed.format && (!parsed.width || !parsed.height)) {
+          updateDimensionsFromImage(file);
+        }
+      } catch (err) {
+        clearChildren(reportEl);
+        errorBoxEl.hidden = false;
+        errorBoxEl.textContent = 'Could not read this file: ' + err.message;
+        verdictEl.className = 'verdict none';
+        verdictEl.textContent = 'No provenance data found';
+      }
+    };
+    reader.onerror = function () {
+      errorBoxEl.hidden = false;
+      errorBoxEl.textContent = 'Could not read this file from disk.';
+    };
+    // The file is read into memory locally; it is never sent anywhere.
+    reader.readAsArrayBuffer(file);
+  });
+})();
+  </script>
+</body>
+</html>
