@@ -93,7 +93,7 @@
 
   <fieldset>
     <legend>Agent perception</legend>
-    <label for="noise">Perception noise (chance of misreading a neighbouring cell) <span class="vals" id="noiseDisp">0.00</span></label>
+    <label for="noise">Perception noise (chance a step misreads one of the four things it looks at) <span class="vals" id="noiseDisp">0.00</span></label>
     <input type="range" id="noise" min="0" max="0.5" step="0.01" value="0" aria-describedby="noiseDisp"/>
     <button type="button" id="checkpointToggle" aria-pressed="false">Human checkpoint: off</button>
   </fieldset>
@@ -133,7 +133,7 @@
 
   <div id="trace" role="log" aria-live="polite" aria-label="Agent trace"></div>
 
-  <p class="hint">Start is the corner marked St; visit search, draft and render in that order before publish counts. Cells the agent currently believes are blocked carry a diagonal mark, whether or not they really are: with noise on, watch that mark appear on free cells and disappear again as the agent looks again.</p>
+  <p class="hint">Start is the corner marked St; visit search, draft and render in that order before publish counts. Each step, the agent looks at its four neighbouring cells; the noise slider is the chance that one of those four readings, chosen at random, comes back wrong that step. Cells the agent currently believes are blocked carry a diagonal mark, whether or not they really are: with noise on, watch that mark appear on free cells and disappear again as the agent looks again.</p>
 
   <script>
 (function () {
@@ -144,6 +144,7 @@
   var NOISE_SALT = 0x9e3779b9;
   var OBSTACLE_DENSITY = 0.15;
   var MAX_OPTIMAL_STEPS = 45;
+  var NOISE_SCALE = 1; // scales the slider value to the actual per-step misread probability
   var MAX_WORLD_ATTEMPTS = 500;
   var DEFAULT_SEED = 1;
   var DEFAULT_BUDGET = 60;
@@ -273,17 +274,31 @@
   }
 
   // ---- noisy observation of the four neighbours, updating the believed map in place ----
+  // The slider reads as the chance that this step contains one misread, not
+  // the chance that each of the four neighbours is independently misread:
+  // one coin flip per step decides whether a misread happens at all, and a
+  // second draw (only spent if it does) picks which single neighbour it
+  // hits. NOISE_SCALE lets that per-step probability be tuned separately
+  // from the number shown on the slider, without changing what the slider
+  // itself means.
   function observe(world, belief, pos, noiseP, rng) {
-    var parts = [], d, nx, ny, idx, trueVal, obsVal;
+    var neighbours = [], parts = [], d, nx, ny;
     for (d = 0; d < DIRS.length; d++) {
       nx = pos.x + DIRS[d].dx; ny = pos.y + DIRS[d].dy;
       if (nx < 0 || ny < 0 || nx >= world.size || ny >= world.size) { continue; }
-      trueVal = trueBlocked(world, nx, ny);
-      obsVal = trueVal;
-      if (rng() < noiseP) { obsVal = !obsVal; }
-      idx = ny * world.size + nx;
+      neighbours.push({ dir: d, x: nx, y: ny, trueVal: trueBlocked(world, nx, ny) });
+    }
+    var misreadAt = -1;
+    if (neighbours.length && rng() < noiseP * NOISE_SCALE) {
+      misreadAt = Math.floor(rng() * neighbours.length);
+    }
+    var i, n, obsVal, idx;
+    for (i = 0; i < neighbours.length; i++) {
+      n = neighbours[i];
+      obsVal = (i === misreadAt) ? !n.trueVal : n.trueVal;
+      idx = n.y * world.size + n.x;
       belief[idx] = obsVal ? BLOCKED : FREE;
-      parts.push((obsVal ? 'obstacle ' : 'free ') + DIRS[d].name);
+      parts.push((obsVal ? 'obstacle ' : 'free ') + DIRS[n.dir].name);
     }
     return parts.join(', ');
   }
