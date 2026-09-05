@@ -29,6 +29,9 @@ ENV/
 .vscode/
 .idea/
 
+# Link-check scratch (Markdown exported from the notebooks by linkcheck.yml)
+book/linkcheck-*.md
+
 # MyST / Jupyter Book build output
 _build/
 book/_build/

@@ -6,7 +6,7 @@
 
 This is the source code for the open textbook **Creative AI**, a bachelor-level course at the University of Oslo (UiO) open to students from all faculties.
 
-The book has been written using [Jupyter Book v2](https://next.jupyterbook.org/) and the [MyST Markdown](https://mystmd.org/) authoring system. It can be compiled to several formats (HTML, PDF). If you are mainly interested in the content, go to [the build](https://fourms.github.io/Creative-AI/).
+The book has been written using [Jupyter Book v2](https://jupyterbook.org/) and the [MyST Markdown](https://mystmd.org/) authoring system. It can be compiled to several formats (HTML, PDF). If you are mainly interested in the content, go to [the build](https://fourms.github.io/Creative-AI/).
 
 ## Course at a glance
 
@@ -36,7 +36,7 @@ scripts/check-style.py      Checks prose against the course style guide
 scripts/verify-book-build.sh  Full local build, exactly as CI runs it
 scripts/tests/              Tests for the scripts above
 .github/workflows/deploy.yml         Builds the book and publishes it to GitHub Pages
-.github/workflows/linkcheck.yml      Checks every link in the built site
+.github/workflows/linkcheck.yml      Checks links in the Markdown pages, the notebooks, and the bibliography
 .github/workflows/accessibility.yml  Runs pa11y over the built site
 requirements.txt            Python dependencies for building the book
 ```

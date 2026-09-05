@@ -176,7 +176,7 @@
     for (o = 1; o <= maxOrder; o++) {
       map = new Map();
       for (i = 0; i + o < tokens.length; i++) {
-        ctxKey = tokens.slice(i, i + o).join('');
+        ctxKey = tokens.slice(i, i + o).join('\u0001');
         nextTok = tokens[i + o];
         inner = map.get(ctxKey);
         if (!inner) { inner = new Map(); map.set(ctxKey, inner); }
@@ -192,7 +192,7 @@
   function nextCounts(tables, context, order) {
     var o, ctxKey, map, hit;
     for (o = order; o >= 1; o--) {
-      ctxKey = context.slice(context.length - o).join('');
+      ctxKey = context.slice(context.length - o).join('\u0001');
       map = tables[o];
       hit = map.get(ctxKey);
       if (hit) { return hit; }

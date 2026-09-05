@@ -12,8 +12,37 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '20'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
       - run: npm install -g markdown-link-check
+      - name: Export notebook prose and bibliography URLs to Markdown
+        run: |
+          python - <<'PY'
+          import glob, json, os, re
+
+          written = 0
+          for path in sorted(glob.glob('book/**/*.ipynb', recursive=True)):
+              if '_build' in path or '.ipynb_checkpoints' in path:
+                  continue
+              with open(path, encoding='utf-8') as handle:
+                  notebook = json.load(handle)
+              prose = [''.join(cell['source'])
+                       for cell in notebook['cells'] if cell['cell_type'] == 'markdown']
+              name = 'linkcheck-' + os.path.basename(path)[: -len('.ipynb')] + '.md'
+              with open(os.path.join(os.path.dirname(path), name), 'w', encoding='utf-8') as handle:
+                  handle.write('\n\n'.join(prose) + '\n')
+              written += 1
+
+          with open('book/references.bib', encoding='utf-8') as handle:
+              urls = re.findall(r'\burl\s*=\s*\{([^}]+)\}', handle.read())
+          with open('book/linkcheck-references.md', 'w', encoding='utf-8') as handle:
+              for url in urls:
+                  handle.write('- <%s>\n' % url.strip())
+          written += 1
+          print('wrote %d Markdown files, %d bibliography URLs' % (written, len(urls)))
+          PY
       - name: Check Markdown links
         run: |
-          find . -name '*.md' -not -path './.git/*' -not -path './book/_build/*' -not -path './.venv/*' -not -path './notes/*' -print0 \
-            | xargs -0 -I{} markdown-link-check -q {}
+          find . -name '*.md' -not -path './.git/*' -not -path './book/_build/*' -not -path './.venv/*' -not -path './notes/*' -not -path './.superpowers/*' -print0 \
+            | xargs -0 -I{} markdown-link-check -q -c .github/markdown-link-check.json {}
