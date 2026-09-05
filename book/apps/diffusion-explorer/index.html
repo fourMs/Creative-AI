@@ -66,7 +66,7 @@
     <legend>Image</legend>
     <label for="fileInput">Load your own image (stays on this device)</label>
     <input type="file" id="fileInput" accept="image/*"/>
-    <p class="hint">Or use the bundled sample image below. Loading a new image resets the step to 0 and generates a fresh noise field.</p>
+    <p class="hint">Non-square pictures are centre-cropped to a square. Or use the bundled sample image below. Loading a new image resets the step to 0 and generates a fresh noise field.</p>
   </fieldset>
 
   <fieldset>
@@ -193,6 +193,13 @@
   var basePixels = null;   // Float32Array, r,g,b per pixel, 0..255
   var noiseField = null;   // Float32Array, same layout, standard normal
 
+  // Scratch buffers reused across renders instead of being reallocated every
+  // frame: the noised pixel buffer, the box-blur output buffer, and the
+  // ImageData object written into the pixel canvas.
+  var noisedBuf = new Float32Array(SIZE * SIZE * 3);
+  var blurBuf = new Float32Array(SIZE * SIZE * 3);
+  var scratchImageData = pixelCtx.createImageData(SIZE, SIZE);
+
   function generateNoiseField() {
     var n = SIZE * SIZE * 3;
     var out = new Float32Array(n);
@@ -209,8 +216,13 @@
   function loadImageFromSource(src) {
     var img = new Image();
     img.onload = function () {
+      // Centre-crop to a square before scaling, so a non-square upload is
+      // not stretched: take the largest centred square of the source image.
+      var s = Math.min(img.naturalWidth, img.naturalHeight);
+      var sx = (img.naturalWidth - s) / 2;
+      var sy = (img.naturalHeight - s) / 2;
       offCtx.clearRect(0, 0, SIZE, SIZE);
-      offCtx.drawImage(img, 0, 0, SIZE, SIZE);
+      offCtx.drawImage(img, sx, sy, s, s, 0, 0, SIZE, SIZE);
       var data = offCtx.getImageData(0, 0, SIZE, SIZE).data;
       var n = SIZE * SIZE;
       var pixels = new Float32Array(n * 3);
@@ -246,8 +258,8 @@
   });
 
   // ---- box blur used only for the "denoise (blur demo)" illustration ----
-  function boxBlur(src, w, h) {
-    var out = new Float32Array(src.length);
+  // Writes into the shared `out` buffer rather than allocating a new one.
+  function boxBlur(src, w, h, out) {
     var radius = 2;
     for (var y = 0; y < h; y++) {
       for (var x = 0; x < w; x++) {
@@ -284,24 +296,21 @@
     var sqrtA = Math.sqrt(alphaBar);
     var sqrtOneMinusA = Math.sqrt(Math.max(0, 1 - alphaBar));
     var n = SIZE * SIZE * 3;
-    var noised = new Float32Array(n);
     for (var i = 0; i < n; i++) {
       // pixel values are 0..255; noise is standard normal, so scale it to the
       // same range before mixing, matching sqrt(alpha_bar)*x + sqrt(1-alpha_bar)*noise.
-      var v = sqrtA * basePixels[i] + sqrtOneMinusA * (noiseField[i] * 127.5);
-      noised[i] = v;
+      noisedBuf[i] = sqrtA * basePixels[i] + sqrtOneMinusA * (noiseField[i] * 127.5);
     }
-    var out = denoiseBtn.getAttribute('aria-pressed') === 'true' ? boxBlur(noised, SIZE, SIZE) : noised;
+    var out = denoiseBtn.getAttribute('aria-pressed') === 'true' ? boxBlur(noisedBuf, SIZE, SIZE, blurBuf) : noisedBuf;
 
-    var imageData = pixelCtx.createImageData(SIZE, SIZE);
-    var d = imageData.data;
+    var d = scratchImageData.data;
     for (var p = 0; p < SIZE * SIZE; p++) {
       d[p * 4] = clamp255(out[p * 3]);
       d[p * 4 + 1] = clamp255(out[p * 3 + 1]);
       d[p * 4 + 2] = clamp255(out[p * 3 + 2]);
       d[p * 4 + 3] = 255;
     }
-    pixelCtx.putImageData(imageData, 0, 0);
+    pixelCtx.putImageData(scratchImageData, 0, 0);
     imgCtx.clearRect(0, 0, imgSize.w, imgSize.h);
     imgCtx.drawImage(pixelCanvas, 0, 0, SIZE, SIZE, 0, 0, imgSize.w, imgSize.h);
 
