@@ -11,16 +11,16 @@ Across the semester you will meet many tools. The list below is not exhaustive, 
 
 The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. Most are still being built; each link below goes live once its app lands, and the "in preparation" label disappears at the same time.
 
-- [Training loop playground](https://fourms.github.io/Creative-AI/apps/training-loop/) (in preparation) — watch a tiny model's loss fall step by step as it trains.
-- [Next-token sampler](https://fourms.github.io/Creative-AI/apps/next-token-sampler/) (in preparation) — compare greedy, temperature, and top-p sampling on the same next-token distribution.
-- [Tokeniser explorer](https://fourms.github.io/Creative-AI/apps/tokeniser-explorer/) (in preparation) — see how a sentence splits into tokens, and why Norwegian text costs more tokens than English.
-- [Forward diffusion explorer](https://fourms.github.io/Creative-AI/apps/diffusion-explorer/) (in preparation) — watch an image dissolve into noise, then step back to see how diffusion models learn to reverse it.
-- [Inference energy estimator](https://fourms.github.io/Creative-AI/apps/energy-estimator/) (in preparation) — estimate the energy and water cost of running a prompt through a model of a given size.
-- [Provenance inspector](https://fourms.github.io/Creative-AI/apps/provenance-inspector/) (in preparation) — inspect the metadata a generated file carries, and what it does and does not prove.
-- [Word-vector explorer](https://fourms.github.io/Creative-AI/apps/word-vectors/) (in preparation) — explore how word embeddings place related words near each other in vector space.
-- [Markov melody generator](https://fourms.github.io/Creative-AI/apps/markov-melody/) (in preparation) — generate a short melody from a Markov chain trained on a handful of tunes.
-- [Agent loop simulator](https://fourms.github.io/Creative-AI/apps/agent-loop/) (in preparation) — step through an agent's plan, act, and observe loop one tool call at a time.
-- [Rhythm-bot](https://fourms.github.io/Creative-AI/apps/rhythm-bot/) (in preparation) — map a tapped rhythm onto a simple generative pattern, live in the browser.
+- [Training loop playground](https://fourms.github.io/Creative-AI/apps/training-loop/) (in preparation): watch a tiny model's loss fall step by step as it trains.
+- [Next-token sampler](https://fourms.github.io/Creative-AI/apps/next-token-sampler/) (in preparation): compare greedy, temperature, and top-p sampling on the same next-token distribution.
+- [Tokeniser explorer](https://fourms.github.io/Creative-AI/apps/tokeniser-explorer/) (in preparation): see how a sentence splits into tokens, and why Norwegian text costs more tokens than English.
+- [Forward diffusion explorer](https://fourms.github.io/Creative-AI/apps/diffusion-explorer/) (in preparation): watch an image dissolve into noise, then step back to see how diffusion models learn to reverse it.
+- [Inference energy estimator](https://fourms.github.io/Creative-AI/apps/energy-estimator/) (in preparation): estimate the energy and water cost of running a prompt through a model of a given size.
+- [Provenance inspector](https://fourms.github.io/Creative-AI/apps/provenance-inspector/) (in preparation): inspect the metadata a generated file carries, and what it does and does not prove.
+- [Word-vector explorer](https://fourms.github.io/Creative-AI/apps/word-vectors/) (in preparation): explore how word embeddings place related words near each other in vector space.
+- [Markov melody generator](https://fourms.github.io/Creative-AI/apps/markov-melody/) (in preparation): generate a short melody from a Markov chain trained on a handful of tunes.
+- [Agent loop simulator](https://fourms.github.io/Creative-AI/apps/agent-loop/) (in preparation): step through an agent's plan, act, and observe loop one tool call at a time.
+- [Rhythm-bot](https://fourms.github.io/Creative-AI/apps/rhythm-bot/) (in preparation): map a tapped rhythm onto a simple generative pattern, live in the browser.
 
 ## Tool categories
 
@@ -81,8 +81,8 @@ The book also ships with its own small apps: single-page, self-contained tools b
 - [Luma AI](https://lumalabs.ai/), [Polycam](https://poly.cam/) — Gaussian splats and 3D capture
 - [Meshy](https://www.meshy.ai/), [Tripo3D](https://www.tripo3d.ai/) — text/image to 3D mesh
 - [Scenario](https://www.scenario.com/), [Layer](https://www.layer.ai/) — game-art pipelines
-- Meta Quest Browser — a headset viewer for exploring Gaussian splats and WebXR scenes in VR
-- [Adobe Aero](https://www.adobe.com/products/aero.html) — a phone AR viewer for placing a generated 3D asset in the room in front of you
+- [Meta Quest Browser](https://www.meta.com/quest/): a headset viewer for exploring Gaussian splats and WebXR scenes in VR
+- [Adobe Aero](https://www.adobe.com/products/aero.html): a phone AR viewer for placing a generated 3D asset in the room in front of you
 
 **Open alternative.** [Nerfstudio](https://docs.nerf.studio/) is an open-source toolkit for building and viewing your own Gaussian splats.
 
