@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Agent loop simulator</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+      --warn-bg: #fbeadf; --warn-fg: #8a3a10; --warn-border: #e0a877;
+      --ok-bg: #e6f4ea; --ok-fg: #14602f; --ok-border: #9bcbab;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+        --warn-bg: #3a2416; --warn-fg: #f2b183; --warn-border: #7a4a22;
+        --ok-bg: #163524; --ok-fg: #8fd6a8; --ok-border: #2f6a45;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    input[type="number"] {
+      width: 100px; padding: 6px 8px; margin: 2px 0 4px; font-size: 1rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+    @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+    .stats { font-size: 1.02rem; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+    .status {
+      display: none; margin: 10px 0 0; padding: 8px 12px; border-radius: 6px;
+      font-weight: 600;
+    }
+    .status.shown { display: block; }
+    .status.ok { background: var(--ok-bg); color: var(--ok-fg); border: 1px solid var(--ok-border); }
+    .status.warn { background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-border); }
+    canvas {
+      display: block; width: 100%; height: auto; aspect-ratio: 1 / 1;
+      border: 1px solid var(--border); border-radius: 6px; margin-top: 10px; background: var(--canvas);
+    }
+    #trace {
+      margin-top: 10px; height: 220px; overflow-y: auto; padding: 8px 10px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85rem; line-height: 1.4;
+    }
+    #trace div { white-space: pre-wrap; }
+    #checkpointPanel[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Agent loop simulator</h1>
+  <p class="intro">An agent is a loop: plan, act, observe, repeat, until the goal is met or the budget runs out. Step through one and watch what noise and a budget do to it, and where a human checkpoint would have helped. Everything runs in your browser; nothing you do here leaves the page.</p>
+
+  <fieldset>
+    <legend>World</legend>
+    <div class="row">
+      <div>
+        <label for="seed">Seed</label>
+        <input type="number" id="seed" value="1" step="1"/>
+      </div>
+      <div>
+        <label for="budget">Budget (max steps)</label>
+        <input type="number" id="budget" value="60" min="1" max="500" step="1"/>
+      </div>
+      <button type="button" id="newSeedBtn">New seed</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Agent perception</legend>
+    <label for="noise">Perception noise (chance of misreading a neighbouring cell) <span class="vals" id="noiseDisp">0.00</span></label>
+    <input type="range" id="noise" min="0" max="0.5" step="0.01" value="0" aria-describedby="noiseDisp"/>
+    <button type="button" id="checkpointToggle" aria-pressed="false">Human checkpoint: off</button>
+  </fieldset>
+
+  <div class="row">
+    <button type="button" id="step">Step</button>
+    <button type="button" id="run" class="primary" aria-pressed="false">Run</button>
+    <button type="button" id="resetBtn">Reset</button>
+  </div>
+
+  <fieldset id="checkpointPanel" hidden>
+    <legend>Human checkpoint</legend>
+    <p id="checkpointMsg" aria-live="polite">Paused after a tool use.</p>
+    <div class="row">
+      <button type="button" id="approveBtn" class="primary">Approve</button>
+    </div>
+    <div class="grid2">
+      <div>
+        <label for="redirCol">Redirect column (0-9)</label>
+        <input type="number" id="redirCol" min="0" max="9" value="0"/>
+      </div>
+      <div>
+        <label for="redirRow">Redirect row (0-9)</label>
+        <input type="number" id="redirRow" min="0" max="9" value="0"/>
+      </div>
+    </div>
+    <div class="row">
+      <button type="button" id="redirectBtn">Redirect here</button>
+    </div>
+    <p class="hint">Or click a cell in the grid below to fill in its coordinates.</p>
+  </fieldset>
+
+  <div class="stats" id="stats" aria-live="polite">Steps: 0 of 60. Tool calls: 0 of 3. Next target: search.</div>
+  <div class="status" id="statusMsg" role="status" aria-live="polite"></div>
+
+  <canvas id="grid" width="680" height="680" role="img" aria-label="10 by 10 grid world"></canvas>
+
+  <div id="trace" role="log" aria-live="polite" aria-label="Agent trace"></div>
+
+  <p class="hint">Start is the corner marked St; visit search, draft and render in that order before publish counts. Cells the agent currently believes are blocked carry a diagonal mark, whether or not they really are: with noise on, watch that mark appear on free cells and disappear again as the agent looks again.</p>
+
+  <script>
+(function () {
+  'use strict';
+
+  var GRID_SIZE = 10;
+  var UNKNOWN = 0, FREE = 1, BLOCKED = 2;
+  var NOISE_SALT = 0x9e3779b9;
+  var OBSTACLE_DENSITY = 0.15;
+  var MAX_OPTIMAL_STEPS = 45;
+  var MAX_WORLD_ATTEMPTS = 500;
+  var DEFAULT_SEED = 1;
+  var DEFAULT_BUDGET = 60;
+  var STEP_INTERVAL_MS = 400;
+  var DIRS = [
+    { dx: 0, dy: -1, name: 'north' },
+    { dx: 1, dy: 0, name: 'east' },
+    { dx: 0, dy: 1, name: 'south' },
+    { dx: -1, dy: 0, name: 'west' }
+  ];
+
+  var el = function (id) { return document.getElementById(id); };
+  var seedEl = el('seed'), budgetEl = el('budget'), newSeedBtn = el('newSeedBtn');
+  var noiseEl = el('noise'), noiseDispEl = el('noiseDisp'), checkpointToggleEl = el('checkpointToggle');
+  var stepBtn = el('step'), runBtn = el('run'), resetBtn = el('resetBtn');
+  var checkpointPanel = el('checkpointPanel'), checkpointMsgEl = el('checkpointMsg');
+  var approveBtn = el('approveBtn'), redirectBtn = el('redirectBtn');
+  var redirColEl = el('redirCol'), redirRowEl = el('redirRow');
+  var statsEl = el('stats'), statusEl = el('statusMsg');
+  var canvas = el('grid'), ctx = canvas.getContext('2d');
+  var traceEl = el('trace');
+
+  // ---- seeded pseudo-random generator (linear congruential generator) ----
+  function makeLCG(seed) {
+    var state = seed >>> 0;
+    return function () {
+      state = (Math.imul(1103515245, state) + 12345) & 0x7fffffff;
+      return state / 0x7fffffff;
+    };
+  }
+  function deriveSeed(seed, salt) { return ((seed >>> 0) ^ (salt >>> 0)) >>> 0; }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function samePos(a, b) { return a.x === b.x && a.y === b.y; }
+
+  // ---- generic breadth-first search over a grid, given a "is this cell blocked" test ----
+  function bfsPath(size, blockedFn, start, goal) {
+    var startIdx = start.y * size + start.x, goalIdx = goal.y * size + goal.x;
+    if (startIdx === goalIdx) { return [{ x: start.x, y: start.y }]; }
+    var prev = new Int32Array(size * size).fill(-1);
+    var visited = new Uint8Array(size * size);
+    visited[startIdx] = 1;
+    var queue = [{ x: start.x, y: start.y }], qi = 0;
+    var cur, curIdx, d, nx, ny, nIdx;
+    while (qi < queue.length) {
+      cur = queue[qi++];
+      curIdx = cur.y * size + cur.x;
+      if (curIdx === goalIdx) { break; }
+      for (d = 0; d < 4; d++) {
+        nx = cur.x + DIRS[d].dx; ny = cur.y + DIRS[d].dy;
+        if (nx < 0 || ny < 0 || nx >= size || ny >= size) { continue; }
+        nIdx = ny * size + nx;
+        if (visited[nIdx]) { continue; }
+        if (blockedFn(nx, ny)) { continue; }
+        visited[nIdx] = 1;
+        prev[nIdx] = curIdx;
+        queue.push({ x: nx, y: ny });
+      }
+    }
+    if (!visited[goalIdx]) { return null; }
+    var path = [], idx = goalIdx;
+    while (idx !== -1) {
+      path.push({ x: idx % size, y: Math.floor(idx / size) });
+      if (idx === startIdx) { break; }
+      idx = prev[idx];
+    }
+    path.reverse();
+    return path;
+  }
+
+  // ---- true world (ground truth) ----
+  function trueBlocked(world, x, y) {
+    if (x < 0 || y < 0 || x >= world.size || y >= world.size) { return true; }
+    return world.obstacles[y * world.size + x] === 1;
+  }
+
+  function worldOptimalLength(world) {
+    var blocked = function (x, y) { return trueBlocked(world, x, y); };
+    var legs = [world.start, world.tools.search, world.tools.draft, world.tools.render, world.goal];
+    var total = 0, i, p;
+    for (i = 0; i < legs.length - 1; i++) {
+      p = bfsPath(world.size, blocked, legs[i], legs[i + 1]);
+      if (!p) { return -1; }
+      total += p.length - 1;
+    }
+    return total;
+  }
+
+  function generateWorld(seed) {
+    var size = GRID_SIZE;
+    var start = { x: 0, y: 0 };
+    var goal = { x: size - 1, y: size - 1 };
+    var rng = makeLCG(seed);
+    var attempt, x, y, obstacles, free, pick, search, draft, render, world, optLen;
+    for (attempt = 0; attempt < MAX_WORLD_ATTEMPTS; attempt++) {
+      obstacles = new Uint8Array(size * size);
+      for (y = 0; y < size; y++) {
+        for (x = 0; x < size; x++) {
+          if ((x === start.x && y === start.y) || (x === goal.x && y === goal.y)) { continue; }
+          if (rng() < OBSTACLE_DENSITY) { obstacles[y * size + x] = 1; }
+        }
+      }
+      free = [];
+      for (y = 0; y < size; y++) {
+        for (x = 0; x < size; x++) {
+          if (obstacles[y * size + x]) { continue; }
+          if (x === start.x && y === start.y) { continue; }
+          if (x === goal.x && y === goal.y) { continue; }
+          free.push({ x: x, y: y });
+        }
+      }
+      if (free.length < 3) { continue; }
+      pick = function () { return free.splice(Math.floor(rng() * free.length), 1)[0]; };
+      search = pick(); draft = pick(); render = pick();
+      if (!search || !draft || !render) { continue; }
+      world = {
+        size: size, start: start, goal: goal, obstacles: obstacles,
+        tools: { search: search, draft: draft, render: render }, seed: seed
+      };
+      optLen = worldOptimalLength(world);
+      if (optLen >= 0 && optLen <= MAX_OPTIMAL_STEPS) { return world; }
+    }
+    // Fallback: an obstacle-free world is always solvable and short.
+    return {
+      size: size, start: start, goal: goal, obstacles: new Uint8Array(size * size),
+      tools: { search: { x: 3, y: 0 }, draft: { x: 6, y: 3 }, render: { x: 3, y: 6 } }, seed: seed
+    };
+  }
+
+  // ---- noisy observation of the four neighbours, updating the believed map in place ----
+  function observe(world, belief, pos, noiseP, rng) {
+    var parts = [], d, nx, ny, idx, trueVal, obsVal;
+    for (d = 0; d < DIRS.length; d++) {
+      nx = pos.x + DIRS[d].dx; ny = pos.y + DIRS[d].dy;
+      if (nx < 0 || ny < 0 || nx >= world.size || ny >= world.size) { continue; }
+      trueVal = trueBlocked(world, nx, ny);
+      obsVal = trueVal;
+      if (rng() < noiseP) { obsVal = !obsVal; }
+      idx = ny * world.size + nx;
+      belief[idx] = obsVal ? BLOCKED : FREE;
+      parts.push((obsVal ? 'obstacle ' : 'free ') + DIRS[d].name);
+    }
+    return parts.join(', ');
+  }
+
+  function bfsBelief(belief, size, start, goal) {
+    return bfsPath(size, function (x, y) { return belief[y * size + x] === BLOCKED; }, start, goal);
+  }
+
+  function directionName(a, b) {
+    if (b.y < a.y) { return 'north'; }
+    if (b.y > a.y) { return 'south'; }
+    if (b.x > a.x) { return 'east'; }
+    return 'west';
+  }
+
+  // ---- app state ----
+  var world = null, belief = null, noiseRng = null, state = null;
+
+  function noiseLevel() { return parseFloat(noiseEl.value) || 0; }
+  function checkpointOn() { return !!(state && state.checkpointEnabled); }
+  function isFinished() { return state && (state.status === 'success' || state.status === 'exhausted'); }
+
+  function nextTarget() {
+    if (state.redirectTarget) {
+      return {
+        pos: state.redirectTarget,
+        label: 'the redirect point (' + state.redirectTarget.x + ',' + state.redirectTarget.y + ')',
+        isTool: false, isRedirect: true
+      };
+    }
+    if (!state.visited.search) { return { pos: world.tools.search, label: 'search', isTool: true, toolName: 'search' }; }
+    if (!state.visited.draft) { return { pos: world.tools.draft, label: 'draft', isTool: true, toolName: 'draft' }; }
+    if (!state.visited.render) { return { pos: world.tools.render, label: 'render', isTool: true, toolName: 'render' }; }
+    return { pos: world.goal, label: 'publish', isTool: false };
+  }
+
+  function allToolsVisited() { return state.visited.search && state.visited.draft && state.visited.render; }
+
+  function addTrace(text) {
+    var line = document.createElement('div');
+    line.textContent = text;
+    traceEl.appendChild(line);
+    while (traceEl.childNodes.length > 300) { traceEl.removeChild(traceEl.firstChild); }
+    traceEl.scrollTop = traceEl.scrollHeight;
+  }
+  function clearTrace() { traceEl.textContent = ''; }
+
+  function finish(status, message) {
+    state.status = status;
+    state.message = message;
+    addTrace(message);
+    stopRun();
+    updateButtonsEnabled();
+  }
+
+  function triggerCheckpoint(toolName) {
+    state.checkpointPending = true;
+    state.status = 'checkpoint';
+    addTrace('Checkpoint: paused after using ' + toolName + '. Approve to continue, or redirect the agent.');
+    checkpointMsgEl.textContent = 'Paused after using ' + toolName + '. Approve to continue as planned, or send the agent to a different cell first.';
+    checkpointPanel.hidden = false;
+    stopRun();
+    updateButtonsEnabled();
+    approveBtn.focus();
+  }
+
+  function stepOnce() {
+    if (!state || isFinished() || state.checkpointPending) { return; }
+
+    if (state.redirectTarget && samePos(state.pos, state.redirectTarget)) {
+      state.redirectTarget = null;
+    }
+
+    var target = nextTarget();
+    addTrace('Plan: go to ' + target.label + '.');
+
+    var atTarget = samePos(state.pos, target.pos);
+    var bumped = false, noPath = false, actionText, usedTool = null;
+
+    if (atTarget && target.isTool) {
+      state.visited[target.toolName] = true;
+      state.toolCalls += 1;
+      usedTool = target.toolName;
+      actionText = 'Use tool ' + target.toolName + '.';
+    } else if (atTarget) {
+      state.redirectTarget = null;
+      actionText = 'Wait (already at ' + target.label + ').';
+    } else {
+      var path = bfsBelief(state.belief, world.size, state.pos, target.pos);
+      if (!path || path.length < 2) {
+        noPath = true;
+        actionText = 'Wait (no believed path to ' + target.label + ').';
+      } else {
+        var next = path[1];
+        var dirName = directionName(state.pos, next);
+        if (trueBlocked(world, next.x, next.y)) {
+          bumped = true;
+          state.belief[next.y * world.size + next.x] = BLOCKED;
+          actionText = 'Move ' + dirName + ' — blocked, staying put.';
+        } else {
+          state.pos = next;
+          actionText = 'Move ' + dirName + '.';
+        }
+      }
+    }
+    addTrace(actionText);
+
+    var seen = observe(world, state.belief, state.pos, noiseLevel(), noiseRng);
+    var obsSuffix = bumped ? ' — replanning.' : (noPath ? ' — still no path, replanning.' : '.');
+    addTrace('Observed: ' + (seen || 'grid edge on every open side') + obsSuffix);
+
+    state.steps += 1;
+    render();
+
+    if (samePos(state.pos, world.goal) && allToolsVisited()) {
+      finish('success', 'Published after ' + state.steps + ' step' + (state.steps === 1 ? '' : 's') + '.');
+      render();
+      return;
+    }
+    if (state.steps >= state.budget) {
+      finish('exhausted', 'Budget exhausted after ' + state.steps + ' steps. The agent did not publish.');
+      render();
+      return;
+    }
+    if (checkpointOn() && usedTool) {
+      triggerCheckpoint(usedTool);
+      render();
+      return;
+    }
+  }
+
+  // ---- run timer ----
+  var runTimer = null;
+  function startRun() {
+    if (!state || isFinished() || state.checkpointPending) { return; }
+    runBtn.textContent = 'Pause';
+    runBtn.setAttribute('aria-pressed', 'true');
+    runTimer = setInterval(function () {
+      stepOnce();
+      if (isFinished() || state.checkpointPending) { stopRun(); }
+    }, STEP_INTERVAL_MS);
+  }
+  function stopRun() {
+    if (runTimer) { clearInterval(runTimer); runTimer = null; }
+    runBtn.textContent = 'Run';
+    runBtn.setAttribute('aria-pressed', 'false');
+  }
+
+  function updateButtonsEnabled() {
+    var blocked = !state || isFinished() || state.checkpointPending;
+    stepBtn.disabled = blocked;
+    runBtn.disabled = blocked;
+  }
+
+  function resolveCheckpoint(redirect) {
+    if (!state || !state.checkpointPending) { return; }
+    if (redirect) {
+      var cx = clamp(parseInt(redirColEl.value, 10) || 0, 0, world.size - 1);
+      var cy = clamp(parseInt(redirRowEl.value, 10) || 0, 0, world.size - 1);
+      state.redirectTarget = { x: cx, y: cy };
+      addTrace('Human redirect: go to (' + cx + ',' + cy + ') next.');
+    } else {
+      addTrace('Human approved: continue as planned.');
+    }
+    state.checkpointPending = false;
+    state.status = 'ready';
+    checkpointPanel.hidden = true;
+    updateButtonsEnabled();
+    render();
+  }
+
+  // ---- rendering ----
+  var canvasSize = { w: 680, h: 680 };
+  function fitCanvas() {
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = canvas.getBoundingClientRect().width || canvas.clientWidth || 680;
+    var cssHeight = cssWidth;
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    canvas.style.height = cssHeight + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    canvasSize = { w: cssWidth, h: cssHeight };
+  }
+
+  function theme() {
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return dark ? {
+      bg: '#101216', grid: '#2a2f37', fog: '#1a1d22', obstacle: '#3a3f47', free: '#101216',
+      start: '#4da3c7', goal: '#5fbf7a', tool: '#c9a24d', toolDone: '#5a6069',
+      agent: '#e6e7e9', believedBlocked: '#e08a3c'
+    } : {
+      bg: '#ffffff', grid: '#e3e5e8', fog: '#eef0f2', obstacle: '#5a6069', free: '#ffffff',
+      start: '#0b6e99', goal: '#1f8a4c', tool: '#8a6d1f', toolDone: '#aab0b8',
+      agent: '#1c1e21', believedBlocked: '#c96a1f'
+    };
+  }
+
+  function drawMarker(x, y, label, color, cell) {
+    ctx.fillStyle = color;
+    ctx.font = Math.max(9, Math.floor(cell * 0.22)) + 'px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x * cell + cell / 2, y * cell + cell * 0.28);
+  }
+
+  function drawWorld() {
+    var th = theme();
+    var w = canvasSize.w, h = canvasSize.h;
+    ctx.fillStyle = th.bg;
+    ctx.fillRect(0, 0, w, h);
+    var cell = w / world.size;
+    var x, y, idx, isObstacle, bel, px, py;
+    for (y = 0; y < world.size; y++) {
+      for (x = 0; x < world.size; x++) {
+        idx = y * world.size + x;
+        isObstacle = world.obstacles[idx] === 1;
+        bel = belief[idx];
+        px = x * cell; py = y * cell;
+        ctx.fillStyle = isObstacle ? th.obstacle : (bel === UNKNOWN ? th.fog : th.free);
+        ctx.fillRect(px, py, cell, cell);
+        if (bel === BLOCKED) {
+          ctx.strokeStyle = th.believedBlocked;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(px + 3, py + cell - 3);
+          ctx.lineTo(px + cell - 3, py + 3);
+          ctx.stroke();
+        }
+        ctx.strokeStyle = th.grid;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(px + 0.5, py + 0.5, cell - 1, cell - 1);
+      }
+    }
+    drawMarker(world.start.x, world.start.y, 'St', th.start, cell);
+    drawMarker(world.tools.search.x, world.tools.search.y, 'Se', state.visited.search ? th.toolDone : th.tool, cell);
+    drawMarker(world.tools.draft.x, world.tools.draft.y, 'Dr', state.visited.draft ? th.toolDone : th.tool, cell);
+    drawMarker(world.tools.render.x, world.tools.render.y, 'Re', state.visited.render ? th.toolDone : th.tool, cell);
+    drawMarker(world.goal.x, world.goal.y, 'Pub', th.goal, cell);
+    if (state.redirectTarget) {
+      ctx.strokeStyle = th.agent;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(state.redirectTarget.x * cell + 4, state.redirectTarget.y * cell + 4, cell - 8, cell - 8);
+    }
+    ctx.fillStyle = th.agent;
+    ctx.beginPath();
+    ctx.arc(state.pos.x * cell + cell / 2, state.pos.y * cell + cell / 2, cell * 0.26, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+
+  function composeStats() {
+    var t = nextTarget();
+    return 'Steps: ' + state.steps + ' of ' + state.budget + '. Tool calls: ' + state.toolCalls + ' of 3. Next target: ' + t.label + '.';
+  }
+
+  function composeAriaLabel() {
+    var t = nextTarget();
+    var done = [];
+    if (state.visited.search) { done.push('search'); }
+    if (state.visited.draft) { done.push('draft'); }
+    if (state.visited.render) { done.push('render'); }
+    var extra = '';
+    if (state.status === 'success') { extra = ' Published.'; }
+    else if (state.status === 'exhausted') { extra = ' Budget exhausted.'; }
+    else if (state.status === 'checkpoint') { extra = ' Paused at a human checkpoint.'; }
+    return world.size + ' by ' + world.size + ' grid world. Agent at column ' + state.pos.x + ', row ' + state.pos.y +
+      '. Tools visited: ' + (done.length ? done.join(', ') : 'none') + '. Next target: ' + t.label + '. ' +
+      'Steps used: ' + state.steps + ' of ' + state.budget + '. Tool calls: ' + state.toolCalls + '.' + extra;
+  }
+
+  function render() {
+    statsEl.textContent = composeStats();
+    if (state.status === 'success') {
+      statusEl.textContent = state.message;
+      statusEl.className = 'status shown ok';
+    } else if (state.status === 'exhausted') {
+      statusEl.textContent = state.message;
+      statusEl.className = 'status shown warn';
+    } else {
+      statusEl.textContent = '';
+      statusEl.className = 'status';
+    }
+    drawWorld();
+    canvas.setAttribute('aria-label', composeAriaLabel());
+  }
+
+  // ---- reset / new world ----
+  function reset() {
+    stopRun();
+    var seedVal = parseInt(seedEl.value, 10);
+    if (!isFinite(seedVal)) { seedVal = DEFAULT_SEED; seedEl.value = String(seedVal); }
+    var budgetVal = parseInt(budgetEl.value, 10);
+    if (!isFinite(budgetVal) || budgetVal < 1) { budgetVal = DEFAULT_BUDGET; budgetEl.value = String(budgetVal); }
+
+    world = generateWorld(seedVal);
+    belief = new Uint8Array(world.size * world.size);
+    noiseRng = makeLCG(deriveSeed(seedVal, NOISE_SALT));
+
+    state = {
+      pos: { x: world.start.x, y: world.start.y },
+      belief: belief,
+      visited: { search: false, draft: false, render: false },
+      steps: 0,
+      budget: budgetVal,
+      toolCalls: 0,
+      redirectTarget: null,
+      checkpointPending: false,
+      checkpointEnabled: checkpointToggleEl.getAttribute('aria-pressed') === 'true',
+      status: 'ready',
+      message: ''
+    };
+
+    belief[world.start.y * world.size + world.start.x] = FREE;
+    observe(world, belief, state.pos, noiseLevel(), noiseRng);
+
+    clearTrace();
+    addTrace('World ready for seed ' + seedVal + '. Start at (0,0); publish is at (' + (world.size - 1) + ',' + (world.size - 1) + '). Visit search, then draft, then render, in that order, before publish counts.');
+
+    checkpointPanel.hidden = true;
+    updateButtonsEnabled();
+    render();
+  }
+
+  // ---- wiring ----
+  runBtn.addEventListener('click', function () { if (runTimer) { stopRun(); } else { startRun(); } });
+  stepBtn.addEventListener('click', function () { stopRun(); stepOnce(); });
+  resetBtn.addEventListener('click', reset);
+
+  seedEl.addEventListener('change', reset);
+  budgetEl.addEventListener('change', reset);
+  noiseEl.addEventListener('input', function () { noiseDispEl.textContent = noiseLevel().toFixed(2); });
+  noiseEl.addEventListener('change', reset);
+
+  newSeedBtn.addEventListener('click', function () {
+    seedEl.value = String(Math.floor(Math.random() * 1000000));
+    reset();
+  });
+
+  checkpointToggleEl.addEventListener('click', function () {
+    var pressed = checkpointToggleEl.getAttribute('aria-pressed') === 'true';
+    checkpointToggleEl.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+    checkpointToggleEl.textContent = 'Human checkpoint: ' + (pressed ? 'off' : 'on');
+    if (state) { state.checkpointEnabled = !pressed; }
+  });
+
+  approveBtn.addEventListener('click', function () { resolveCheckpoint(false); });
+  redirectBtn.addEventListener('click', function () { resolveCheckpoint(true); });
+
+  canvas.addEventListener('click', function (evt) {
+    if (!state || !state.checkpointPending) { return; }
+    var rect = canvas.getBoundingClientRect();
+    var relX = evt.clientX - rect.left, relY = evt.clientY - rect.top;
+    var cell = rect.width / world.size;
+    redirColEl.value = String(clamp(Math.floor(relX / cell), 0, world.size - 1));
+    redirRowEl.value = String(clamp(Math.floor(relY / cell), 0, world.size - 1));
+  });
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(function () { fitCanvas(); render(); }, 120);
+  });
+
+  noiseDispEl.textContent = noiseLevel().toFixed(2);
+  fitCanvas();
+  reset();
+})();
+  </script>
+</body>
+</html>
