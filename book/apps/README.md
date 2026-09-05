@@ -23,3 +23,18 @@ leaves the browser. Bundled data files list their licence here.
 | agent-loop | 11 | none |
 | rhythm-bot | 12 | none |
 | evolve | 2, 9 | none |
+
+## Checks
+
+The apps are copied into the built site by `scripts/verify-book-build.sh`, so
+run that from the repository root after adding or renaming one:
+
+```bash
+./scripts/verify-book-build.sh
+ls book/_build/html/apps
+```
+
+Chapter structure, citations, and figures are checked by
+`python scripts/check-chapters.py`, and the prose that introduces each app is
+checked by `python scripts/check-style.py`. The style guide it enforces is the
+course folder's STYLE.md, which lives outside this repository.
