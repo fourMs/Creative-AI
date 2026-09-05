@@ -34,6 +34,9 @@
     },
     {
       "pattern": "^https://transactions\\.ismir\\.net/"
+    },
+    {
+      "pattern": "^https://doi\\.org/10\\.5334/tismir"
     }
   ],
   "httpHeaders": [
