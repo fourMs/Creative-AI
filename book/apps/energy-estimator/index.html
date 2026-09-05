@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Inference energy estimator</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+      --warn-bg: #fbeadf; --warn-fg: #8a3a10; --warn-border: #e0a877;
+      --tag-bg: #e6eef2; --tag-fg: #0b6e99;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+        --warn-bg: #3a2416; --warn-fg: #f2b183; --warn-border: #7a4a22;
+        --tag-bg: #1f2e35; --tag-fg: #8fc7de;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    select, input[type="number"] {
+      width: 100%; padding: 6px 8px; margin: 2px 0 4px; font-size: 1rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+    @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+    .stats { font-size: 1.05rem; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+    .formula {
+      font-size: 0.9rem; font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 10px; margin: 8px 0 0; white-space: pre-wrap; word-break: break-word;
+    }
+    .compare { margin: 8px 0 0; }
+    table.assumptions {
+      width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 4px 0 0;
+    }
+    table.assumptions caption { text-align: left; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+    table.assumptions th, table.assumptions td {
+      border: 1px solid var(--border); padding: 6px 8px; vertical-align: top; text-align: left;
+    }
+    table.assumptions thead th { background: var(--bg); font-weight: 700; }
+    table.assumptions td.numcell input { width: 7em; margin: 0; }
+    table.assumptions td.numcell input.wide { width: 100%; }
+    table.assumptions .tag {
+      display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em;
+      background: var(--tag-bg); color: var(--tag-fg); border-radius: 4px; padding: 1px 6px;
+      margin-right: 4px; text-transform: uppercase;
+    }
+    .assumptions-wrap { overflow-x: auto; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>Inference energy estimator</h1>
+  <p class="intro">Estimates of AI's footprint vary by a factor of a thousand depending on assumptions. This calculator makes the assumptions visible so you can argue about them. Nothing you enter here leaves your browser.</p>
+
+  <fieldset>
+    <legend>Scenario</legend>
+    <label for="taskType">Task type</label>
+    <select id="taskType">
+      <option value="classification">Text classification</option>
+      <option value="short" selected>Text generation, short</option>
+      <option value="long">Text generation, long</option>
+      <option value="image">Image generation</option>
+      <option value="imageHires">Image generation, high resolution</option>
+      <option value="video">Video, 5 seconds</option>
+    </select>
+
+    <div class="grid2">
+      <div>
+        <label for="queries">Queries per day</label>
+        <input type="number" id="queries" min="0" step="1" value="100" inputmode="numeric"/>
+      </div>
+      <div>
+        <label for="days">Number of days</label>
+        <input type="number" id="days" min="0" step="1" value="30" inputmode="numeric"/>
+      </div>
+    </div>
+
+    <label id="gridLabel">Grid carbon intensity preset</label>
+    <div class="row" role="group" aria-labelledby="gridLabel">
+      <button type="button" id="gridNorway" aria-pressed="false">Norway (hydro)</button>
+      <button type="button" id="gridEU" aria-pressed="true">EU average</button>
+      <button type="button" id="gridCoal" aria-pressed="false">Coal-heavy</button>
+    </div>
+    <p class="hint" id="gridChoiceHint">Using EU average: <span id="gridChoiceValue"></span> g CO2e/kWh. Edit any preset's value in the Assumptions table below.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Assumptions</legend>
+    <p class="hint" style="margin-top:0;">Every number below is a default you can overwrite. Sources are given so you can judge, and argue with, each one.</p>
+    <div class="assumptions-wrap">
+      <table class="assumptions">
+        <caption>Editable defaults used in the calculation. DOI: <a href="https://doi.org/10.1145/3630106.3658542" target="_blank" rel="noopener">10.1145/3630106.3658542</a> (Luccioni, Jernite &amp; Strubell, 2024, <em>Power Hungry Processing</em>).</caption>
+        <thead>
+          <tr><th scope="col">Assumption</th><th scope="col">Default</th><th scope="col">Source</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><label for="wh-classification">Text classification (Wh/query)</label></th>
+            <td class="numcell"><input type="number" id="wh-classification" min="0" step="0.0001" value="0.002"/></td>
+            <td>Luccioni, Jernite &amp; Strubell 2024, measured range for classification tasks.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="wh-short">Text generation, short (Wh/query)</label></th>
+            <td class="numcell"><input type="number" id="wh-short" min="0" step="0.001" value="0.05"/></td>
+            <td>Luccioni, Jernite &amp; Strubell 2024, measured range for short text generation.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="wh-long">Text generation, long (Wh/query)</label></th>
+            <td class="numcell"><input type="number" id="wh-long" min="0" step="0.01" value="0.5"/></td>
+            <td>Luccioni, Jernite &amp; Strubell 2024, measured range for long text generation.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="wh-image">Image generation (Wh/query)</label></th>
+            <td class="numcell"><input type="number" id="wh-image" min="0" step="0.1" value="3"/></td>
+            <td>Luccioni et al. 2024 report a mean of about 2.9 Wh per text-to-image query, with a range across models spanning more than an order of magnitude.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="wh-imageHires">Image generation, high resolution (Wh/query)</label></th>
+            <td class="numcell"><input type="number" id="wh-imageHires" min="0" step="0.5" value="10"/></td>
+            <td><span class="tag">Extrapolation</span>not directly measured by Luccioni et al. 2024; scaled up from their per-pixel image-generation figures.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="wh-video">Video, 5 seconds (Wh/query)</label></th>
+            <td class="numcell"><input type="number" id="wh-video" min="0" step="1" value="100"/></td>
+            <td><span class="tag">Estimate</span>order-of-magnitude figure from the chapter statement that a short clip costs roughly a hundred image generations.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="grid-norway">Norway grid (g CO2e/kWh)</label></th>
+            <td class="numcell"><input type="number" id="grid-norway" min="0" step="1" value="30"/></td>
+            <td><span class="tag">Approximate</span>hydro-dominated grid; approximate 2023 figure from public electricity-map data.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="grid-eu">EU average grid (g CO2e/kWh)</label></th>
+            <td class="numcell"><input type="number" id="grid-eu" min="0" step="1" value="250"/></td>
+            <td><span class="tag">Approximate</span>approximate 2023 figure from public electricity-map data.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="grid-coal">Coal-heavy grid (g CO2e/kWh)</label></th>
+            <td class="numcell"><input type="number" id="grid-coal" min="0" step="1" value="800"/></td>
+            <td><span class="tag">Approximate</span>approximate 2023 figure from public electricity-map data.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="water">Water use effectiveness (litres/kWh)</label></th>
+            <td class="numcell">
+              <input type="range" id="water" class="wide" min="0" max="5" step="0.1" value="1.8" aria-describedby="waterDisp"/>
+              <span class="vals" id="waterDisp">1.8</span>
+            </td>
+            <td><span class="tag">Rarely disclosed</span>operators rarely publish this figure; 1.8 L/kWh is a commonly cited illustrative value, not a specific operator's disclosure.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="phone-kwh">Phone charge (kWh/charge)</label></th>
+            <td class="numcell"><input type="number" id="phone-kwh" min="0" step="0.001" value="0.015"/></td>
+            <td><span class="tag">Approximate</span>typical smartphone battery capacity, for comparison only.</td>
+          </tr>
+          <tr>
+            <th scope="row"><label for="ev-kwh-per-km">Electric car (kWh/km)</label></th>
+            <td class="numcell"><input type="number" id="ev-kwh-per-km" min="0" step="0.001" value="0.17"/></td>
+            <td><span class="tag">Approximate</span>typical electric-car energy consumption, for comparison only.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="row">
+      <button type="button" id="resetBtn">Reset to sources</button>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Result</legend>
+    <div class="stats" id="stats" aria-live="polite">—</div>
+    <div class="formula" id="formula" aria-live="polite"></div>
+    <p class="compare" id="compare" aria-live="polite"></p>
+  </fieldset>
+
+  <p class="hint">What to notice: the energy total depends only on the per-query watt-hours and the number of queries; the grid preset and water figure change only the CO2e and water outputs, never the energy. Try coal instead of Norway to see how much the same energy use can cost the climate.</p>
+
+  <script>
+(function () {
+  'use strict';
+
+  var DEFAULTS = {
+    'wh-classification': 0.002,
+    'wh-short': 0.05,
+    'wh-long': 0.5,
+    'wh-image': 3,
+    'wh-imageHires': 10,
+    'wh-video': 100,
+    'grid-norway': 30,
+    'grid-eu': 250,
+    'grid-coal': 800,
+    'water': 1.8,
+    'phone-kwh': 0.015,
+    'ev-kwh-per-km': 0.17
+  };
+
+  var TASK_LABELS = {
+    classification: 'Text classification',
+    short: 'Text generation, short',
+    long: 'Text generation, long',
+    image: 'Image generation',
+    imageHires: 'Image generation, high resolution',
+    video: 'Video, 5 seconds'
+  };
+  var TASK_TO_WH_ID = {
+    classification: 'wh-classification',
+    short: 'wh-short',
+    long: 'wh-long',
+    image: 'wh-image',
+    imageHires: 'wh-imageHires',
+    video: 'wh-video'
+  };
+  var GRID_LABELS = { norway: 'Norway (hydro)', eu: 'EU average', coal: 'Coal-heavy' };
+  var GRID_TO_ID = { norway: 'grid-norway', eu: 'grid-eu', coal: 'grid-coal' };
+
+  var el = function (id) { return document.getElementById(id); };
+
+  var taskEl = el('taskType'), queriesEl = el('queries'), daysEl = el('days');
+  var waterEl = el('water'), waterDispEl = el('waterDisp');
+  var resetBtn = el('resetBtn');
+  var gridButtons = { norway: el('gridNorway'), eu: el('gridEU'), coal: el('gridCoal') };
+  var gridChoiceValueEl = el('gridChoiceValue'), gridChoiceHintEl = el('gridChoiceHint');
+  var statsEl = el('stats'), formulaEl = el('formula'), compareEl = el('compare');
+
+  var selectedGrid = 'eu';
+
+  function numVal(id) {
+    var v = parseFloat(el(id).value);
+    return isFinite(v) && v >= 0 ? v : 0;
+  }
+
+  function fmt(n, decimals) {
+    if (!isFinite(n)) { return '—'; }
+    var parts = n.toFixed(decimals).split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  }
+
+  // ---- pure calculation, kept separate from the DOM so it can be copied
+  // verbatim into a headless test script ----
+  function computeEstimate(input) {
+    var totalQueries = input.queriesPerDay * input.days;
+    var totalWh = input.whPerQuery * totalQueries;
+    var energyKwh = totalWh / 1000;
+    var co2Kg = energyKwh * input.gridGPerKwh / 1000;
+    var waterL = energyKwh * input.waterLPerKwh;
+    var phoneEquiv = input.phoneKwh > 0 ? energyKwh / input.phoneKwh : NaN;
+    var evKm = input.evKwhPerKm > 0 ? energyKwh / input.evKwhPerKm : NaN;
+    return {
+      totalQueries: totalQueries,
+      totalWh: totalWh,
+      energyKwh: energyKwh,
+      co2Kg: co2Kg,
+      waterL: waterL,
+      phoneEquiv: phoneEquiv,
+      evKm: evKm
+    };
+  }
+
+  function currentInput() {
+    var task = taskEl.value;
+    return {
+      task: task,
+      whPerQuery: numVal(TASK_TO_WH_ID[task]),
+      queriesPerDay: numVal('queries'),
+      days: numVal('days'),
+      gridGPerKwh: numVal(GRID_TO_ID[selectedGrid]),
+      waterLPerKwh: numVal('water'),
+      phoneKwh: numVal('phone-kwh'),
+      evKwhPerKm: numVal('ev-kwh-per-km')
+    };
+  }
+
+  function setGridButtons() {
+    var keys = Object.keys(gridButtons), i;
+    for (i = 0; i < keys.length; i++) {
+      gridButtons[keys[i]].setAttribute('aria-pressed', keys[i] === selectedGrid ? 'true' : 'false');
+    }
+    var v = numVal(GRID_TO_ID[selectedGrid]);
+    gridChoiceValueEl.textContent = fmt(v, 0);
+    gridChoiceHintEl.firstChild.textContent = 'Using ' + GRID_LABELS[selectedGrid] + ': ';
+  }
+
+  function updateWaterLabel() {
+    waterDispEl.textContent = parseFloat(waterEl.value).toFixed(1);
+  }
+
+  function render() {
+    var input = currentInput();
+    var r = computeEstimate(input);
+    var taskLabel = TASK_LABELS[input.task];
+
+    statsEl.textContent = taskLabel + ': ' + fmt(r.energyKwh, 3) + ' kWh, ' +
+      fmt(r.co2Kg, 3) + ' kg CO2e, ' + fmt(r.waterL, 2) + ' L water, over ' +
+      fmt(r.totalQueries, 0) + ' queries.';
+
+    formulaEl.textContent =
+      'energy = ' + input.whPerQuery + ' Wh/query x ' + fmt(input.queriesPerDay, 0) + ' queries/day x ' +
+        fmt(input.days, 0) + ' days = ' + fmt(r.totalWh, 1) + ' Wh = ' + fmt(r.energyKwh, 3) + ' kWh\n' +
+      'CO2e  = ' + fmt(r.energyKwh, 3) + ' kWh x ' + fmt(input.gridGPerKwh, 0) + ' g/kWh (' + GRID_LABELS[selectedGrid] + ') / 1000 = ' + fmt(r.co2Kg, 3) + ' kg\n' +
+      'water = ' + fmt(r.energyKwh, 3) + ' kWh x ' + fmt(input.waterLPerKwh, 2) + ' L/kWh = ' + fmt(r.waterL, 2) + ' L';
+
+    var compareParts = [];
+    if (isFinite(r.phoneEquiv)) {
+      compareParts.push('about the same energy as charging a phone ' + fmt(r.phoneEquiv, 0) + ' times (at ' + input.phoneKwh + ' kWh/charge, approximate)');
+    }
+    if (isFinite(r.evKm)) {
+      compareParts.push('about ' + fmt(r.evKm, 1) + ' km in an electric car (at ' + input.evKwhPerKm + ' kWh/km, approximate)');
+    }
+    compareEl.textContent = compareParts.length ? 'That is ' + compareParts.join(', or ') + '.' : '';
+
+    setGridButtons();
+  }
+
+  function selectGrid(key) {
+    selectedGrid = key;
+    render();
+  }
+
+  function resetToSources() {
+    var ids = Object.keys(DEFAULTS), i;
+    for (i = 0; i < ids.length; i++) { el(ids[i]).value = DEFAULTS[ids[i]]; }
+    updateWaterLabel();
+    render();
+  }
+
+  taskEl.addEventListener('change', render);
+  queriesEl.addEventListener('input', render);
+  daysEl.addEventListener('input', render);
+  waterEl.addEventListener('input', function () { updateWaterLabel(); render(); });
+  resetBtn.addEventListener('click', resetToSources);
+
+  gridButtons.norway.addEventListener('click', function () { selectGrid('norway'); });
+  gridButtons.eu.addEventListener('click', function () { selectGrid('eu'); });
+  gridButtons.coal.addEventListener('click', function () { selectGrid('coal'); });
+
+  var allIds = Object.keys(DEFAULTS);
+  allIds.forEach(function (id) {
+    if (id !== 'water') { el(id).addEventListener('input', render); }
+  });
+
+  updateWaterLabel();
+  render();
+})();
+  </script>
+</body>
+</html>

@@ -15,7 +15,7 @@ The book also ships with its own small apps: single-page, self-contained tools b
 - [Next-token sampler](https://fourms.github.io/Creative-AI/apps/next-token-sampler/): compare greedy, temperature, and top-p sampling on the same next-token distribution.
 - [Tokeniser explorer](https://fourms.github.io/Creative-AI/apps/tokeniser-explorer/): see how a sentence splits into tokens, and why Norwegian text costs more tokens than English.
 - [Forward diffusion explorer](https://fourms.github.io/Creative-AI/apps/diffusion-explorer/): watch an image dissolve into noise, then step back to see how diffusion models learn to reverse it.
-- [Inference energy estimator](https://fourms.github.io/Creative-AI/apps/energy-estimator/) (in preparation): estimate the energy and water cost of running a prompt through a model of a given size.
+- [Inference energy estimator](https://fourms.github.io/Creative-AI/apps/energy-estimator/): estimate the energy and water cost of running a prompt through a model of a given size.
 - [Provenance inspector](https://fourms.github.io/Creative-AI/apps/provenance-inspector/) (in preparation): inspect the metadata a generated file carries, and what it does and does not prove.
 - [Word-vector explorer](https://fourms.github.io/Creative-AI/apps/word-vectors/) (in preparation): explore how word embeddings place related words near each other in vector space.
 - [Markov melody generator](https://fourms.github.io/Creative-AI/apps/markov-melody/) (in preparation): generate a short melody from a Markov chain trained on a handful of tunes.
