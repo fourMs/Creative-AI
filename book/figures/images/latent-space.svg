@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" role="img" aria-label="An encoder compresses a picture into a small latent, the denoising loop runs there, and a decoder renders the picture at full resolution at the end">
+  <style>
+    .box { fill: #f4f1fa; stroke: #5a2a7a; stroke-width: 2; rx: 10; ry: 10; }
+    .big { fill: #ffffff; stroke: #5a2a7a; stroke-width: 2; }
+    .lat { fill: #ffffff; stroke: #5a2a7a; stroke-width: 2; }
+    .out { fill: #fff0f3; stroke: #e8556d; stroke-width: 2; rx: 10; ry: 10; }
+    .label { font: 600 14px Helvetica, Arial, sans-serif; fill: #1f2545; }
+    .small { font: 500 12px Helvetica, Arial, sans-serif; fill: #444; }
+    .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
+    .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
+    .loop { fill: none; stroke: #e8556d; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#a2); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+    </marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
+    </marker>
+  </defs>
+
+  <text class="head" x="40" y="34">Pixel space</text>
+  <text class="head" x="330" y="34">Latent space</text>
+  <text class="head" x="650" y="34">Pixel space</text>
+
+  <rect class="big" x="40" y="58" width="110" height="110"/>
+  <g fill="none" stroke="#5a2a7a" stroke-width="2">
+    <circle cx="72" cy="88" r="10"/>
+    <path d="M 46 160 L 82 112 L 112 160 Z"/>
+    <path d="M 96 160 L 122 126 L 144 160 Z"/>
+  </g>
+  <text class="small" x="95" y="190" text-anchor="middle">millions of numbers</text>
+
+  <rect class="box" x="180" y="92" width="100" height="42"/>
+  <text class="label" x="230" y="118" text-anchor="middle">encoder</text>
+  <path class="arrow" d="M 150 113 L 180 113"/>
+
+  <rect class="lat" x="330" y="90" width="46" height="46"/>
+  <rect class="lat" x="392" y="90" width="46" height="46"/>
+  <rect class="lat" x="454" y="90" width="46" height="46"/>
+  <path class="arrow" d="M 280 113 L 330 113"/>
+  <path class="loop" d="M 477 136 L 477 174 L 353 174 L 353 136"/>
+  <text class="small" x="415" y="196" text-anchor="middle" style="fill:#e8556d">denoise, step by step, under the prompt</text>
+  <text class="small" x="415" y="70" text-anchor="middle">thousands of numbers</text>
+
+  <rect class="box" x="530" y="92" width="100" height="42"/>
+  <text class="label" x="580" y="118" text-anchor="middle">decoder</text>
+  <path class="arrow" d="M 500 113 L 530 113"/>
+
+  <rect class="out" x="660" y="58" width="110" height="110"/>
+  <g fill="none" stroke="#e8556d" stroke-width="2">
+    <circle cx="692" cy="88" r="10"/>
+    <path d="M 666 160 L 702 112 L 732 160 Z"/>
+    <path d="M 716 160 L 742 126 L 764 160 Z"/>
+  </g>
+  <text class="small" x="715" y="190" text-anchor="middle">rendered once, at the end</text>
+  <path class="arrow" d="M 630 113 L 660 113"/>
+
+  <text class="small" x="400" y="256" text-anchor="middle">The expensive loop runs on the small representation, which is why these models fit on a laptop.</text>
+</svg>
