@@ -4,7 +4,7 @@ This page collects the technical vocabulary of the book in one place, as a looku
 
 ```{glossary}
 4E cognition
-: The view that cognition is embodied, embedded, enactive, and extended: shaped by the body, fitted to a physical and social setting, brought forth through activity, and reaching into external resources that are reliably available and trusted the way memory is trusted.
+: The view that cognition is embodied, embedded, enactive, and extended. That is, it is shaped by the body, fitted to a physical and social setting, brought forth through activity, and reaching into external resources that are reliably available and trusted the way memory is trusted.
 
 Aesthetic control
 : The precision with which a person can steer a generative system towards the artefact they actually want. Sampler settings, conditioning, and reference material are the layers of a pipeline that give a maker this control.
@@ -109,7 +109,7 @@ Embodiment
 : Having a body in a scene, with a height, a reach, and hands that may or may not be one's own. It turns scale from an aesthetic setting into a bodily fact once a person is standing next to a virtual object.
 
 Ethical authorship
-: The question of who is the author when a model trained on millions of other people's work assists a maker, and what that maker owes the people whose work trained the model, their audience, and themselves in how they describe the result.
+: The question of who is the author when a model trained on millions of other people's work assists a maker. It is also the question of what that maker owes the people whose work trained the model, their audience, and themselves in how they describe the result.
 
 Evolutionary algorithm (genetic algorithm)
 : A search method that keeps a population of candidate solutions, scores them, and repeatedly makes a new population by copying the better ones with small random changes and recombinations.
@@ -124,7 +124,7 @@ Few-shot
 : Giving a model two to six worked examples of input and output before the real request, used whenever the format of the answer matters more than what can be stated in adjectives.
 
 Fine-tuning
-: Continuing to train a foundation model briefly on a smaller, focused dataset so that it specialises for a task, at a cost ranging from a few euros for a lightweight adapter to millions for a full fine-tune of a large model.
+: Continuing to train a foundation model briefly on a smaller, focused dataset so that it specialises for a task. The cost ranges from a few euros for a lightweight adapter to millions for a full fine-tune of a large model.
 
 Fitness function
 : The score an evolutionary algorithm optimises, saying how good a candidate is. When a person supplies the score by choosing favourites instead, the search becomes interactive evolution.
@@ -268,7 +268,7 @@ Photogrammetry
 : Reconstructing a three-dimensional mesh by matching features across many overlapping photographs and triangulating camera positions from the result. It is a decades-old technique into which machine learning has mostly entered as denoising and feature matching.
 
 Place illusion and plausibility illusion
-: Two components of presence in a virtual environment. Place illusion is the feeling of being there, produced by the display responding correctly to how a person moves; plausibility illusion is the feeling that events are really happening, produced by things responding credibly to the person and to each other.
+: Two components of presence in a virtual environment. Place illusion is the feeling of being there, produced by the display responding correctly to how a person moves. Plausibility illusion is the feeling that events are really happening, produced by things responding credibly to the person and to each other.
 
 Presence
 : The sensation of being in the place a virtual reality system is showing, decomposed into a place illusion and a plausibility illusion. The strongest evidence for it is behavioural, such as people flinching or keeping away from a virtual edge, rather than what they report believing.
