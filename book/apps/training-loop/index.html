@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Training loop playground</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+      --warn-bg: #fbeadf; --warn-fg: #8a3a10; --warn-border: #e0a877;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+        --warn-bg: #3a2416; --warn-fg: #f2b183; --warn-border: #7a4a22;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    select {
+      width: 100%; padding: 6px 8px; margin: 2px 0 4px; font-size: 1rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+    @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+    .stats { font-size: 1.05rem; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+    .warn {
+      display: none; margin: 10px 0 0; padding: 8px 12px; border-radius: 6px;
+      background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-border);
+      font-weight: 600;
+    }
+    .warn.shown { display: block; }
+    canvas { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 10px; background: var(--canvas); }
+  </style>
+</head>
+<body>
+  <h1>Training loop playground</h1>
+  <p class="intro">Every model in this book is trained by the loop you can watch here: predict, measure the loss, nudge the parameters, repeat. Everything runs in your browser; nothing you do here leaves the page.</p>
+
+  <fieldset>
+    <legend>Data</legend>
+    <label for="target">Target function</label>
+    <select id="target">
+      <option value="line" selected>Line: y = 2x + 0.5</option>
+      <option value="sine">Sine: y = sin(2πx)</option>
+      <option value="step">Step: y = −1 or +1</option>
+    </select>
+    <label for="noise">Noise (standard deviation) <span class="vals" id="noiseDisp"></span></label>
+    <input type="range" id="noise" min="0" max="0.5" step="0.01" value="0.05" aria-describedby="noiseDisp"/>
+  </fieldset>
+
+  <fieldset>
+    <legend>Model</legend>
+    <label for="model">Model</label>
+    <select id="model">
+      <option value="line" selected>Line (2 parameters)</option>
+      <option value="poly">Polynomial, degree 3 (4 parameters)</option>
+      <option value="net">Tiny network, 8 hidden units (25 parameters)</option>
+    </select>
+    <label for="lr">Learning rate <span class="vals" id="lrDisp"></span></label>
+    <input type="range" id="lr" min="-3" max="-0.30103" step="0.001" value="-1.30103" aria-describedby="lrDisp"/>
+    <label for="speed">Speed: steps per frame <span class="vals" id="speedDisp"></span></label>
+    <input type="range" id="speed" min="1" max="50" step="1" value="5" aria-describedby="speedDisp"/>
+  </fieldset>
+
+  <div class="row">
+    <button type="button" id="run" class="primary" aria-pressed="false">Start</button>
+    <button type="button" id="step">Step</button>
+    <button type="button" id="resetBtn">Reset</button>
+  </div>
+
+  <div class="stats" id="stats" aria-live="polite">Step 0. Loss: —</div>
+  <div class="warn" id="warn" role="alert">Loss is growing: the learning rate is too high.</div>
+
+  <canvas id="chart" width="720" height="280" role="img" aria-label="Data points and the current model curve"></canvas>
+  <canvas id="losschart" width="720" height="160" role="img" aria-label="Training loss versus step, on a logarithmic scale"></canvas>
+  <p class="hint">What to notice: the line model always finds the same two numbers; the polynomial has more freedom and can overshoot at a high learning rate; the tiny network needs many more steps to bend into shape.</p>
+
+  <script>
+(function () {
+  'use strict';
+
+  var N = 200;
+  var X_RANGE = 1.5;
+  var DATA_SEED = 12345;
+  var NET_SEED = 987654321;
+  var HIDDEN = 8;
+  var Y_FLOOR = 1e-6;
+
+  var el = function (id) { return document.getElementById(id); };
+  var targetEl = el('target'), noiseEl = el('noise'), modelEl = el('model');
+  var lrEl = el('lr'), speedEl = el('speed');
+  var runBtn = el('run'), stepBtn = el('step'), resetBtn = el('resetBtn');
+  var statsEl = el('stats'), warnEl = el('warn');
+  var chart = el('chart'), chartCtx = chart.getContext('2d');
+  var lossChart = el('losschart'), lossCtx = lossChart.getContext('2d');
+
+  // ---- seeded pseudo-random generator (linear congruential generator) ----
+  function makeLCG(seed) {
+    var state = seed >>> 0;
+    return function () {
+      state = (Math.imul(1103515245, state) + 12345) & 0x7fffffff;
+      return state / 0x7fffffff;
+    };
+  }
+  function gaussian(rng) {
+    var u1 = Math.max(rng(), 1e-12);
+    var u2 = rng();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  }
+
+  // ---- target functions ----
+  function targetValue(name, x) {
+    if (name === 'sine') { return Math.sin(2 * Math.PI * x); }
+    if (name === 'step') { return x >= 0 ? 1 : -1; }
+    return 2 * x + 0.5;
+  }
+
+  // ---- state ----
+  var xs = [], ys = [];
+  var params = null;
+  var step = 0;
+  var lossHistory = [];
+  var startLoss = null;
+  var diverged = false;
+  var running = false;
+  var rafId = null;
+
+  function generateData() {
+    var rng = makeLCG(DATA_SEED);
+    var noise = parseFloat(noiseEl.value);
+    var tgt = targetEl.value;
+    xs = new Array(N);
+    ys = new Array(N);
+    var i, x, y;
+    for (i = 0; i < N; i++) {
+      x = -X_RANGE + 2 * X_RANGE * rng();
+      y = targetValue(tgt, x);
+      if (noise > 0) { y += noise * gaussian(rng); }
+      xs[i] = x;
+      ys[i] = y;
+    }
+  }
+
+  function initParams() {
+    var m = modelEl.value;
+    if (m === 'line') {
+      params = { w: 0, b: 0 };
+    } else if (m === 'poly') {
+      params = { a: [0, 0, 0, 0] };
+    } else {
+      var rng = makeLCG(NET_SEED);
+      var w1 = new Array(HIDDEN), b1 = new Array(HIDDEN), w2 = new Array(HIDDEN);
+      var j;
+      for (j = 0; j < HIDDEN; j++) {
+        w1[j] = (rng() - 0.5) * 1.0;
+        b1[j] = (rng() - 0.5) * 0.5;
+        w2[j] = (rng() - 0.5) * 1.0;
+      }
+      params = { w1: w1, b1: b1, w2: w2, b2: 0 };
+    }
+  }
+
+  // ---- forward prediction, used for drawing the curve ----
+  function predict(x, m, p) {
+    var i, h, yhat;
+    if (m === 'line') {
+      return p.w * x + p.b;
+    }
+    if (m === 'poly') {
+      return p.a[0] + p.a[1] * x + p.a[2] * x * x + p.a[3] * x * x * x;
+    }
+    yhat = p.b2;
+    for (i = 0; i < HIDDEN; i++) {
+      h = Math.tanh(p.w1[i] * x + p.b1[i]);
+      yhat += p.w2[i] * h;
+    }
+    return yhat;
+  }
+
+  // ---- full-batch gradient step, analytic for line/polynomial, backprop for the network ----
+  function lineGrad() {
+    var n = xs.length, loss = 0, gw = 0, gb = 0, i, yhat, err;
+    for (i = 0; i < n; i++) {
+      yhat = params.w * xs[i] + params.b;
+      err = yhat - ys[i];
+      loss += err * err;
+      gw += 2 * err * xs[i];
+      gb += 2 * err;
+    }
+    return { loss: loss / n, gw: gw / n, gb: gb / n };
+  }
+  function polyGrad() {
+    var n = xs.length, loss = 0, g = [0, 0, 0, 0], i, x, x2, x3, yhat, err;
+    var a = params.a;
+    for (i = 0; i < n; i++) {
+      x = xs[i]; x2 = x * x; x3 = x2 * x;
+      yhat = a[0] + a[1] * x + a[2] * x2 + a[3] * x3;
+      err = yhat - ys[i];
+      loss += err * err;
+      g[0] += 2 * err;
+      g[1] += 2 * err * x;
+      g[2] += 2 * err * x2;
+      g[3] += 2 * err * x3;
+    }
+    return { loss: loss / n, g: [g[0] / n, g[1] / n, g[2] / n, g[3] / n] };
+  }
+  function netGrad() {
+    var n = xs.length, loss = 0, i, j, x, y, net, h, yhat, err, dyhat, dnet;
+    var hVals = new Array(HIDDEN);
+    var gw1 = new Array(HIDDEN), gb1 = new Array(HIDDEN), gw2 = new Array(HIDDEN), gb2 = 0;
+    for (j = 0; j < HIDDEN; j++) { gw1[j] = 0; gb1[j] = 0; gw2[j] = 0; }
+    for (i = 0; i < n; i++) {
+      x = xs[i]; y = ys[i];
+      yhat = params.b2;
+      for (j = 0; j < HIDDEN; j++) {
+        net = params.w1[j] * x + params.b1[j];
+        h = Math.tanh(net);
+        hVals[j] = h;
+        yhat += params.w2[j] * h;
+      }
+      err = yhat - y;
+      loss += err * err;
+      dyhat = 2 * err;
+      gb2 += dyhat;
+      for (j = 0; j < HIDDEN; j++) {
+        gw2[j] += dyhat * hVals[j];
+        dnet = dyhat * params.w2[j] * (1 - hVals[j] * hVals[j]);
+        gw1[j] += dnet * x;
+        gb1[j] += dnet;
+      }
+    }
+    for (j = 0; j < HIDDEN; j++) { gw1[j] /= n; gb1[j] /= n; gw2[j] /= n; }
+    return { loss: loss / n, gw1: gw1, gb1: gb1, gw2: gw2, gb2: gb2 / n };
+  }
+
+  function currentLoss() {
+    var m = modelEl.value;
+    if (m === 'line') { return lineGrad().loss; }
+    if (m === 'poly') { return polyGrad().loss; }
+    return netGrad().loss;
+  }
+
+  function stepOnce() {
+    var m = modelEl.value, lr = Math.pow(10, parseFloat(lrEl.value)), r, j;
+    if (m === 'line') {
+      r = lineGrad();
+      params.w -= lr * r.gw;
+      params.b -= lr * r.gb;
+    } else if (m === 'poly') {
+      r = polyGrad();
+      for (j = 0; j < 4; j++) { params.a[j] -= lr * r.g[j]; }
+    } else {
+      r = netGrad();
+      for (j = 0; j < HIDDEN; j++) {
+        params.w1[j] -= lr * r.gw1[j];
+        params.b1[j] -= lr * r.gb1[j];
+        params.w2[j] -= lr * r.gw2[j];
+      }
+      params.b2 -= lr * r.gb2;
+    }
+    step += 1;
+    var newLoss = currentLoss();
+    lossHistory.push(newLoss);
+    if (lossHistory.length > 4000) { lossHistory.shift(); }
+    if (!diverged && (!isFinite(newLoss) || newLoss > 10 * startLoss)) {
+      diverged = true;
+      stop();
+      warnEl.classList.add('shown');
+    }
+    return newLoss;
+  }
+
+  function paramText() {
+    var m = modelEl.value;
+    if (m === 'line') {
+      return 'w = ' + params.w.toFixed(3) + ', b = ' + params.b.toFixed(3);
+    }
+    if (m === 'poly') {
+      return 'a0 = ' + params.a[0].toFixed(3) + ', a1 = ' + params.a[1].toFixed(3) +
+        ', a2 = ' + params.a[2].toFixed(3) + ', a3 = ' + params.a[3].toFixed(3);
+    }
+    return '25 parameters (8 hidden tanh units)';
+  }
+
+  function updateStats(loss) {
+    var l = isFinite(loss) ? loss.toFixed(3) : 'diverged';
+    statsEl.textContent = 'Step ' + step + '. Loss: ' + l + '. ' + paramText();
+  }
+
+  function theme() {
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return dark
+      ? { bg: '#101216', grid: '#2a2f37', point: '#9aa0a8', curve: '#4da3c7', text: '#9aa0a8' }
+      : { bg: '#ffffff', grid: '#e3e5e8', point: '#5a6069', curve: '#0b6e99', text: '#5a6069' };
+  }
+
+  function drawChart() {
+    var th = theme();
+    var w = chart.width, h = chart.height;
+    var mL = 34, mR = 10, mT = 10, mB = 26;
+    var pw = w - mL - mR, ph = h - mT - mB;
+    chartCtx.fillStyle = th.bg;
+    chartCtx.fillRect(0, 0, w, h);
+
+    var yMin = -2.2, yMax = 2.2;
+    var i;
+    for (i = 0; i < xs.length; i++) { if (ys[i] < yMin) { yMin = ys[i] - 0.2; } if (ys[i] > yMax) { yMax = ys[i] + 0.2; } }
+
+    function xPix(x) { return mL + (x + X_RANGE) / (2 * X_RANGE) * pw; }
+    function yPix(y) { return mT + ph - (y - yMin) / (yMax - yMin) * ph; }
+
+    // grid + zero lines
+    chartCtx.strokeStyle = th.grid;
+    chartCtx.lineWidth = 1;
+    chartCtx.beginPath();
+    chartCtx.moveTo(mL, yPix(0)); chartCtx.lineTo(mL + pw, yPix(0));
+    chartCtx.moveTo(xPix(0), mT); chartCtx.lineTo(xPix(0), mT + ph);
+    chartCtx.stroke();
+
+    // data points
+    chartCtx.fillStyle = th.point;
+    for (i = 0; i < xs.length; i++) {
+      chartCtx.beginPath();
+      chartCtx.arc(xPix(xs[i]), yPix(ys[i]), 2, 0, 2 * Math.PI);
+      chartCtx.fill();
+    }
+
+    // model curve
+    var m = modelEl.value;
+    chartCtx.strokeStyle = th.curve;
+    chartCtx.lineWidth = 2;
+    chartCtx.beginPath();
+    var steps = 120, x, y;
+    for (i = 0; i <= steps; i++) {
+      x = -X_RANGE + (2 * X_RANGE) * (i / steps);
+      y = predict(x, m, params);
+      if (i === 0) { chartCtx.moveTo(xPix(x), yPix(y)); } else { chartCtx.lineTo(xPix(x), yPix(y)); }
+    }
+    chartCtx.stroke();
+
+    chartCtx.fillStyle = th.text;
+    chartCtx.font = '12px system-ui, sans-serif';
+    chartCtx.fillText(yMax.toFixed(1), 2, mT + 10);
+    chartCtx.fillText(yMin.toFixed(1), 2, mT + ph);
+  }
+
+  function drawLossChart() {
+    var th = theme();
+    var w = lossChart.width, h = lossChart.height;
+    var mL = 44, mR = 10, mT = 10, mB = 22;
+    var pw = w - mL - mR, ph = h - mT - mB;
+    lossCtx.fillStyle = th.bg;
+    lossCtx.fillRect(0, 0, w, h);
+
+    if (lossHistory.length === 0) { return; }
+    var finite = [];
+    var i;
+    for (i = 0; i < lossHistory.length; i++) { if (isFinite(lossHistory[i]) && lossHistory[i] > 0) { finite.push(lossHistory[i]); } }
+    var maxL = finite.length ? Math.max.apply(null, finite) : 1;
+    var minL = finite.length ? Math.min.apply(null, finite) : Y_FLOOR;
+    minL = Math.max(Math.min(minL, maxL / 10), Y_FLOOR);
+    if (maxL <= minL) { maxL = minL * 10; }
+    var logMin = Math.log10(minL), logMax = Math.log10(maxL);
+
+    function xPix(idx) { return mL + (lossHistory.length <= 1 ? 0 : idx / (lossHistory.length - 1) * pw); }
+    function yPix(loss) {
+      var l = loss;
+      if (!isFinite(l) || l <= 0) { l = maxL; }
+      l = Math.max(minL, Math.min(maxL, l));
+      var t = (Math.log10(l) - logMin) / (logMax - logMin || 1);
+      return mT + ph - t * ph;
+    }
+
+    lossCtx.strokeStyle = th.grid;
+    lossCtx.lineWidth = 1;
+    lossCtx.strokeRect(mL, mT, pw, ph);
+
+    lossCtx.strokeStyle = th.curve;
+    lossCtx.lineWidth = 2;
+    lossCtx.beginPath();
+    for (i = 0; i < lossHistory.length; i++) {
+      if (i === 0) { lossCtx.moveTo(xPix(i), yPix(lossHistory[i])); } else { lossCtx.lineTo(xPix(i), yPix(lossHistory[i])); }
+    }
+    lossCtx.stroke();
+
+    lossCtx.fillStyle = th.text;
+    lossCtx.font = '12px system-ui, sans-serif';
+    lossCtx.fillText(maxL.toExponential(1), 2, mT + 10);
+    lossCtx.fillText(minL.toExponential(1), 2, mT + ph);
+    lossCtx.fillText('step ' + (lossHistory.length - 1), w - mR - 60, h - 6);
+  }
+
+  function redraw(loss) {
+    updateStats(loss);
+    drawChart();
+    drawLossChart();
+  }
+
+  function frame() {
+    var speed = parseInt(speedEl.value, 10), i, loss;
+    for (i = 0; i < speed && !diverged; i++) { loss = stepOnce(); }
+    redraw(currentLoss());
+    if (running && !diverged) { rafId = requestAnimationFrame(frame); }
+  }
+
+  function start() {
+    if (diverged) { return; }
+    running = true;
+    runBtn.textContent = 'Stop';
+    runBtn.setAttribute('aria-pressed', 'true');
+    rafId = requestAnimationFrame(frame);
+  }
+  function stop() {
+    running = false;
+    runBtn.textContent = 'Start';
+    runBtn.setAttribute('aria-pressed', 'false');
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  function reset() {
+    stop();
+    generateData();
+    initParams();
+    step = 0;
+    lossHistory = [];
+    diverged = false;
+    warnEl.classList.remove('shown');
+    startLoss = currentLoss();
+    lossHistory.push(startLoss);
+    redraw(startLoss);
+  }
+
+  function updateLabels() {
+    noiseEl_display();
+    lrEl_display();
+    speedEl_display();
+  }
+  function noiseEl_display() { el('noiseDisp').textContent = parseFloat(noiseEl.value).toFixed(2); }
+  function lrEl_display() { el('lrDisp').textContent = Math.pow(10, parseFloat(lrEl.value)).toFixed(3); }
+  function speedEl_display() { el('speedDisp').textContent = speedEl.value + ' step' + (speedEl.value === '1' ? '' : 's') + '/frame'; }
+
+  runBtn.addEventListener('click', function () { if (running) { stop(); } else { start(); } });
+  stepBtn.addEventListener('click', function () {
+    stop();
+    if (diverged) { return; }
+    var loss = stepOnce();
+    redraw(loss);
+  });
+  resetBtn.addEventListener('click', reset);
+
+  targetEl.addEventListener('change', reset);
+  noiseEl.addEventListener('input', noiseEl_display);
+  noiseEl.addEventListener('change', reset);
+  modelEl.addEventListener('change', reset);
+  lrEl.addEventListener('input', lrEl_display);
+  speedEl.addEventListener('input', speedEl_display);
+
+  updateLabels();
+  reset();
+})();
+  </script>
+</body>
+</html>

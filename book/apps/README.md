@@ -12,3 +12,4 @@ leaves the browser. Bundled data files list their licence here.
 
 | App | Chapter | Bundled data |
 | --- | --- | --- |
+| training-loop | 2 | none |
