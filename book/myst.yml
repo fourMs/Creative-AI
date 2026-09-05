@@ -19,6 +19,7 @@ project:
     - file: intro.ipynb
     - file: introduction.ipynb
     - file: how-it-works.ipynb
+    - file: co-creation-and-ethics.ipynb
     - file: ai-language.ipynb
     - file: ai-images.ipynb
     - file: ai-sound.ipynb
@@ -26,7 +27,6 @@ project:
     - file: ai-code.ipynb
     - file: ai-3d-games.ipynb
     - file: multimodal-agents.ipynb
-    - file: ethics.ipynb
     - file: futures.ipynb
     - file: tips-and-tricks.ipynb
     - file: tools.md
