@@ -16,7 +16,12 @@ to check documents that are not part of the book's table of contents).
 
 Each file's prose is stripped of fenced code blocks, admonition option
 lines (`:class:`, `:label:`, `:width:`), Markdown tables, and front
-matter, then scanned line by line for:
+matter. A fenced block that opens a directive other than `code-cell`
+(```` ```{admonition} ````, ```` ```{note} ````, and the like) is prose,
+so its body is kept and only its fence lines and option lines are
+dropped. Stripped lines are blanked rather than deleted, so reported
+line numbers match the file's own prose. The remaining text is scanned
+line by line for:
 
     contraction        contractions such as "don't", "it's"
     bold-in-sentence    double-starred emphasis used mid-sentence
@@ -38,6 +43,14 @@ matter, then scanned line by line for:
     em-dash             a sentence with exactly one em dash, outside
                         Further reading list items and outside a list
                         item titled with bold, a link, or a citation
+
+Sentence splitting and word counting see a link as its visible text: a
+Markdown link `[text](destination)` is reduced to `text`, and an image,
+a bare URL, a `{ref}`/`{cite}` role, and a `[@Key]` citation each count
+as a single word. Without this, a full stop inside a destination such
+as `sound.ipynb` would end a sentence, and a long link would collapse
+into one token. The substitution is done a line at a time, so line
+numbers do not move.
 
 Three things are exempt throughout: the em dash used as the list-item
 separator inside ":::{seealso} Further reading" blocks and inside any
@@ -87,9 +100,17 @@ AUDITORY_HYPHEN_RE = re.compile(r"\bauditory-visual\b", re.IGNORECASE)
 FIRST_PERSON_RE = re.compile(r"(?<![\w'])I(?=\s|$)")
 
 FRONT_MATTER_RE = re.compile(r"\A---\n.*?\n---\n?", re.S)
-FENCED_CODE_RE = re.compile(r"(?ms)^```.*?^```[ \t]*$\n?")
-OPTION_LINE_RE = re.compile(r"(?m)^[ \t]*:(class|label|width):.*$\n?")
-TABLE_LINE_RE = re.compile(r"(?m)^[ \t]*\|.*\|[ \t]*$\n?")
+OPTION_LINE_RE = re.compile(r"^[ \t]*:(class|label|width):")
+TABLE_LINE_RE = re.compile(r"^[ \t]*\|.*\|[ \t]*$")
+
+# A fenced block: ```` ``` ````, optionally carrying an info string. When the
+# info string names a directive (```` ```{admonition} ````) other than
+# `code-cell`, the block is prose and its body is kept.
+FENCE_OPEN_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})[ \t]*(.*)$")
+DIRECTIVE_RE = re.compile(r"^\{([A-Za-z][A-Za-z0-9_-]*)\}")
+DIRECTIVE_OPTION_RE = re.compile(r"^[ \t]*:[A-Za-z][A-Za-z0-9_-]*:")
+# Fenced directives whose body is source rather than prose.
+CODE_DIRECTIVES = {"code-cell", "code", "code-block", "literalinclude", "mermaid"}
 
 FURTHER_READING_START = ":::{seealso} Further reading"
 EXPLORE_TIP_START = ":::{tip} Explore interactively"
@@ -103,6 +124,15 @@ MD_LINK_RE = re.compile(r"\[[^\]]+\]\([^)]+\)")
 CITE_KEY_RE = re.compile(r"\[@[^\]]+\]")
 BOLD_LEAD_RE = re.compile(r"^\*\*.+?\*\*")
 
+# Sentence splitting and word counting see a link as its visible text. The
+# destination is dropped (a full stop in "sound.ipynb" is not a sentence end)
+# and an image, a bare URL, a role, and a citation each count as one word.
+LINK_WORD = "link"
+IMAGE_SUB_RE = re.compile(r"!\[[^\]]*\]\((?:[^()]|\([^()]*\))*\)")
+LINK_SUB_RE = re.compile(r"\[([^\]]+)\]\((?:[^()]|\([^()]*\))*\)")
+ROLE_SUB_RE = re.compile(r"\{(?:ref|numref|doc|term|abbr|cite(?::[a-z]+)?)\}`[^`]*`")
+BARE_URL_RE = re.compile(r"(?:https?://|www\.)[^\s<>)\]]+")
+
 # A single, unnested *italic* span (never the "*" of a "**bold**" pair).
 ITALIC_RE = re.compile(r"(?<!\*)\*(?!\*)([^*\n]*?)(?<!\*)\*(?!\*)")
 
@@ -113,11 +143,44 @@ CATEGORIES = [
 
 
 def strip_non_prose(text):
+    """Blank out everything that is not prose, keeping one line per source
+    line so that reported line numbers stay meaningful.
+
+    Fenced code blocks go entirely. A fenced block that opens a directive
+    (```` ```{admonition} ````) other than one of CODE_DIRECTIVES is prose:
+    its fence lines and the option lines directly after the opener go, and
+    its body stays. Nested fences are not expected; an inner fence is
+    treated as the end of the outer block, as before."""
     text = FRONT_MATTER_RE.sub("", text)
-    text = FENCED_CODE_RE.sub("", text)
-    text = OPTION_LINE_RE.sub("", text)
-    text = TABLE_LINE_RE.sub("", text)
-    return text
+    lines = text.split("\n")
+    out = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        opener = FENCE_OPEN_RE.match(line)
+        if opener:
+            marker, info = opener.group(1), opener.group(2).strip()
+            directive = DIRECTIVE_RE.match(info)
+            keep_body = bool(directive) and directive.group(1) not in CODE_DIRECTIVES
+            out.append("")  # the opening fence
+            i += 1
+            if keep_body:
+                while i < len(lines) and DIRECTIVE_OPTION_RE.match(lines[i]):
+                    out.append("")
+                    i += 1
+            while i < len(lines) and not lines[i].strip().startswith(marker[0] * 3):
+                out.append(lines[i] if keep_body else "")
+                i += 1
+            if i < len(lines):
+                out.append("")  # the closing fence
+                i += 1
+            continue
+        if OPTION_LINE_RE.match(line) or TABLE_LINE_RE.match(line):
+            out.append("")
+        else:
+            out.append(line)
+        i += 1
+    return "\n".join(out)
 
 
 def mask_quotes(line):
@@ -139,6 +202,18 @@ def mask_examples(line):
     if m:
         line = " " * len(m.group(0)) + line[len(m.group(0)):]
     line = ITALIC_RE.sub(lambda mm: "�" * len(mm.group(0)), line)
+    return line
+
+
+def normalise_links(line):
+    """Reduce links, images, roles and citations to the words a reader sees,
+    so that sentence splitting and word counting are not thrown off by a
+    destination. Done a line at a time, and never changes the line count."""
+    line = IMAGE_SUB_RE.sub(LINK_WORD, line)
+    line = CITE_KEY_RE.sub(LINK_WORD, line)
+    line = ROLE_SUB_RE.sub(LINK_WORD, line)
+    line = LINK_SUB_RE.sub(lambda m: m.group(1), line)
+    line = BARE_URL_RE.sub(LINK_WORD, line)
     return line
 
 
@@ -228,7 +303,7 @@ def check_text(text, allowlist):
 
         # sentence length, and single em dash per sentence
         titled_item = is_titled_list_item(line)
-        for sentence in sentences_of(line):
+        for sentence in sentences_of(normalise_links(line)):
             words = sentence.split()
             if len(words) > 40:
                 hits.append((lineno, "long-sentence", sentence[:80]))

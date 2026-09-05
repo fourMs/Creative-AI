@@ -200,6 +200,74 @@ def test_style_checker_quoted_audiovisual_exempt_but_bare_flagged():
         assert r.stdout.count(": audiovisual:") == 1, r.stdout
 
 
+def _style_stdout(md, *extra):
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "ch.md"); open(src, "w").write(md)
+        r = subprocess.run([PY, os.path.join(ROOT, "scripts", "check-style.py"), "--files", src, *extra],
+                            capture_output=True, text=True)
+        assert r.returncode == 0, r.stdout + r.stderr
+        return r.stdout
+
+
+def _load_check_style():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "check_style", os.path.join(ROOT, "scripts", "check-style.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# A 45-word sentence carrying two Markdown links and one citation. Counted by
+# visible text it is over forty words; counted by raw tokens each link would
+# collapse to one word and the sentence would slip under the limit.
+LINK_HEAVY_MD = (
+    "The [history of generative art](https://en.wikipedia.org/wiki/Generative_art) "
+    "and the [transformer architecture](https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)) "
+    "both matter here [@Vaswani2017], because the tools that students reach for today "
+    "grew out of a long tradition of rule-based making that is worth knowing about "
+    "before anyone in the class starts to prompt a model.\n"
+)
+
+
+def test_style_checker_counts_link_text_in_long_sentences():
+    out = _style_stdout(LINK_HEAVY_MD)
+    assert out.count(": long-sentence:") == 1, out
+
+
+def test_style_checker_does_not_split_sentence_at_link_destination():
+    mod = _load_check_style()
+    line = ("The next chapter on [sound](sound.ipynb) picks the thread up again and "
+            "shows how the same idea works for audio material.")
+    assert len(line.split()) == 20, line.split()
+    sentences = mod.sentences_of(mod.normalise_links(line))
+    assert len(sentences) == 1, sentences
+
+
+ADMONITION_MD = """```{admonition} Chapter summary
+:class: tip
+This summary sentence keeps going and going without much of a point at all, just to push the total count of words well past the forty word threshold so that the checker has something long enough to flag inside a fenced admonition body.
+```
+"""
+
+CODE_CELL_MD = """```{code-cell} python
+# This comment keeps going and going without much of a point at all, just to push the total count of words well past the forty word threshold so that the checker would flag it if code cell bodies were ever read as prose.
+print("hi")
+```
+"""
+
+
+def test_style_checker_reads_fenced_admonition_body_as_prose():
+    out = _style_stdout(ADMONITION_MD)
+    assert out.count(": long-sentence:") == 1, out
+    assert ": bold-in-sentence:" not in out, out
+
+
+def test_style_checker_ignores_fenced_code_cell_body():
+    out = _style_stdout(CODE_CELL_MD)
+    assert ": long-sentence:" not in out, out
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):
