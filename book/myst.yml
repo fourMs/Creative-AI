@@ -27,6 +27,7 @@ project:
     - file: spatial.ipynb
     - file: code.ipynb
     - file: multimodal.ipynb
+    - file: agents.ipynb
     - file: futures.ipynb
     - file: tips-and-tricks.ipynb
     - file: tools.md
