@@ -14,3 +14,4 @@ leaves the browser. Bundled data files list their licence here.
 | --- | --- | --- |
 | training-loop | 2 | none |
 | next-token-sampler | 2, 4 | Alice (Project Gutenberg, public domain); Et dukkehjem (Norwegian Wikisource/Runeberg transcription, public domain) |
+| tokeniser-explorer | 4 | vocab.json trained on Gutenberg (public domain) and Wikipedia (CC-BY-SA 4.0) text |

@@ -13,7 +13,7 @@ The book also ships with its own small apps: single-page, self-contained tools b
 
 - [Training loop playground](https://fourms.github.io/Creative-AI/apps/training-loop/): watch a tiny model's loss fall step by step as it trains.
 - [Next-token sampler](https://fourms.github.io/Creative-AI/apps/next-token-sampler/): compare greedy, temperature, and top-p sampling on the same next-token distribution.
-- [Tokeniser explorer](https://fourms.github.io/Creative-AI/apps/tokeniser-explorer/) (in preparation): see how a sentence splits into tokens, and why Norwegian text costs more tokens than English.
+- [Tokeniser explorer](https://fourms.github.io/Creative-AI/apps/tokeniser-explorer/): see how a sentence splits into tokens, and why Norwegian text costs more tokens than English.
 - [Forward diffusion explorer](https://fourms.github.io/Creative-AI/apps/diffusion-explorer/) (in preparation): watch an image dissolve into noise, then step back to see how diffusion models learn to reverse it.
 - [Inference energy estimator](https://fourms.github.io/Creative-AI/apps/energy-estimator/) (in preparation): estimate the energy and water cost of running a prompt through a model of a given size.
 - [Provenance inspector](https://fourms.github.io/Creative-AI/apps/provenance-inspector/) (in preparation): inspect the metadata a generated file carries, and what it does and does not prove.
