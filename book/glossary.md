@@ -84,6 +84,9 @@ Data
 Data workers
 : People, often in low-wage countries, who label images, rank model outputs, and write fine-tuning examples. They are the reason a model behaves the way it does, and some carry the psychological cost of moderating violent or abusive material.
 
+Dataflow programming
+: A style of programming in which boxes process data and the connections drawn between them carry it from one box to the next. Audio-specific graphical languages such as Max/MSP and Pure Data work this way, and building in them is usually called patching.
+
 Demo reel
 : A selected artefact cut from many generation attempts, in which the kept examples are exactly the ones a model happened to get right. It is evidence that a system can sometimes produce a good result, not that it can produce the result you need on demand.
 
@@ -209,6 +212,9 @@ Markov chain
 
 Memorisation
 : A trained model reproducing something close to a specific training example rather than a general statistical pattern. It is real but rare, and concentrated on examples the training data contained many times over.
+
+MIDI
+: A long-standing protocol that carries symbolic musical information, such as which note started, how hard, and what a controller was set to, rather than sound itself. A generative model that produces MIDI writes a score for something else to play, while one that produces audio writes the sound.
 
 Modality
 : In this book, a kind of data a model takes in or puts out: text, image, audio, video, 3D geometry, motion data. Psychology uses the same word for a sense, and where this book means perception it says sensory modality, or names the sense as auditory, visual, or tactile.
