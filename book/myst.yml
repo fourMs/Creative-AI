@@ -29,6 +29,7 @@ project:
     - file: multimodal-agents.ipynb
     - file: ethics.ipynb
     - file: futures.ipynb
+    - file: tips-and-tricks.ipynb
     - file: tools.md
     - file: gallery.md
     - file: glossary.md
