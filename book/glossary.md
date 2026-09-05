@@ -6,6 +6,9 @@ This page collects the technical vocabulary of the book in one place, as a looku
 Agent
 : A system given a goal that chooses its own steps, calling tools in a loop of plan, act, and observe until a stopping condition is met.
 
+Anarchive
+: A computational memory that holds no fixed documents but continuously reorganises cultural traces into new generative forms, a term proposed by Pierre Cassou-Noguès and Gwenola Wagon. Chapter 3 uses it for the latent space of a trained model, where provenance is unstable and meaning is relational rather than documentary.
+
 Cellular automaton
 : A grid of cells whose states update together at each step according to a rule that looks only at each cell's neighbours. Simple rules can produce elaborate patterns, as in Conway's Game of Life.
 
