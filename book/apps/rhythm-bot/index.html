@@ -68,7 +68,7 @@
     <button type="button" id="micBtn" aria-pressed="false">Use microphone</button>
     <label for="sensitivity">Microphone sensitivity <span class="vals" id="sensDisp"></span></label>
     <input type="range" id="sensitivity" min="1" max="100" step="1" value="55" aria-describedby="sensDisp"/>
-    <p class="hint" id="micHint">Microphone is off. Press &ldquo;Use microphone&rdquo; to let the bot listen for claps or taps instead of the space bar; your browser will ask permission first.</p>
+    <p class="hint" id="micHint">Microphone is off. Press &ldquo;Use microphone&rdquo; to let the bot listen for claps or taps instead of the space bar; your browser will ask permission first. Onset timing from a laptop microphone is approximate: it is analysed in the browser at screen refresh rate, so it can jitter by a few tens of milliseconds; tapping is more precise.</p>
   </fieldset>
 
   <fieldset>
@@ -378,7 +378,7 @@
       lastMicOnsetPerf = -Infinity;
       micBtn.textContent = 'Stop microphone';
       micBtn.setAttribute('aria-pressed', 'true');
-      micHintEl.textContent = 'Microphone is on: clap or tap near it. Audio is analysed locally for onset timing only and is never recorded.';
+      micHintEl.textContent = 'Microphone is on: clap or tap near it. Audio is analysed locally for onset timing only and is never recorded. Its timing is approximate (analysed at screen refresh rate, so a few tens of milliseconds of jitter); tapping is more precise.';
       micRaf();
     }).catch(function (err) {
       micHintEl.textContent = 'Microphone permission was not granted (' + (err && err.name ? err.name : 'error') + '). Use the space bar or the pad instead.';
@@ -393,7 +393,7 @@
     analyser = null; micDataArr = null;
     micBtn.textContent = 'Use microphone';
     micBtn.setAttribute('aria-pressed', 'false');
-    micHintEl.textContent = 'Microphone is off. Press “Use microphone” to let the bot listen for claps or taps instead of the space bar; your browser will ask permission first.';
+    micHintEl.textContent = 'Microphone is off. Press “Use microphone” to let the bot listen for claps or taps instead of the space bar; your browser will ask permission first. Onset timing from a laptop microphone is approximate: it is analysed in the browser at screen refresh rate, so it can jitter by a few tens of milliseconds; tapping is more precise.';
   }
 
   function micRaf() {
@@ -502,6 +502,14 @@
     c2d.strokeStyle = th.text;
     c2d.lineWidth = 1.5;
     c2d.beginPath(); c2d.moveTo(w - 1.5, 0); c2d.lineTo(w - 1.5, h); c2d.stroke();
+    var bpmLabel = (locked && smoothedPeriod !== null) ? (Math.round(60 / smoothedPeriod) + ' BPM') : '— BPM';
+    c2d.fillStyle = th.text;
+    c2d.font = '12px system-ui, sans-serif';
+    c2d.textAlign = 'right';
+    c2d.textBaseline = 'top';
+    c2d.fillText(bpmLabel, w - 6, 6);
+    c2d.textAlign = 'left';
+    c2d.textBaseline = 'alphabetic';
   }
 
   function rafLoop() {
