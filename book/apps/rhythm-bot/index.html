@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<!--
+  This page makes no network requests. Microphone audio, when the "Use
+  microphone" button is used, is analysed locally for onset timing only:
+  it is never recorded, stored, or transmitted anywhere.
+-->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Rhythm-bot</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+    @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+    #pad {
+      display: block; width: 100%; padding: 26px 10px; margin: 2px 0 10px;
+      font-size: 1.2rem; font-weight: 700; border-radius: 10px;
+      border: 2px solid var(--accent); background: var(--panel); color: var(--fg);
+      touch-action: manipulation; user-select: none;
+    }
+    #pad:active { background: var(--accent); color: var(--accent-fg); }
+    .stats { font-size: 1rem; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+    canvas { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 10px; background: var(--canvas); }
+    .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <h1>Rhythm-bot</h1>
+  <p class="intro">Dr. Squiggles is a robot at RITMO that listens to your rhythm and plays along. This is its browser cousin: tap a beat, and it will lock on and start improvising. Change the tempo and watch it follow, or lose you. Everything runs in this page: nothing you tap or play leaves your browser, and any microphone audio is analysed locally for the timing of onsets only, never recorded or sent anywhere.</p>
+
+  <fieldset>
+    <legend>Tap a beat</legend>
+    <button type="button" id="pad">Tap here (or press the space bar)</button>
+    <button type="button" id="micBtn" aria-pressed="false">Use microphone</button>
+    <label for="sensitivity">Microphone sensitivity <span class="vals" id="sensDisp"></span></label>
+    <input type="range" id="sensitivity" min="1" max="100" step="1" value="55" aria-describedby="sensDisp"/>
+    <p class="hint" id="micHint">Microphone is off. Press &ldquo;Use microphone&rdquo; to let the bot listen for claps or taps instead of the space bar; your browser will ask permission first.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Bot behaviour</legend>
+    <div class="grid2">
+      <div>
+        <label for="boldness">Boldness <span class="vals" id="boldDisp"></span></label>
+        <input type="range" id="boldness" min="0" max="100" step="1" value="35" aria-describedby="boldDisp"/>
+      </div>
+      <div>
+        <label for="follow">Follow strength <span class="vals" id="followDisp"></span></label>
+        <input type="range" id="follow" min="0" max="100" step="1" value="50" aria-describedby="followDisp"/>
+      </div>
+    </div>
+    <p class="hint">Boldness sets how often the bot adds an off-beat or two sixteenth-note pickups instead of the plain beat. Follow strength sets how fast its tempo estimate chases a change in your tapping.</p>
+    <div class="row">
+      <button type="button" id="muteBtn" aria-pressed="false">Mute bot</button>
+      <button type="button" id="resetBtn">Reset</button>
+    </div>
+  </fieldset>
+
+  <div class="stats" id="stats" aria-live="polite">Tap a beat, or turn on the microphone, to get started.</div>
+  <canvas id="timeline" width="720" height="160" role="img" aria-label="Scrolling timeline of your taps and the bot's beats, with time running from left to right"></canvas>
+  <div class="stats">
+    <span class="legend-swatch" id="swatchHuman"></span>you
+    &nbsp;&nbsp;
+    <span class="legend-swatch" id="swatchBot"></span>bot
+  </div>
+
+  <p class="hint">What to notice: tap steadily and the bot locks on within about four taps; keep a study pulse and raise Boldness to hear it add off-beats and pickups, always anchored back on your next tap; speed up or slow down gradually and watch Follow strength decide how eagerly it chases you; stop tapping for four beats and it fades out and admits it lost the beat.</p>
+
+  <script>
+(function () {
+  'use strict';
+
+  // ---- tunable constants ----
+  var LOOKAHEAD = 0.12;          // seconds, audio scheduler lookahead
+  var TICK_MS = 25;              // scheduler poll interval
+  var MAX_IOIS = 8;              // inter-onset intervals kept
+  var LOCK_MIN_IOIS = 3;         // 3 intervals = 4 taps before the bot can lock
+  var STABILITY_TOL = 0.2;       // relative standard deviation allowed to call the beat "stable"
+  var MIN_IOI_SEC = 0.2;         // ignore intervals faster than 300 bpm (double triggers)
+  var MAX_IOI_SEC = 2.5;         // ignore intervals slower than 24 bpm
+  var GAP_BEATS_LOST = 4;        // beats of silence before the bot says it lost the beat
+  var REFRACTORY_MS = 120;       // minimum gap between two microphone onsets
+  var WINDOW_SECONDS = 8;        // timeline width, in seconds of history
+
+  var el = function (id) { return document.getElementById(id); };
+  var padBtn = el('pad'), micBtn = el('micBtn'), sensEl = el('sensitivity');
+  var boldEl = el('boldness'), followEl = el('follow');
+  var muteBtn = el('muteBtn'), resetBtn = el('resetBtn');
+  var statsEl = el('stats'), micHintEl = el('micHint');
+  var canvas = el('timeline'), c2d = canvas.getContext('2d');
+
+  // ============================================================
+  // Audio engine. No AudioContext is created, and no sound or microphone
+  // access happens, until a user gesture (a tap, the space bar, or the
+  // "Use microphone" button) calls ensureAudio().
+  // ============================================================
+  var ctx = null, botGain = null, noiseBuffer = null, schedTimer = null;
+
+  function ensureAudio() {
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      botGain = ctx.createGain();
+      botGain.gain.value = currentBotGainTarget();
+      botGain.connect(ctx.destination);
+      noiseBuffer = makeNoiseBuffer();
+      schedTimer = setInterval(schedulerTick, TICK_MS);
+      requestAnimationFrame(rafLoop);
+    }
+    if (ctx.state === 'suspended') { ctx.resume(); }
+  }
+
+  function makeNoiseBuffer() {
+    var len = Math.floor(ctx.sampleRate * 0.08);
+    var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    var d = buf.getChannelData(0), i;
+    for (i = 0; i < len; i++) { d[i] = Math.random() * 2 - 1; }
+    return buf;
+  }
+
+  function noiseBurst(t, peak) {
+    var src = ctx.createBufferSource();
+    src.buffer = noiseBuffer;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(peak, t + 0.002);
+    g.gain.setTargetAtTime(0, t + 0.005, 0.02);
+    src.connect(g); g.connect(botGain);
+    src.start(t); src.stop(t + 0.08);
+  }
+
+  function sineBlip(t, freq, peak) {
+    var o = ctx.createOscillator();
+    o.type = 'sine'; o.frequency.value = freq;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(peak, t + 0.002);
+    g.gain.setTargetAtTime(0, t + 0.004, 0.015);
+    o.connect(g); g.connect(botGain);
+    o.start(t); o.stop(t + 0.09);
+  }
+
+  function currentBotGainTarget() { return (muted || lostBeat) ? 0 : 1; }
+
+  function setBotGainTarget(target, ramp) {
+    if (!ctx) { return; }
+    var now = ctx.currentTime;
+    botGain.gain.cancelScheduledValues(now);
+    botGain.gain.setValueAtTime(botGain.gain.value, now);
+    botGain.gain.linearRampToValueAtTime(target, now + ramp);
+  }
+
+  function audioTimeNow(perfMs) {
+    if (ctx.getOutputTimestamp) {
+      var ts = ctx.getOutputTimestamp();
+      if (ts && typeof ts.contextTime === 'number' && ts.contextTime > 0) {
+        return ts.contextTime + (perfMs - ts.performanceTime) / 1000;
+      }
+    }
+    return ctx.currentTime + (perfMs - performance.now()) / 1000;
+  }
+
+  // ============================================================
+  // Seeded PRNG (linear congruential generator), same scheme as the
+  // markov-melody app, used only for the pattern chooser below.
+  // ============================================================
+  function makeLCG(seed) {
+    var state = seed >>> 0;
+    return function () {
+      state = (Math.imul(1103515245, state) + 12345) & 0x7fffffff;
+      return state / 0x7fffffff;
+    };
+  }
+  var rng = makeLCG((Date.now() ^ Math.floor(performance.now() * 1000)) >>> 0);
+
+  // choose among three subdivisions, weighted by boldness (0..1):
+  // "none" (plain beat), "off" (one off-beat), "two" (two sixteenth pickups)
+  function choosePattern(bold, rngFn) {
+    var pNone = 1 - bold * 0.9;
+    var r = rngFn();
+    if (r <= pNone) { return 'none'; }
+    var rest = (1 - pNone) / 2;
+    if (r <= pNone + rest) { return 'off'; }
+    return 'two';
+  }
+
+  // ============================================================
+  // Tempo and phase tracking, and the bot's beat scheduler.
+  // ============================================================
+  var iois = [];              // last inter-onset intervals, seconds
+  var smoothedPeriod = null;  // exponentially-smoothed beat period, seconds
+  var lastOnsetTime = null;   // audio-clock time of the last human onset
+  var onsetCount = 0;         // onsets since the last reset or lost-beat
+  var locked = false;         // has the bot locked on and started sounding?
+  var lostBeat = false;       // has the human gone quiet for too long?
+  var nextBeatTime = null;    // audio-clock time of the next predicted beat
+  var muted = false;
+
+  var humanEvents = [];       // audio-clock times of human onsets, for the canvas
+  var botEvents = [];         // audio-clock times of bot beats, for the canvas
+
+  function median(arr) {
+    var s = arr.slice().sort(function (a, b) { return a - b; });
+    var n = s.length;
+    return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+  }
+
+  function followAlpha() { return 0.05 + (parseFloat(followEl.value) / 100) * 0.9; }
+  function boldness() { return parseFloat(boldEl.value) / 100; }
+
+  function isStable() {
+    if (iois.length < LOCK_MIN_IOIS) { return false; }
+    var recent = iois.slice(-4);
+    var mean = 0, i;
+    for (i = 0; i < recent.length; i++) { mean += recent[i]; }
+    mean /= recent.length;
+    var variance = 0;
+    for (i = 0; i < recent.length; i++) { variance += (recent[i] - mean) * (recent[i] - mean); }
+    variance /= recent.length;
+    return mean > 0 && (Math.sqrt(variance) / mean) < STABILITY_TOL;
+  }
+
+  function registerOnset(t) {
+    humanEvents.push(t);
+    if (lastOnsetTime !== null) {
+      var ioi = t - lastOnsetTime;
+      if (ioi >= MIN_IOI_SEC && ioi <= MAX_IOI_SEC) {
+        iois.push(ioi);
+        if (iois.length > MAX_IOIS) { iois.shift(); }
+        var med = median(iois);
+        if (smoothedPeriod === null) {
+          smoothedPeriod = med;
+        } else {
+          smoothedPeriod += followAlpha() * (med - smoothedPeriod);
+        }
+        onsetCount++;
+      }
+    } else {
+      onsetCount = 1;
+    }
+    lastOnsetTime = t;
+    lostBeat = false;
+    if (smoothedPeriod !== null) {
+      nextBeatTime = t + smoothedPeriod;
+      if (!locked && isStable()) {
+        locked = true;
+        setBotGainTarget(currentBotGainTarget(), 0.08);
+      }
+    }
+    updateStatus();
+  }
+
+  function playBeat(t, period) {
+    noiseBurst(t, 0.9);
+    var pattern = choosePattern(boldness(), rng);
+    if (pattern === 'off') {
+      sineBlip(t + period * 0.5, 1100, 0.4);
+    } else if (pattern === 'two') {
+      sineBlip(t + period * 0.7, 1300, 0.32);
+      sineBlip(t + period * 0.85, 1300, 0.32);
+    }
+    botEvents.push(t);
+  }
+
+  function triggerLostBeat() {
+    lostBeat = true;
+    locked = false;
+    setBotGainTarget(0, 1.5);
+    iois = [];
+    smoothedPeriod = null;
+    lastOnsetTime = null;
+    onsetCount = 0;
+    nextBeatTime = null;
+    updateStatus();
+  }
+
+  function schedulerTick() {
+    if (!ctx) { return; }
+    var now = ctx.currentTime;
+    if (lastOnsetTime !== null && !lostBeat) {
+      var gapLimit = smoothedPeriod !== null ? smoothedPeriod * GAP_BEATS_LOST : 4;
+      if ((now - lastOnsetTime) > gapLimit) { triggerLostBeat(); }
+    }
+    if (locked && !lostBeat && nextBeatTime !== null) {
+      while (nextBeatTime < now + LOOKAHEAD) {
+        playBeat(nextBeatTime, smoothedPeriod);
+        nextBeatTime += smoothedPeriod;
+      }
+    }
+    if (humanEvents.length > 200) { humanEvents = humanEvents.slice(-200); }
+    if (botEvents.length > 200) { botEvents = botEvents.slice(-200); }
+  }
+
+  // ============================================================
+  // Tap input: the pad button and the space bar.
+  // ============================================================
+  function isFormTarget(target) {
+    if (!target) { return false; }
+    if (target.isContentEditable) { return true; }
+    var tag = target.tagName;
+    return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
+  }
+
+  function onTapGesture() {
+    ensureAudio();
+    registerOnset(audioTimeNow(performance.now()));
+  }
+
+  padBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); onTapGesture(); });
+  document.addEventListener('keydown', function (e) {
+    if (isFormTarget(e.target)) { return; }
+    if (e.code !== 'Space' || e.repeat) { return; }
+    // let a focused button other than the pad handle its own space-bar
+    // activation (Mute bot, Reset, Use microphone), instead of stealing
+    // the key for a tap
+    if (e.target && e.target.tagName === 'BUTTON' && e.target !== padBtn) { return; }
+    e.preventDefault();
+    onTapGesture();
+  });
+
+  // ============================================================
+  // Microphone onset detector: an AnalyserNode reading time-domain data,
+  // polled on every animation frame, comparing RMS energy to a
+  // sensitivity-controlled threshold, with a refractory period so one
+  // clap or tap is not counted twice. Audio is analysed in memory only;
+  // nothing is written to disk or sent anywhere.
+  // ============================================================
+  var micStream = null, micSource = null, analyser = null, micDataArr = null;
+  var micActive = false, micRafId = null, lastMicOnsetPerf = -Infinity;
+
+  function startMic() {
+    ensureAudio();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      micHintEl.textContent = 'This browser does not support microphone access.';
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function (stream) {
+      micStream = stream;
+      micSource = ctx.createMediaStreamSource(stream);
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 1024;
+      micSource.connect(analyser);
+      micDataArr = new Float32Array(analyser.fftSize);
+      micActive = true;
+      lastMicOnsetPerf = -Infinity;
+      micBtn.textContent = 'Stop microphone';
+      micBtn.setAttribute('aria-pressed', 'true');
+      micHintEl.textContent = 'Microphone is on: clap or tap near it. Audio is analysed locally for onset timing only and is never recorded.';
+      micRaf();
+    }).catch(function (err) {
+      micHintEl.textContent = 'Microphone permission was not granted (' + (err && err.name ? err.name : 'error') + '). Use the space bar or the pad instead.';
+    });
+  }
+
+  function stopMic() {
+    micActive = false;
+    if (micRafId) { cancelAnimationFrame(micRafId); micRafId = null; }
+    if (micStream) { micStream.getTracks().forEach(function (tr) { tr.stop(); }); micStream = null; }
+    if (micSource) { try { micSource.disconnect(); } catch (e) { /* already gone */ } micSource = null; }
+    analyser = null; micDataArr = null;
+    micBtn.textContent = 'Use microphone';
+    micBtn.setAttribute('aria-pressed', 'false');
+    micHintEl.textContent = 'Microphone is off. Press “Use microphone” to let the bot listen for claps or taps instead of the space bar; your browser will ask permission first.';
+  }
+
+  function micRaf() {
+    if (!micActive) { return; }
+    micRafId = requestAnimationFrame(micRaf);
+    analyser.getFloatTimeDomainData(micDataArr);
+    var sum = 0, i;
+    for (i = 0; i < micDataArr.length; i++) { sum += micDataArr[i] * micDataArr[i]; }
+    var rms = Math.sqrt(sum / micDataArr.length);
+    var threshold = 0.35 - (parseFloat(sensEl.value) / 100) * 0.33;
+    var nowPerf = performance.now();
+    if (rms > threshold && (nowPerf - lastMicOnsetPerf) > REFRACTORY_MS) {
+      lastMicOnsetPerf = nowPerf;
+      registerOnset(audioTimeNow(nowPerf));
+    }
+  }
+
+  micBtn.addEventListener('click', function () { if (micActive) { stopMic(); } else { startMic(); } });
+
+  // ============================================================
+  // Mute and reset.
+  // ============================================================
+  muteBtn.addEventListener('click', function () {
+    muted = !muted;
+    muteBtn.setAttribute('aria-pressed', String(muted));
+    muteBtn.textContent = muted ? 'Unmute bot' : 'Mute bot';
+    setBotGainTarget(currentBotGainTarget(), 0.05);
+    updateStatus();
+  });
+
+  resetBtn.addEventListener('click', function () {
+    iois = []; smoothedPeriod = null; lastOnsetTime = null; onsetCount = 0;
+    locked = false; lostBeat = false; nextBeatTime = null;
+    humanEvents = []; botEvents = [];
+    setBotGainTarget(0, 0.02);
+    updateStatus();
+    drawTimeline();
+  });
+
+  // ============================================================
+  // Status line (aria-live) and canvas timeline.
+  // ============================================================
+  function updateStatus() {
+    var bpm = smoothedPeriod !== null ? Math.round(60 / smoothedPeriod) : null;
+    var txt;
+    if (lostBeat) {
+      txt = 'Lost the beat. Keep tapping, or clap, to start again.';
+    } else if (locked) {
+      txt = 'Locked at ' + bpm + ' BPM' + (muted ? ' — muted, still tracking.' : ' — improvising.');
+    } else if (smoothedPeriod !== null) {
+      txt = 'Tracking at ' + bpm + ' BPM (' + Math.min(onsetCount, 4) + ' of 4 taps to lock on).';
+    } else {
+      txt = 'Tap a beat, or turn on the microphone, to get started.';
+    }
+    statsEl.textContent = txt;
+  }
+
+  function theme() {
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return dark
+      ? { bg: '#101216', text: '#9aa0a8', human: '#4da3c7', bot: '#e0954f' }
+      : { bg: '#ffffff', text: '#5a6069', human: '#0b6e99', bot: '#b8560f' };
+  }
+
+  function paintSwatches() {
+    var th = theme();
+    el('swatchHuman').style.background = th.human;
+    el('swatchBot').style.background = th.bot;
+  }
+
+  var TIMELINE_ASPECT = 160 / 720;
+  var timelineSize = { w: 720, h: 160 };
+
+  function fitCanvas() {
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = canvas.getBoundingClientRect().width || canvas.clientWidth || 720;
+    var cssHeight = Math.round(cssWidth * TIMELINE_ASPECT);
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    canvas.style.height = cssHeight + 'px';
+    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    timelineSize = { w: cssWidth, h: cssHeight };
+  }
+
+  function drawTimeline() {
+    paintSwatches();
+    var th = theme();
+    var w = timelineSize.w, h = timelineSize.h;
+    c2d.fillStyle = th.bg;
+    c2d.fillRect(0, 0, w, h);
+    var now = ctx ? ctx.currentTime : 0;
+    function xFor(t) { return w - (now - t) / WINDOW_SECONDS * w; }
+    var i, x;
+    c2d.fillStyle = th.human;
+    for (i = 0; i < humanEvents.length; i++) {
+      x = xFor(humanEvents[i]);
+      if (x < -8 || x > w + 8) { continue; }
+      c2d.beginPath(); c2d.arc(x, h * 0.32, 5, 0, Math.PI * 2); c2d.fill();
+    }
+    c2d.fillStyle = th.bot;
+    for (i = 0; i < botEvents.length; i++) {
+      x = xFor(botEvents[i]);
+      if (x < -8 || x > w + 8) { continue; }
+      c2d.beginPath(); c2d.arc(x, h * 0.68, 5, 0, Math.PI * 2); c2d.fill();
+    }
+    c2d.strokeStyle = th.text;
+    c2d.lineWidth = 1.5;
+    c2d.beginPath(); c2d.moveTo(w - 1.5, 0); c2d.lineTo(w - 1.5, h); c2d.stroke();
+  }
+
+  function rafLoop() {
+    drawTimeline();
+    requestAnimationFrame(rafLoop);
+  }
+
+  // ============================================================
+  // Slider labels and start-up.
+  // ============================================================
+  function updateLabels() {
+    el('boldDisp').textContent = boldEl.value + ' %';
+    el('followDisp').textContent = followEl.value + ' %';
+    el('sensDisp').textContent = sensEl.value + ' %';
+  }
+  boldEl.addEventListener('input', updateLabels);
+  followEl.addEventListener('input', updateLabels);
+  sensEl.addEventListener('input', updateLabels);
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(function () { fitCanvas(); drawTimeline(); }, 120);
+  });
+  var themeQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  if (themeQuery && themeQuery.addEventListener) {
+    themeQuery.addEventListener('change', drawTimeline);
+  }
+
+  updateLabels();
+  fitCanvas();
+  updateStatus();
+  drawTimeline();
+})();
+  </script>
+</body>
+</html>

@@ -21,3 +21,4 @@ leaves the browser. Bundled data files list their licence here.
 | word-vectors | 4 | vectors.json from GloVe 6B 50d (PDDL), first 7 000 words |
 | markov-melody | 6 | none |
 | agent-loop | 11 | none |
+| rhythm-bot | 12 | none |
