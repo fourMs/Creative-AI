@@ -73,6 +73,8 @@ The book also ships with its own small apps: single-page, self-contained tools b
 
 - [Cursor](https://cursor.com/), [GitHub Copilot](https://github.com/features/copilot), [Claude Code](https://www.anthropic.com/claude-code) — AI-assisted development environments
 - [p5.js](https://p5js.org/), [Processing](https://processing.org/) — creative coding host languages
+- [Glicol](https://glicol.org/) — a graph-oriented live coding language for sound, free in the browser with no account
+- [Strudel](https://strudel.cc/) — TidalCycles patterns in the browser, free with no account
 
 **Open alternative.** [Hugging Face Spaces](https://huggingface.co/spaces) lets you run open models in the browser without a commercial subscription.
 

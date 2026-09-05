@@ -201,6 +201,9 @@ Latent space
 Legibility
 : The degree to which a person in a room can see what a machine is about to do, such as a limb rising before a robot strikes a surface, which is what lets them play or work alongside it.
 
+Live coding
+: Writing and changing a program while it runs, so that the sound or image it produces changes with the text. It is performed with the editor projected for the audience, which makes the process of programming part of the work.
+
 LoRA
 : A small set of extra weights trained on a handful of images of a subject and layered on top of a frozen open-weight model, so that the subject becomes a word the model knows. It is standard practice for keeping a character consistent across many images.
 
