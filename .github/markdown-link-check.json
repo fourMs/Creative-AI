@@ -1,11 +1,36 @@
 {
-  "aliveStatusCodes": [200, 206, 301, 302, 303, 307, 308, 401, 403, 405, 429],
+  "aliveStatusCodes": [
+    200,
+    206,
+    301,
+    302,
+    303,
+    307,
+    308,
+    401,
+    403,
+    405,
+    429
+  ],
   "timeout": "20s",
   "retryOn429": true,
   "retryCount": 3,
   "fallbackRetryDelay": "30s",
   "ignorePatterns": [
-    { "pattern": "^https://fourms\\.github\\.io/Creative-AI/" },
-    { "pattern": "^https://github\\.com/fourMs/Creative-AI/actions/" }
+    {
+      "pattern": "^https://fourms\\.github\\.io/Creative-AI/"
+    },
+    {
+      "pattern": "^https://github\\.com/fourMs/Creative-AI/actions/"
+    },
+    {
+      "pattern": "^https://gemini\\.google\\.com/"
+    },
+    {
+      "pattern": "^https://www\\.adobe\\.com/"
+    },
+    {
+      "pattern": "^https://www\\.krea\\.ai/"
+    }
   ]
 }
