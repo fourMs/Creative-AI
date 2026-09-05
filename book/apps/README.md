@@ -13,4 +13,4 @@ leaves the browser. Bundled data files list their licence here.
 | App | Chapter | Bundled data |
 | --- | --- | --- |
 | training-loop | 2 | none |
-| next-token-sampler | 2, 4 | Gutenberg text (public domain) |
+| next-token-sampler | 2, 4 | Alice (Project Gutenberg, public domain); Et dukkehjem (Norwegian Wikisource/Runeberg transcription, public domain) |

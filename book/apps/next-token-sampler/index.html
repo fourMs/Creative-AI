@@ -99,8 +99,8 @@
       <div>
         <label for="order">Context length (order)</label>
         <select id="order">
-          <option value="1">1 word</option>
-          <option value="2" selected>2 words</option>
+          <option value="1" selected>1 word</option>
+          <option value="2">2 words</option>
           <option value="3">3 words</option>
         </select>
       </div>
@@ -109,6 +109,7 @@
         <input type="number" id="seed" value="42" step="1"/>
       </div>
     </div>
+    <p class="hint">Higher orders copy longer stretches of the text; with a short sample most contexts have only one continuation, so temperature and top-k have less to act on. Start at order 1 to see the knobs, then raise the order to see copying.</p>
     <label for="temperature">Temperature <span class="vals" id="temperatureDisp"></span></label>
     <input type="range" id="temperature" min="0.1" max="2" step="0.1" value="1" aria-describedby="temperatureDisp"/>
     <label for="topk">Top-k <span class="vals" id="topkDisp"></span></label>
@@ -123,7 +124,7 @@
 
   <div class="output" id="output" aria-live="polite">Press Generate to sample a continuation.</div>
 
-  <div class="bars" id="bars" hidden>
+  <div class="bars" id="bars" hidden aria-live="polite">
     <h2>Top ten candidates at the last step</h2>
     <div id="barsList"></div>
   </div>
@@ -308,20 +309,36 @@
 
   var lastResult = null;
 
+  // ---- table cache: rebuilding the n-gram counts is the expensive part,
+  // so keep the last (text, order) pair's tables and tokens around and only
+  // rebuild when either one actually changes ----
+  var cache = { text: null, order: null, tokens: null, tables: null };
+
+  function getTables(text, order) {
+    if (cache.text !== text || cache.order !== order) {
+      cache.tokens = tokenize(text);
+      cache.tables = cache.tokens.length ? buildTables(cache.tokens, order) : null;
+      cache.text = text;
+      cache.order = order;
+    }
+    return cache;
+  }
+
   function runGenerate() {
     var text = textEl.value;
     var order = parseInt(orderEl.value, 10);
     var temperature = parseFloat(temperatureEl.value);
     var topK = parseInt(topkEl.value, 10);
     var seed = parseInt(seedEl.value, 10) || 0;
-    var tokens = tokenize(text);
+    var cached = getTables(text, order);
+    var tokens = cached.tokens;
     if (tokens.length === 0) {
       outputEl.textContent = 'Paste some text first.';
       lastResult = null;
       barsEl.hidden = true;
       return;
     }
-    var tables = buildTables(tokens, order);
+    var tables = cached.tables;
     var result = generateTokens(tokens, tables, order, temperature, topK, seed, GEN_LENGTH);
     lastResult = result;
     outputEl.textContent = detokenize(result.tokens);
