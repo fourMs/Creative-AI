@@ -33,6 +33,7 @@ project:
 site:
   template: book-theme
   options:
+    favicon: figures/cover/favicon.png
     logo: figures/cover/creative-ai-strip.svg
     show_myst_footer: false
     show_myst_banner: false
