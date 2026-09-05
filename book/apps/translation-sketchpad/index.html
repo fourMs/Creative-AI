@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<!--
+  This page makes no network requests. Microphone audio, used only when a
+  "record" button is pressed, is analysed in this browser tab for pitch and
+  loudness, kept in memory for playback, and never uploaded or sent anywhere.
+-->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Translation sketchpad</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    select {
+      width: 100%; padding: 6px 8px; margin: 2px 0 4px; font-size: 1rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+    @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+    .stats { font-size: 1rem; margin: 10px 0; font-variant-numeric: tabular-nums; }
+    canvas#pad {
+      display: block; width: 100%; height: auto; border: 1px solid var(--border);
+      border-radius: 6px; margin: 4px 0 8px; background: var(--canvas);
+      touch-action: none; user-select: none; cursor: crosshair;
+    }
+    .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+    details { margin-top: 14px; }
+    details summary { cursor: pointer; font-weight: 600; }
+    details p { margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>Translation sketchpad</h1>
+  <p class="intro">This sketchpad turns a drawn line into sound, and a sung line back into a drawn line, using one shared representation: a contour of pitch and loudness over time. No machine learning model is involved; the mapping runs on fixed rules, written out below, so every step is visible. Everything runs in this browser. Nothing you draw, sing, or record is uploaded anywhere.</p>
+
+  <fieldset>
+    <legend>Draw</legend>
+    <label for="scaleSelect">Scale for pitch</label>
+    <select id="scaleSelect">
+      <option value="chromatic" selected>Chromatic (every semitone)</option>
+      <option value="major">Major</option>
+      <option value="pentatonic">Pentatonic</option>
+    </select>
+    <canvas id="pad" width="720" height="302" aria-label="Drawing area, two octaves tall. Drag the pointer from left to right: height sets pitch and drawing speed sets loudness. A second colour, when present, shows a line traced from the microphone."></canvas>
+    <div class="stats" id="description">Draw a line, or record your voice, to see a description here.</div>
+    <div class="row">
+      <span class="legend-swatch" id="swatchDrawn"></span><span>what you drew</span>
+      &nbsp;&nbsp;
+      <span class="legend-swatch" id="swatchRecorded"></span><span>what the microphone heard</span>
+    </div>
+    <div class="row">
+      <button type="button" id="clearBtn">Clear</button>
+    </div>
+    <p class="hint">Draw a line from left to right with a mouse, a trackpad, or a finger. Height sets pitch across two octaves, from C3 at the bottom to C5 at the top; drawing speed sets loudness. Choosing a scale snaps the pitch to its notes as you draw, so the chromatic scale gives the smoothest glide and the pentatonic scale gives the widest steps. Drawing needs a pointer; every other control here, including recording your voice, works from the keyboard. The description above is built from a few written rules about the shape of the line; a real captioning model would learn such patterns from examples instead of following rules written by a person.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Play</legend>
+    <div class="grid2">
+      <div>
+        <label for="waveformSelect">Waveform</label>
+        <select id="waveformSelect">
+          <option value="sine" selected>Sine</option>
+          <option value="square">Square</option>
+          <option value="sawtooth">Sawtooth</option>
+          <option value="triangle">Triangle</option>
+        </select>
+      </div>
+      <div>
+        <label for="durationRange">Duration <span class="vals" id="durationDisp">3.0 s</span></label>
+        <input type="range" id="durationRange" min="1" max="8" step="0.5" value="3" aria-describedby="durationDisp"/>
+      </div>
+    </div>
+    <div class="row">
+      <button type="button" id="playDrawnBtn" class="primary" aria-pressed="false" disabled>Play</button>
+      <button type="button" id="loopBtn" aria-pressed="false">Loop</button>
+    </div>
+    <p class="hint">Play sends the drawn line to a single oscillator: its frequency follows the line's height and its gain follows the drawing speed recorded at each point, over the duration set above. A play head moves across the canvas while it sounds. Loop repeats the drawn line until switched off or the line changes.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Listen and compare</legend>
+    <div class="row">
+      <button type="button" id="micBtn" aria-pressed="false">Trace with my voice</button>
+      <button type="button" id="singBtn" disabled>Sing what you drew</button>
+    </div>
+    <div class="row">
+      <button type="button" id="playRecordedBtn" aria-pressed="false" disabled>Play recorded line</button>
+      <button type="button" id="playAudioBtn" disabled>Play my recording</button>
+    </div>
+    <p class="hint" id="micHint">Trace with my voice records up to eight seconds and draws a line from the pitch and loudness it hears; press it again to stop early. Sing what you drew plays your drawn line first and then records you singing it back, so both lines end up on the canvas together. Your browser will ask permission before the microphone is used, and the microphone stops as soon as recording ends. The difference score reported below is a crude measure: it does not account for timing offsets, octave errors, or the difference in tone between an oscillator and a voice.</p>
+  </fieldset>
+
+  <div class="stats" id="status" aria-live="polite">Draw a line to begin, or try tracing with your voice.</div>
+
+  <p class="hint">What to notice: a rising line sounds like a rising pitch and nothing else, since height is the only thing this sketchpad reads from your drawing; drawing quickly makes a loud passage, and drawing slowly makes a quiet one. Sing a simple falling phrase, trace it with your voice, and compare its line with one you draw by hand: the two rarely match exactly, which is the point of the difference score.</p>
+
+  <details>
+    <summary>How it works</summary>
+    <p>The shared representation behind every translation in this app is a contour: an array of pitch and loudness values, sampled fifty times for every second of playback. A drawn line becomes a contour by reading, at each sample position along its width, the pitch that its height maps to (quantised to the chosen scale) and the loudness recorded from how fast the pointer was moving when it passed that point. A recording becomes a contour by splitting the audio into overlapping 2048-sample frames, roughly forty-six milliseconds each, and running autocorrelation on every frame: the frame is compared against time-shifted copies of itself, the shift that matches best gives the pitch, and a frame is only called "voiced" and given a pitch when that match is strong enough to clear a confidence threshold. The root-mean-square level of each frame gives its loudness. Playing a contour back sends its pitch and loudness arrays straight to a single oscillator's frequency and gain, so the sound never has to first become anything else. The text description is built from three simple rules: whether the pitch rises, falls, or holds across each third of the contour, and which third is loudest.</p>
+    <p>This app bundles no data of its own and calls no external service.</p>
+  </details>
+
+  <script>
+(function () {
+  'use strict';
+
+  // ---- tunable constants ----
+  var CONTOUR_HZ = 50;               // contour samples per second of playback
+  var MAX_RECORD_SECONDS = 8;        // longest microphone recording accepted
+  var MIN_FREQ = 130.8127826502993;  // C3, bottom of the two-octave pitch range
+  var OCTAVES = 2;
+  var PITCH_MIN_HZ = 70;             // autocorrelation search range, floor
+  var PITCH_MAX_HZ = 1200;           // autocorrelation search range, ceiling
+  var AUTOCORR_FRAME = 2048;         // samples per analysis frame
+  var CONF_THRESHOLD = 0.4;          // normalised autocorrelation confidence needed to call a frame voiced
+  var SILENCE_RMS = 0.01;            // frames quieter than this are treated as silence
+  var LOUDNESS_NORM = 0.25;          // RMS level mapped to loudness 1.0
+  var PEAK_GAIN = 0.3;               // ceiling gain of the synthesised voice
+  var SPEED_NORM = 1.0;              // pointer speed, pixels per millisecond, mapped to loudness 1.0
+  var HOLD_THRESH = 1.5;             // semitones per second below which a segment "holds"
+  var FAST_THRESH = 8;               // semitones per second above which a change is called "quick"
+  var ANALYSIS_CHUNK = 10;           // contour frames analysed per timer tick
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function freqToSemitone(freq) { return 12 * Math.log2(freq / MIN_FREQ); }
+  function semitoneToFreq(s) { return MIN_FREQ * Math.pow(2, s / 12); }
+
+  // ---- scales: allowed semitone steps across the two-octave range (0 to 24) ----
+  var SCALE_STEPS = {
+    chromatic: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24],
+    major: [0,2,4,5,7,9,11,12,14,16,17,19,21,23,24],
+    pentatonic: [0,2,4,7,9,12,14,16,19,21,24]
+  };
+
+  function quantizeFreq(freq, scaleName) {
+    var semis = clamp(freqToSemitone(freq), 0, OCTAVES * 12);
+    var steps = SCALE_STEPS[scaleName] || SCALE_STEPS.chromatic;
+    var best = steps[0], bestDist = Math.abs(steps[0] - semis), i, d;
+    for (i = 1; i < steps.length; i++) {
+      d = Math.abs(steps[i] - semis);
+      if (d < bestDist) { bestDist = d; best = steps[i]; }
+    }
+    return semitoneToFreq(best);
+  }
+
+  function freqToY(freq, height) {
+    var semis = clamp(freqToSemitone(freq), 0, OCTAVES * 12);
+    return (1 - semis / (OCTAVES * 12)) * height;
+  }
+  function yToFreq(y, height) {
+    var frac = 1 - clamp(y, 0, height) / height;
+    return semitoneToFreq(frac * OCTAVES * 12);
+  }
+
+  // ---- DOM refs ----
+  var el = function (id) { return document.getElementById(id); };
+  var pad = el('pad'), pctx = pad.getContext('2d');
+  var scaleSelect = el('scaleSelect'), waveformSelect = el('waveformSelect');
+  var durationRange = el('durationRange'), durationDisp = el('durationDisp');
+  var playDrawnBtn = el('playDrawnBtn'), loopBtn = el('loopBtn'), clearBtn = el('clearBtn');
+  var micBtn = el('micBtn'), singBtn = el('singBtn');
+  var playRecordedBtn = el('playRecordedBtn'), playAudioBtn = el('playAudioBtn');
+  var statusEl = el('status'), descriptionEl = el('description');
+  var swatchDrawnEl = el('swatchDrawn'), swatchRecordedEl = el('swatchRecorded');
+
+  function setStatus(text) { statusEl.textContent = text; }
+
+  // ============================================================
+  // State. Everything lives in memory only; nothing is written to
+  // storage and nothing is sent anywhere.
+  // ============================================================
+  var drawnStroke = null;        // sorted array of {xNorm, freq, loudness}, the raw drawn gesture
+  var recordedContour = null;    // {freqs, loudness, n, duration} derived from the microphone
+  var recordedBuffer = null;     // decoded AudioBuffer of the actual recording, for direct replay
+  var recordedDurationSeconds = 0;
+  var lastSource = null;         // 'drawn' or 'recorded': which contour the description describes
+  var isRecording = false;
+  var preRecordPlaying = false;  // true while "Sing what you drew" is playing back before it records
+  var isPlaying = false;
+  var currentPlayback = null;    // {osc, gainNode, startTime, duration, which}
+
+  // ============================================================
+  // Audio engine. No AudioContext is created until a user gesture
+  // (a button press) calls ensureAudio().
+  // ============================================================
+  var actx = null;
+  function ensureAudio() {
+    if (!actx) { actx = new (window.AudioContext || window.webkitAudioContext)(); }
+    if (actx.state === 'suspended') { actx.resume(); }
+    return actx;
+  }
+
+  function fillGaps(freqs) {
+    var out = freqs.slice(), i, firstVal = null;
+    for (i = 0; i < out.length; i++) { if (out[i] != null) { firstVal = out[i]; break; } }
+    if (firstVal == null) { return null; }
+    var lastVal = firstVal;
+    for (i = 0; i < out.length; i++) {
+      if (out[i] == null) { out[i] = lastVal; } else { lastVal = out[i]; }
+    }
+    return out;
+  }
+
+  function setPlayButtonState(which, playing) {
+    if (which === 'drawn') {
+      playDrawnBtn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+      playDrawnBtn.textContent = playing ? 'Stop' : 'Play';
+    } else if (which === 'recorded') {
+      playRecordedBtn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+      playRecordedBtn.textContent = playing ? 'Stop' : 'Play recorded line';
+    }
+  }
+
+  function stopPlayback() {
+    if (!currentPlayback) { return; }
+    var prevWhich = currentPlayback.which;
+    var now = actx.currentTime;
+    try {
+      currentPlayback.gainNode.gain.cancelScheduledValues(now);
+      currentPlayback.gainNode.gain.setValueAtTime(currentPlayback.gainNode.gain.value, now);
+      currentPlayback.gainNode.gain.linearRampToValueAtTime(0, now + 0.03);
+      currentPlayback.osc.stop(now + 0.05);
+    } catch (e) { /* already stopped */ }
+    currentPlayback = null;
+    isPlaying = false;
+    setPlayButtonState(prevWhich, false);
+  }
+
+  function playContour(contour, waveform, which, onEnded) {
+    var ctxA = ensureAudio();
+    var freqs = fillGaps(contour.freqs);
+    if (!freqs) {
+      setStatus('There is no clear pitch to play.');
+      if (onEnded) { onEnded(); }
+      return;
+    }
+    stopPlayback();
+    var n = Math.max(2, freqs.length);
+    var freqCurve = new Float32Array(n);
+    var gainCurve = new Float32Array(n);
+    var i, srcI;
+    for (i = 0; i < n; i++) {
+      srcI = Math.min(freqs.length - 1, i);
+      freqCurve[i] = Math.max(20, freqs[srcI]);
+      gainCurve[i] = clamp(contour.loudness[srcI] == null ? 0 : contour.loudness[srcI], 0, 1) * PEAK_GAIN;
+    }
+    gainCurve[0] = 0;
+    gainCurve[n - 1] = 0;
+    var osc = ctxA.createOscillator();
+    osc.type = waveform;
+    var gainNode = ctxA.createGain();
+    gainNode.gain.value = 0;
+    osc.connect(gainNode);
+    gainNode.connect(ctxA.destination);
+    var lead = 0.05;
+    var startTime = ctxA.currentTime + lead;
+    var dur = Math.max(0.05, contour.duration);
+    osc.frequency.setValueCurveAtTime(freqCurve, startTime, dur);
+    gainNode.gain.setValueCurveAtTime(gainCurve, startTime, dur);
+    osc.start(startTime);
+    osc.stop(startTime + dur + 0.05);
+    isPlaying = true;
+    currentPlayback = { osc: osc, gainNode: gainNode, startTime: startTime, duration: dur, which: which };
+    setPlayButtonState(which, true);
+    startPlayheadLoop();
+    osc.onended = function () {
+      var wasCurrent = currentPlayback && currentPlayback.osc === osc;
+      if (wasCurrent) {
+        isPlaying = false;
+        currentPlayback = null;
+        setPlayButtonState(which, false);
+      }
+      if (wasCurrent && which === 'drawn' && loopBtn.getAttribute('aria-pressed') === 'true') {
+        var fresh = getDrawnContour(parseFloat(durationRange.value));
+        if (fresh) { playContour(fresh, waveformSelect.value, 'drawn'); return; }
+      }
+      drawScene();
+      if (onEnded) { onEnded(); }
+    };
+  }
+
+  // ============================================================
+  // Drawn line: raw stroke storage and resampling into a contour.
+  // ============================================================
+  function sampleStrokeAt(stroke, xNorm) {
+    if (xNorm <= stroke[0].xNorm) { return stroke[0]; }
+    var last = stroke[stroke.length - 1];
+    if (xNorm >= last.xNorm) { return last; }
+    var lo = 0, hi = stroke.length - 1, mid;
+    while (hi - lo > 1) {
+      mid = (lo + hi) >> 1;
+      if (stroke[mid].xNorm <= xNorm) { lo = mid; } else { hi = mid; }
+    }
+    var a = stroke[lo], b = stroke[hi];
+    var span = b.xNorm - a.xNorm;
+    var t = span > 1e-9 ? (xNorm - a.xNorm) / span : 0;
+    return { freq: a.freq + (b.freq - a.freq) * t, loudness: a.loudness + (b.loudness - a.loudness) * t };
+  }
+
+  function getDrawnContour(durationSeconds) {
+    if (!drawnStroke || drawnStroke.length < 2) { return null; }
+    var n = Math.max(2, Math.round(durationSeconds * CONTOUR_HZ));
+    var freqs = new Array(n), loudness = new Array(n), i, xNorm, s;
+    for (i = 0; i < n; i++) {
+      xNorm = n > 1 ? i / (n - 1) : 0;
+      s = sampleStrokeAt(drawnStroke, xNorm);
+      freqs[i] = s.freq;
+      loudness[i] = s.loudness;
+    }
+    return { freqs: freqs, loudness: loudness, n: n, duration: durationSeconds };
+  }
+
+  // ============================================================
+  // Pointer drawing on the canvas.
+  // ============================================================
+  var isDrawing = false, lastPt = null, rawStroke = [];
+
+  function handlePointer(e, isFirst) {
+    var rect = pad.getBoundingClientRect();
+    var x = clamp(e.clientX - rect.left, 0, rect.width);
+    var y = clamp(e.clientY - rect.top, 0, rect.height);
+    var xNorm = rect.width > 0 ? x / rect.width : 0;
+    var now = performance.now();
+    var loudness;
+    if (isFirst || !lastPt) {
+      loudness = 0.15;
+    } else {
+      var dt = now - lastPt.t;
+      var dx = x - lastPt.x, dy = y - lastPt.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var speed = dt > 0 ? dist / dt : 0;
+      loudness = clamp(Math.sqrt(speed / SPEED_NORM), 0, 1);
+    }
+    var rawFreq = yToFreq(y, rect.height || pad.clientHeight || 1);
+    var freq = quantizeFreq(rawFreq, scaleSelect.value);
+    rawStroke.push({ xNorm: xNorm, freq: freq, loudness: loudness });
+    lastPt = { x: x, y: y, t: now };
+    drawScene();
+  }
+
+  function finalizeDrawnStroke() {
+    if (rawStroke.length < 2) {
+      rawStroke = [];
+      setStatus('Draw a longer line, from left to right, to make a sound.');
+      updateButtonsEnabled();
+      return;
+    }
+    rawStroke.sort(function (a, b) { return a.xNorm - b.xNorm; });
+    drawnStroke = rawStroke;
+    rawStroke = [];
+    lastSource = 'drawn';
+    updateButtonsEnabled();
+    refreshComparison();
+    setStatus('Line drawn. Press Play to hear it.');
+    drawScene();
+  }
+
+  pad.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    try { pad.setPointerCapture(e.pointerId); } catch (err) { /* not supported */ }
+    isDrawing = true;
+    rawStroke = [];
+    lastPt = null;
+    handlePointer(e, true);
+  });
+  pad.addEventListener('pointermove', function (e) {
+    if (!isDrawing) { return; }
+    e.preventDefault();
+    handlePointer(e, false);
+  });
+  function endDrawing(e) {
+    if (!isDrawing) { return; }
+    isDrawing = false;
+    try { pad.releasePointerCapture(e.pointerId); } catch (err) { /* not supported */ }
+    finalizeDrawnStroke();
+  }
+  pad.addEventListener('pointerup', endDrawing);
+  pad.addEventListener('pointercancel', endDrawing);
+
+  // ============================================================
+  // Microphone recording, and offline pitch and loudness analysis.
+  // ============================================================
+  var mediaRecorder = null, micStream = null, recordChunks = [], recordStartPerf = 0, autoStopTimer = null;
+
+  function pickMimeType() {
+    var candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+    var i;
+    if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) { return ''; }
+    for (i = 0; i < candidates.length; i++) {
+      if (MediaRecorder.isTypeSupported(candidates[i])) { return candidates[i]; }
+    }
+    return '';
+  }
+
+  function startRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+      setStatus('This browser does not support microphone recording.');
+      return;
+    }
+    ensureAudio();
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function (stream) {
+      micStream = stream;
+      recordChunks = [];
+      var mime = pickMimeType();
+      try { mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream); }
+      catch (e) { mediaRecorder = new MediaRecorder(stream); }
+      mediaRecorder.addEventListener('dataavailable', function (ev) {
+        if (ev.data && ev.data.size > 0) { recordChunks.push(ev.data); }
+      });
+      mediaRecorder.addEventListener('stop', onRecordingStopped);
+      isRecording = true;
+      recordStartPerf = performance.now();
+      micBtn.setAttribute('aria-pressed', 'true');
+      micBtn.textContent = 'Stop recording';
+      setStatus('Recording. It stops automatically after eight seconds, or press the button again to stop sooner.');
+      mediaRecorder.start();
+      autoStopTimer = setTimeout(function () { stopRecording(); }, MAX_RECORD_SECONDS * 1000);
+      updateButtonsEnabled();
+    }).catch(function (err) {
+      setStatus('Microphone permission was not granted (' + (err && err.name ? err.name : 'error') + ').');
+      preRecordPlaying = false;
+      updateButtonsEnabled();
+    });
+  }
+
+  function stopRecording() {
+    if (!isRecording) { return; }
+    if (autoStopTimer) { clearTimeout(autoStopTimer); autoStopTimer = null; }
+    isRecording = false;
+    micBtn.setAttribute('aria-pressed', 'false');
+    micBtn.textContent = 'Trace with my voice';
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); }
+    if (micStream) { micStream.getTracks().forEach(function (t) { t.stop(); }); micStream = null; }
+    updateButtonsEnabled();
+  }
+
+  function onRecordingStopped() {
+    var elapsedSeconds = Math.min(MAX_RECORD_SECONDS, (performance.now() - recordStartPerf) / 1000);
+    if (elapsedSeconds < 0.3 || recordChunks.length === 0) {
+      setStatus('The recording was too short to analyse. Try again and sing or speak for at least a second.');
+      return;
+    }
+    var blob = new Blob(recordChunks, { type: (mediaRecorder && mediaRecorder.mimeType) || 'audio/webm' });
+    setStatus('Analysing your voice.');
+    blob.arrayBuffer().then(function (buf) {
+      var ctxA = ensureAudio();
+      return ctxA.decodeAudioData(buf);
+    }).then(function (audioBuffer) {
+      var trueDuration = audioBuffer.length / audioBuffer.sampleRate;
+      recordedBuffer = audioBuffer;
+      recordedDurationSeconds = Math.min(elapsedSeconds, trueDuration) || trueDuration;
+      analyseRecording(audioBuffer, recordedDurationSeconds);
+    }).catch(function (err) {
+      setStatus('This browser could not decode the recording for analysis.');
+    });
+  }
+
+  function autocorrelatePitch(buf, sr, lagMin, lagMax) {
+    var size = buf.length, i;
+    var sumSq = 0;
+    for (i = 0; i < size; i++) { sumSq += buf[i] * buf[i]; }
+    var rms = Math.sqrt(sumSq / size);
+    var loudness = Math.pow(clamp(rms / LOUDNESS_NORM, 0, 1), 0.5);
+    if (rms < SILENCE_RMS) { return { voiced: false, freq: null, loudness: loudness }; }
+    var compareLen = size - lagMax;
+    if (compareLen < 8) { return { voiced: false, freq: null, loudness: loudness }; }
+    var r0 = 0;
+    for (i = 0; i < compareLen; i++) { r0 += buf[i] * buf[i]; }
+    if (r0 <= 0) { return { voiced: false, freq: null, loudness: loudness }; }
+    var bestLag = -1, bestVal = -Infinity, lag, sum, j;
+    for (lag = lagMin; lag <= lagMax; lag++) {
+      sum = 0;
+      for (j = 0; j < compareLen; j++) { sum += buf[j] * buf[j + lag]; }
+      if (sum > bestVal) { bestVal = sum; bestLag = lag; }
+    }
+    var confidence = bestVal / r0;
+    if (confidence < CONF_THRESHOLD || bestLag <= 0) { return { voiced: false, freq: null, loudness: loudness }; }
+    return { voiced: true, freq: sr / bestLag, loudness: loudness };
+  }
+
+  function analyseRecording(buffer, totalSeconds) {
+    var data = buffer.getChannelData(0);
+    var sr = buffer.sampleRate;
+    var hop = Math.max(1, Math.round(sr / CONTOUR_HZ));
+    var n = Math.max(1, Math.round(totalSeconds * CONTOUR_HZ));
+    var lagMin = Math.max(2, Math.floor(sr / PITCH_MAX_HZ));
+    var lagMax = Math.min(AUTOCORR_FRAME - 1, Math.ceil(sr / PITCH_MIN_HZ));
+    var freqs = new Array(n), loud = new Array(n);
+    var idx = 0;
+
+    function frameAt(i) {
+      var start = i * hop;
+      var buf = new Float32Array(AUTOCORR_FRAME);
+      var k, srcIdx;
+      for (k = 0; k < AUTOCORR_FRAME; k++) {
+        srcIdx = start + k;
+        buf[k] = srcIdx < data.length ? data[srcIdx] : 0;
+      }
+      return buf;
+    }
+
+    function processBatch() {
+      var end = Math.min(n, idx + ANALYSIS_CHUNK);
+      var res;
+      for (; idx < end; idx++) {
+        res = autocorrelatePitch(frameAt(idx), sr, lagMin, lagMax);
+        freqs[idx] = res.voiced ? res.freq : null;
+        loud[idx] = res.loudness;
+      }
+      if (idx < n) {
+        setStatus('Analysing your voice (' + Math.round(idx / n * 100) + ' per cent).');
+        setTimeout(processBatch, 0);
+      } else {
+        recordedContour = { freqs: freqs, loudness: loud, n: n, duration: totalSeconds };
+        lastSource = 'recorded';
+        onAnalysisComplete();
+      }
+    }
+    processBatch();
+  }
+
+  function onAnalysisComplete() {
+    updateButtonsEnabled();
+    updateDescription();
+    drawScene();
+    var diff = computeDifference();
+    if (diff && diff.na) {
+      setStatus('Recorded ' + recordedDurationSeconds.toFixed(1) + ' s. There is not enough overlap with a clear pitch to compare it with the drawn line.');
+    } else if (diff) {
+      setStatus('Recorded ' + recordedDurationSeconds.toFixed(1) + ' s. Difference from the drawn line: ' + diff.meanAbsSemitones.toFixed(1) + ' semitones on average, over the shared ' + diff.sharedSeconds.toFixed(1) + ' s.');
+    } else {
+      setStatus('Recorded ' + recordedDurationSeconds.toFixed(1) + ' s. Draw a line, or use Sing what you drew, to compare it with your voice.');
+    }
+  }
+
+  // ============================================================
+  // Comparing the drawn line with the recorded line.
+  // ============================================================
+  function computeDifference() {
+    if (!drawnStroke || drawnStroke.length < 2 || !recordedContour) { return null; }
+    var durationSecondsDrawn = parseFloat(durationRange.value);
+    var drawnC = getDrawnContour(durationSecondsDrawn);
+    if (!drawnC) { return null; }
+    var sharedSeconds = Math.min(durationSecondsDrawn, recordedContour.duration);
+    var sharedN = Math.max(0, Math.round(sharedSeconds * CONTOUR_HZ));
+    var i, sum = 0, count = 0, rf, df;
+    for (i = 0; i < sharedN && i < drawnC.n && i < recordedContour.n; i++) {
+      rf = recordedContour.freqs[i];
+      if (rf == null) { continue; }
+      df = drawnC.freqs[i];
+      sum += Math.abs(12 * Math.log2(rf / df));
+      count++;
+    }
+    if (count === 0) { return { na: true }; }
+    return { meanAbsSemitones: sum / count, sharedSeconds: sharedSeconds, voicedFraction: count / sharedN };
+  }
+
+  function refreshComparison() {
+    if (!drawnStroke || !recordedContour) { return; }
+    var diff = computeDifference();
+    if (diff && !diff.na) {
+      setStatus('Difference from the drawn line: ' + diff.meanAbsSemitones.toFixed(1) + ' semitones on average, over the shared ' + diff.sharedSeconds.toFixed(1) + ' s.');
+    }
+  }
+
+  // ============================================================
+  // Rule-based text description.
+  // ============================================================
+  function trendPhrase(slope) {
+    var a = Math.abs(slope);
+    if (a < HOLD_THRESH) { return 'holds'; }
+    var dir = slope > 0 ? 'rises' : 'falls';
+    return dir + (a > FAST_THRESH ? ' quickly' : ' slowly');
+  }
+
+  function loudnessClause(loud) {
+    var mean = (loud[0] + loud[1] + loud[2]) / 3;
+    var maxV = Math.max(loud[0], loud[1], loud[2]);
+    var minV = Math.min(loud[0], loud[1], loud[2]);
+    if (maxV - minV < 0.15) {
+      var level = mean < 0.3 ? 'quiet' : (mean > 0.65 ? 'loud' : 'moderate');
+      return level + ' throughout';
+    }
+    var peakIdx = loud.indexOf(maxV);
+    var pos = ['near the start', 'in the middle', 'near the end'][peakIdx];
+    return 'loud ' + pos;
+  }
+
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function generateDescription(contour) {
+    var freqs = fillGaps(contour.freqs);
+    if (!freqs) { return 'No clear pitch was detected, so no description can be written.'; }
+    var n = contour.n;
+    if (n < 3) { return 'The line is too short to describe in three parts.'; }
+    var third = Math.floor(n / 3);
+    var segRanges = [[0, third], [third, 2 * third], [2 * third, n]];
+    var trends = [], loud = [], i, seg, a, b, k, sum, segSeconds, slope;
+    for (i = 0; i < 3; i++) {
+      seg = segRanges[i];
+      a = seg[0];
+      b = Math.max(a + 1, seg[1]);
+      segSeconds = (b - a) / CONTOUR_HZ;
+      slope = (freqToSemitone(freqs[b - 1]) - freqToSemitone(freqs[a])) / (segSeconds || (1 / CONTOUR_HZ));
+      trends.push(trendPhrase(slope));
+      sum = 0;
+      for (k = a; k < b; k++) { sum += contour.loudness[k]; }
+      loud.push(sum / (b - a));
+    }
+    var pitchClause = capitalize(trends[0]) + ', ' + trends[1] + ', then ' + trends[2];
+    return pitchClause + '; ' + loudnessClause(loud) + '.';
+  }
+
+  function updateDescription() {
+    var contour = null, label = '';
+    if (lastSource === 'drawn' && drawnStroke) {
+      contour = getDrawnContour(parseFloat(durationRange.value));
+      label = 'What you drew: ';
+    } else if (lastSource === 'recorded' && recordedContour) {
+      contour = recordedContour;
+      label = 'What the microphone heard: ';
+    }
+    if (!contour) {
+      descriptionEl.textContent = 'Draw a line, or record your voice, to see a description here.';
+      return;
+    }
+    descriptionEl.textContent = label + generateDescription(contour);
+  }
+
+  // ============================================================
+  // Buttons: enabling and wiring.
+  // ============================================================
+  function updateButtonsEnabled() {
+    var busy = preRecordPlaying || isRecording;
+    playDrawnBtn.disabled = !drawnStroke || busy;
+    singBtn.disabled = !drawnStroke || busy;
+    playRecordedBtn.disabled = !recordedContour || busy;
+    playAudioBtn.disabled = !recordedBuffer || busy;
+    micBtn.disabled = preRecordPlaying;
+  }
+
+  playDrawnBtn.addEventListener('click', function () {
+    if (isPlaying && currentPlayback && currentPlayback.which === 'drawn') {
+      stopPlayback();
+      setStatus('Stopped.');
+      return;
+    }
+    var c = getDrawnContour(parseFloat(durationRange.value));
+    if (!c) { return; }
+    setStatus('Playing the drawn line.');
+    playContour(c, waveformSelect.value, 'drawn');
+  });
+
+  playRecordedBtn.addEventListener('click', function () {
+    if (isPlaying && currentPlayback && currentPlayback.which === 'recorded') {
+      stopPlayback();
+      setStatus('Stopped.');
+      return;
+    }
+    if (!recordedContour) { return; }
+    setStatus('Playing the recorded line.');
+    playContour(recordedContour, waveformSelect.value, 'recorded');
+  });
+
+  playAudioBtn.addEventListener('click', function () {
+    var ctxA = ensureAudio();
+    if (!recordedBuffer) { return; }
+    var src = ctxA.createBufferSource();
+    src.buffer = recordedBuffer;
+    src.connect(ctxA.destination);
+    src.start();
+    setStatus('Playing your recording.');
+  });
+
+  loopBtn.addEventListener('click', function () {
+    var next = loopBtn.getAttribute('aria-pressed') !== 'true';
+    loopBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
+  });
+
+  micBtn.addEventListener('click', function () {
+    if (isRecording) { stopRecording(); } else { stopPlayback(); startRecording(); }
+  });
+
+  singBtn.addEventListener('click', function () {
+    if (!drawnStroke) { return; }
+    var c = getDrawnContour(parseFloat(durationRange.value));
+    if (!c) { return; }
+    preRecordPlaying = true;
+    updateButtonsEnabled();
+    setStatus('Playing the drawn line. Get ready to sing it back.');
+    playContour(c, waveformSelect.value, 'drawn', function () {
+      preRecordPlaying = false;
+      updateButtonsEnabled();
+      setStatus('Now recording. Sing back what you just heard.');
+      startRecording();
+    });
+  });
+
+  clearBtn.addEventListener('click', function () {
+    stopPlayback();
+    drawnStroke = null;
+    recordedContour = null;
+    recordedBuffer = null;
+    lastSource = null;
+    updateButtonsEnabled();
+    updateDescription();
+    setStatus('Cleared. Draw a line to begin, or try tracing with your voice.');
+    drawScene();
+  });
+
+  scaleSelect.addEventListener('change', function () {
+    setStatus('New drawing will use the ' + scaleSelect.options[scaleSelect.selectedIndex].text.toLowerCase() + ' scale.');
+  });
+
+  durationRange.addEventListener('input', function () {
+    durationDisp.textContent = parseFloat(durationRange.value).toFixed(1) + ' s';
+    if (lastSource === 'drawn') { updateDescription(); }
+    refreshComparison();
+  });
+
+  // ============================================================
+  // Canvas: sizing, theme, and the drawing itself.
+  // ============================================================
+  function theme() {
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return dark
+      ? { bg: '#101216', grid: '#3a3f47', text: '#9aa0a8', drawn: '#4da3c7', recorded: '#e0954f', playhead: '#e6e7e9' }
+      : { bg: '#ffffff', grid: '#c9ccd1', text: '#5a6069', drawn: '#0b6e99', recorded: '#b8560f', playhead: '#1c1e21' };
+  }
+
+  function paintSwatches() {
+    var th = theme();
+    swatchDrawnEl.style.background = th.drawn;
+    swatchRecordedEl.style.background = th.recorded;
+  }
+
+  var PAD_ASPECT = 302 / 720;
+  var padSize = { w: 720, h: 302 };
+
+  function fitPad() {
+    var dpr = window.devicePixelRatio || 1;
+    var cssWidth = pad.getBoundingClientRect().width || pad.clientWidth || 720;
+    var cssHeight = Math.round(cssWidth * PAD_ASPECT);
+    pad.width = Math.round(cssWidth * dpr);
+    pad.height = Math.round(cssHeight * dpr);
+    pad.style.height = cssHeight + 'px';
+    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    padSize = { w: cssWidth, h: cssHeight };
+  }
+
+  function plotXF(points, color) {
+    pctx.strokeStyle = color;
+    pctx.lineWidth = 2.5;
+    pctx.lineJoin = 'round';
+    pctx.lineCap = 'round';
+    var began = false, i, p, y;
+    for (i = 0; i < points.length; i++) {
+      p = points[i];
+      if (p.freq == null) { began = false; continue; }
+      y = freqToY(p.freq, padSize.h);
+      if (!began) { pctx.beginPath(); pctx.moveTo(p.x, y); began = true; } else { pctx.lineTo(p.x, y); }
+    }
+    if (began) { pctx.stroke(); }
+  }
+
+  function drawScene() {
+    paintSwatches();
+    var th = theme();
+    var w = padSize.w, h = padSize.h, i;
+    pctx.fillStyle = th.bg;
+    pctx.fillRect(0, 0, w, h);
+
+    pctx.strokeStyle = th.grid;
+    pctx.lineWidth = 1;
+    var gridLines = [{ s: 0, label: 'C3' }, { s: 12, label: 'C4' }, { s: 24, label: 'C5' }];
+    pctx.fillStyle = th.text;
+    pctx.font = '11px system-ui, sans-serif';
+    pctx.textBaseline = 'middle';
+    pctx.textAlign = 'left';
+    for (i = 0; i < gridLines.length; i++) {
+      var y = freqToY(semitoneToFreq(gridLines[i].s), h);
+      pctx.beginPath(); pctx.moveTo(0, y); pctx.lineTo(w, y); pctx.stroke();
+      var ty = y;
+      if (gridLines[i].s === 24) { ty = y + 9; } else if (gridLines[i].s === 0) { ty = y - 8; }
+      pctx.fillText(gridLines[i].label, 4, ty);
+    }
+
+    if (drawnStroke && drawnStroke.length >= 2) {
+      var dpts = drawnStroke.map(function (p) { return { x: p.xNorm * w, freq: p.freq }; });
+      plotXF(dpts, th.drawn);
+    }
+    if (rawStroke.length >= 2) {
+      var live = rawStroke.map(function (p) { return { x: p.xNorm * w, freq: p.freq }; });
+      plotXF(live, th.drawn);
+    }
+    if (recordedContour) {
+      var rpts = [], n = recordedContour.n;
+      for (i = 0; i < n; i++) {
+        rpts.push({ x: n > 1 ? i / (n - 1) * w : 0, freq: recordedContour.freqs[i] });
+      }
+      plotXF(rpts, th.recorded);
+    }
+
+    if (isPlaying && currentPlayback && actx) {
+      var elapsed = actx.currentTime - currentPlayback.startTime;
+      var frac = clamp(elapsed / currentPlayback.duration, 0, 1);
+      var x = frac * w;
+      pctx.strokeStyle = th.playhead;
+      pctx.lineWidth = 2;
+      pctx.beginPath(); pctx.moveTo(x, 0); pctx.lineTo(x, h); pctx.stroke();
+    }
+  }
+
+  var rafId = null;
+  function startPlayheadLoop() {
+    if (rafId) { return; }
+    function tick() {
+      drawScene();
+      if (isPlaying) { rafId = requestAnimationFrame(tick); } else { rafId = null; }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(function () { fitPad(); drawScene(); }, 120);
+  });
+  var themeQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  if (themeQuery && themeQuery.addEventListener) { themeQuery.addEventListener('change', drawScene); }
+
+  // ---- start-up ----
+  durationDisp.textContent = parseFloat(durationRange.value).toFixed(1) + ' s';
+  fitPad();
+  updateButtonsEnabled();
+  updateDescription();
+  drawScene();
+})();
+  </script>
+</body>
+</html>
