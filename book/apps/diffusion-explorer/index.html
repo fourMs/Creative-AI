@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Forward diffusion explorer</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+      --warn-bg: #fbeadf; --warn-fg: #8a3a10; --warn-border: #e0a877;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+        --warn-bg: #3a2416; --warn-fg: #f2b183; --warn-border: #7a4a22;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    input[type="file"] {
+      display: block; width: 100%; margin: 2px 0 4px; font-size: 0.95rem;
+      color: var(--fg);
+    }
+    select {
+      width: 100%; padding: 6px 8px; margin: 2px 0 4px; font-size: 1rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .canvases { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+    .canvasBox { flex: 1 1 320px; min-width: 0; }
+    .canvasBox p { margin: 4px 0 0; font-size: 0.85rem; color: var(--muted); text-align: center; }
+    .stats { font-size: 1.05rem; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+    canvas { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--canvas); }
+    #imgCanvas { max-width: 320px; margin: 0 auto; }
+    #curveCanvas { background: var(--canvas); }
+  </style>
+</head>
+<body>
+  <h1>Forward diffusion explorer</h1>
+  <p class="intro">Forward diffusion adds noise to a picture in small steps until nothing is left. A real model learns to run this backwards; here you can watch the forward half and see why the schedule matters. Everything runs in your browser: the bundled photo and any picture you load stay on your device and are never uploaded.</p>
+
+  <fieldset>
+    <legend>Image</legend>
+    <label for="fileInput">Load your own image (stays on this device)</label>
+    <input type="file" id="fileInput" accept="image/*"/>
+    <p class="hint">Or use the bundled sample image below. Loading a new image resets the step to 0 and generates a fresh noise field.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Diffusion</legend>
+    <label for="schedule">Noise schedule</label>
+    <select id="schedule">
+      <option value="linear" selected>Linear (betas 1e-4 to 0.02)</option>
+      <option value="cosine">Cosine (Nichol &amp; Dhariwal)</option>
+    </select>
+    <label for="step">Step t <span class="vals" id="stepDisp">0</span> of 1000</label>
+    <input type="range" id="step" min="0" max="1000" step="1" value="0" aria-describedby="stepDisp"/>
+    <label for="speed">Play speed: steps per frame <span class="vals" id="speedDisp"></span></label>
+    <input type="range" id="speed" min="1" max="20" step="1" value="4" aria-describedby="speedDisp"/>
+  </fieldset>
+
+  <div class="row">
+    <button type="button" id="playBtn" class="primary" aria-pressed="false">Play</button>
+    <button type="button" id="pauseBtn">Pause</button>
+    <button type="button" id="resetBtn">Reset to step 0</button>
+    <button type="button" id="denoiseToggle" aria-pressed="false">Denoise (blur demo)</button>
+  </div>
+  <p class="hint">The denoise toggle applies a small box blur to the noised image as a rough illustration of "removing noise". It is not a trained model and does not reconstruct the original picture.</p>
+
+  <div class="stats" id="stats" aria-live="polite">Step 0. alpha-bar = 1.000. Signal-to-noise ratio: +infinity dB.</div>
+
+  <div class="canvases">
+    <div class="canvasBox">
+      <canvas id="imgCanvas" width="320" height="320" role="img" aria-label="The image at the current noise step"></canvas>
+      <p>Image at step t</p>
+    </div>
+    <div class="canvasBox">
+      <canvas id="curveCanvas" width="440" height="256" role="img" aria-label="Alpha-bar against step t, with the current step marked"></canvas>
+      <p>alpha-bar(t) for the chosen schedule</p>
+    </div>
+  </div>
+
+  <p class="hint">What to notice: at step 0 the image is unchanged; by step 1000 it is indistinguishable from static. The cosine schedule keeps more signal in the middle steps than the linear schedule, so a cosine-trained model spends more of its steps on fine detail.</p>
+
+  <script>
+(function () {
+  'use strict';
+
+  var T = 1000;
+  var SIZE = 256;
+  var NOISE_SEED = 20260905;
+
+  var el = function (id) { return document.getElementById(id); };
+  var fileInput = el('fileInput');
+  var scheduleEl = el('schedule');
+  var stepEl = el('step');
+  var speedEl = el('speed');
+  var playBtn = el('playBtn'), pauseBtn = el('pauseBtn'), resetBtn = el('resetBtn');
+  var denoiseBtn = el('denoiseToggle');
+  var statsEl = el('stats');
+  var imgCanvas = el('imgCanvas'), imgCtx = imgCanvas.getContext('2d');
+  var curveCanvas = el('curveCanvas'), curveCtx = curveCanvas.getContext('2d');
+
+  // ---- noise schedules ----
+  // Linear: betas evenly spaced from 1e-4 to 0.02 over T steps; alpha_bar is
+  // the cumulative product of (1 - beta). Index 0 means "no noise added yet".
+  var linearAlphaBar = (function () {
+    var betaStart = 1e-4, betaEnd = 0.02;
+    var table = new Float64Array(T + 1);
+    table[0] = 1;
+    var prod = 1;
+    for (var t = 1; t <= T; t++) {
+      var beta = betaStart + (betaEnd - betaStart) * (t - 1) / (T - 1);
+      prod *= (1 - beta);
+      table[t] = prod;
+    }
+    return table;
+  })();
+
+  // Cosine schedule (Nichol & Dhariwal, "Improved Denoising Diffusion
+  // Probabilistic Models"): f(t) = cos^2(((t/T + s) / (1 + s)) * pi/2),
+  // alpha_bar(t) = f(t) / f(0), with s = 0.008.
+  var cosineAlphaBar = (function () {
+    var s = 0.008;
+    function f(t) {
+      var x = ((t / T) + s) / (1 + s) * (Math.PI / 2);
+      var c = Math.cos(x);
+      return c * c;
+    }
+    var f0 = f(0);
+    var table = new Float64Array(T + 1);
+    for (var t = 0; t <= T; t++) { table[t] = f(t) / f0; }
+    return table;
+  })();
+
+  function alphaBarAt(t) {
+    var table = scheduleEl.value === 'cosine' ? cosineAlphaBar : linearAlphaBar;
+    return table[Math.max(0, Math.min(T, t | 0))];
+  }
+
+  // ---- seeded pseudo-random generator (mulberry32) + Box-Muller ----
+  function makeRng(seed) {
+    var state = seed >>> 0;
+    return function () {
+      state |= 0; state = (state + 0x6D2B79F5) | 0;
+      var t = Math.imul(state ^ (state >>> 15), 1 | state);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function boxMuller(rng) {
+    var u1 = Math.max(rng(), 1e-12);
+    var u2 = rng();
+    var r = Math.sqrt(-2 * Math.log(u1));
+    return [r * Math.cos(2 * Math.PI * u2), r * Math.sin(2 * Math.PI * u2)];
+  }
+
+  // ---- offscreen canvases: one holds the loaded image at SIZE x SIZE, the
+  // other is a scratch buffer for putImageData (which needs exact pixel
+  // dimensions); the visible imgCanvas is DPR-scaled and only ever receives
+  // a drawImage of that scratch buffer. ----
+  var offCanvas = document.createElement('canvas');
+  offCanvas.width = SIZE; offCanvas.height = SIZE;
+  var offCtx = offCanvas.getContext('2d');
+
+  var pixelCanvas = document.createElement('canvas');
+  pixelCanvas.width = SIZE; pixelCanvas.height = SIZE;
+  var pixelCtx = pixelCanvas.getContext('2d');
+
+  var basePixels = null;   // Float32Array, r,g,b per pixel, 0..255
+  var noiseField = null;   // Float32Array, same layout, standard normal
+
+  function generateNoiseField() {
+    var n = SIZE * SIZE * 3;
+    var out = new Float32Array(n);
+    var rng = makeRng(NOISE_SEED);
+    var i = 0;
+    while (i < n) {
+      var pair = boxMuller(rng);
+      out[i++] = pair[0];
+      if (i < n) { out[i++] = pair[1]; }
+    }
+    return out;
+  }
+
+  function loadImageFromSource(src) {
+    var img = new Image();
+    img.onload = function () {
+      offCtx.clearRect(0, 0, SIZE, SIZE);
+      offCtx.drawImage(img, 0, 0, SIZE, SIZE);
+      var data = offCtx.getImageData(0, 0, SIZE, SIZE).data;
+      var n = SIZE * SIZE;
+      var pixels = new Float32Array(n * 3);
+      for (var p = 0; p < n; p++) {
+        pixels[p * 3] = data[p * 4];
+        pixels[p * 3 + 1] = data[p * 4 + 1];
+        pixels[p * 3 + 2] = data[p * 4 + 2];
+      }
+      basePixels = pixels;
+      noiseField = generateNoiseField();
+      stepEl.value = '0';
+      updateStepLabel();
+      render();
+    };
+    img.src = src;
+  }
+
+  function loadSampleImage() {
+    loadImageFromSource('sample.jpg');
+  }
+
+  fileInput.addEventListener('change', function () {
+    var file = fileInput.files && fileInput.files[0];
+    if (!file) { return; }
+    stop();
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      // ev.target.result is a data: URL built locally by FileReader; the
+      // file itself is never sent anywhere.
+      loadImageFromSource(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ---- box blur used only for the "denoise (blur demo)" illustration ----
+  function boxBlur(src, w, h) {
+    var out = new Float32Array(src.length);
+    var radius = 2;
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        var rs = 0, gs = 0, bs = 0, count = 0;
+        for (var dy = -radius; dy <= radius; dy++) {
+          var yy = y + dy;
+          if (yy < 0 || yy >= h) { continue; }
+          for (var dx = -radius; dx <= radius; dx++) {
+            var xx = x + dx;
+            if (xx < 0 || xx >= w) { continue; }
+            var idx = (yy * w + xx) * 3;
+            rs += src[idx]; gs += src[idx + 1]; bs += src[idx + 2];
+            count++;
+          }
+        }
+        var oi = (y * w + x) * 3;
+        out[oi] = rs / count; out[oi + 1] = gs / count; out[oi + 2] = bs / count;
+      }
+    }
+    return out;
+  }
+
+  function snrDb(alphaBar) {
+    var noisePower = 1 - alphaBar;
+    if (noisePower <= 1e-12) { return Infinity; }
+    var ratio = alphaBar / noisePower;
+    if (ratio <= 0) { return -Infinity; }
+    return 10 * Math.log10(ratio);
+  }
+
+  function renderImage(t) {
+    if (!basePixels) { return; }
+    var alphaBar = alphaBarAt(t);
+    var sqrtA = Math.sqrt(alphaBar);
+    var sqrtOneMinusA = Math.sqrt(Math.max(0, 1 - alphaBar));
+    var n = SIZE * SIZE * 3;
+    var noised = new Float32Array(n);
+    for (var i = 0; i < n; i++) {
+      // pixel values are 0..255; noise is standard normal, so scale it to the
+      // same range before mixing, matching sqrt(alpha_bar)*x + sqrt(1-alpha_bar)*noise.
+      var v = sqrtA * basePixels[i] + sqrtOneMinusA * (noiseField[i] * 127.5);
+      noised[i] = v;
+    }
+    var out = denoiseBtn.getAttribute('aria-pressed') === 'true' ? boxBlur(noised, SIZE, SIZE) : noised;
+
+    var imageData = pixelCtx.createImageData(SIZE, SIZE);
+    var d = imageData.data;
+    for (var p = 0; p < SIZE * SIZE; p++) {
+      d[p * 4] = clamp255(out[p * 3]);
+      d[p * 4 + 1] = clamp255(out[p * 3 + 1]);
+      d[p * 4 + 2] = clamp255(out[p * 3 + 2]);
+      d[p * 4 + 3] = 255;
+    }
+    pixelCtx.putImageData(imageData, 0, 0);
+    imgCtx.clearRect(0, 0, imgSize.w, imgSize.h);
+    imgCtx.drawImage(pixelCanvas, 0, 0, SIZE, SIZE, 0, 0, imgSize.w, imgSize.h);
+
+    var db = snrDb(alphaBar);
+    var dbText = db === Infinity ? '+infinity dB' : (db === -Infinity ? '-infinity dB' : db.toFixed(1) + ' dB');
+    statsEl.textContent = 'Step ' + t + ' of ' + T + '. alpha-bar = ' + alphaBar.toFixed(4) +
+      '. Signal-to-noise ratio: ' + dbText + '.';
+  }
+
+  function clamp255(v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
+
+  // ---- alpha-bar curve, drawn for the currently selected schedule ----
+  function theme() {
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return dark
+      ? { bg: '#101216', grid: '#2a2f37', curve: '#4da3c7', marker: '#f2b183', text: '#9aa0a8' }
+      : { bg: '#ffffff', grid: '#e3e5e8', curve: '#0b6e99', marker: '#8a3a10', text: '#5a6069' };
+  }
+
+  function mapLinear(v, inLo, inHi, outLo, outHi) {
+    if (inHi === inLo) { return outLo; }
+    return outLo + (v - inLo) / (inHi - inLo) * (outHi - outLo);
+  }
+
+  function drawCurve(t) {
+    var th = theme();
+    var w = curveSize.w, h = curveSize.h;
+    var mL = 40, mR = 10, mT = 10, mB = 22;
+    var pw = w - mL - mR, ph = h - mT - mB;
+    curveCtx.fillStyle = th.bg;
+    curveCtx.fillRect(0, 0, w, h);
+
+    var table = scheduleEl.value === 'cosine' ? cosineAlphaBar : linearAlphaBar;
+
+    function xPix(step) { return mapLinear(step, 0, T, mL, mL + pw); }
+    function yPix(v) { return mapLinear(v, 0, 1, mT + ph, mT); }
+
+    curveCtx.strokeStyle = th.grid;
+    curveCtx.lineWidth = 1;
+    curveCtx.strokeRect(mL, mT, pw, ph);
+
+    curveCtx.strokeStyle = th.curve;
+    curveCtx.lineWidth = 2;
+    curveCtx.beginPath();
+    var stride = 4;
+    for (var t2 = 0; t2 <= T; t2 += stride) {
+      var px = xPix(t2), py = yPix(table[t2]);
+      if (t2 === 0) { curveCtx.moveTo(px, py); } else { curveCtx.lineTo(px, py); }
+    }
+    curveCtx.stroke();
+
+    var mx = xPix(t), my = yPix(table[Math.max(0, Math.min(T, t | 0))]);
+    curveCtx.strokeStyle = th.marker;
+    curveCtx.lineWidth = 1.5;
+    curveCtx.beginPath();
+    curveCtx.moveTo(mx, mT); curveCtx.lineTo(mx, mT + ph);
+    curveCtx.stroke();
+    curveCtx.fillStyle = th.marker;
+    curveCtx.beginPath();
+    curveCtx.arc(mx, my, 4, 0, 2 * Math.PI);
+    curveCtx.fill();
+
+    curveCtx.fillStyle = th.text;
+    curveCtx.font = '12px system-ui, sans-serif';
+    curveCtx.fillText('1.0', 4, mT + 10);
+    curveCtx.fillText('0.0', 4, mT + ph);
+    curveCtx.fillText('t=0', mL, h - 6);
+    curveCtx.fillText('t=' + T, mL + pw - 30, h - 6);
+  }
+
+  function render() {
+    var t = parseInt(stepEl.value, 10);
+    renderImage(t);
+    drawCurve(t);
+  }
+
+  // ---- canvases sized for devicePixelRatio, drawn in CSS-pixel units ----
+  var curveSize = { w: 440, h: 256 };
+  var imgSize = { w: 320, h: 320 };
+  function fitCanvas(canvas, ctx, cssWidth, cssHeight) {
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    canvas.style.height = cssHeight + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function fitCanvases() {
+    var curveWidth = curveCanvas.getBoundingClientRect().width || curveCanvas.clientWidth || 440;
+    var curveHeight = Math.round(curveWidth * (256 / 440));
+    curveSize = { w: curveWidth, h: curveHeight };
+    fitCanvas(curveCanvas, curveCtx, curveWidth, curveHeight);
+
+    var imgWidth = imgCanvas.getBoundingClientRect().width || imgCanvas.clientWidth || 320;
+    imgSize = { w: imgWidth, h: imgWidth };
+    fitCanvas(imgCanvas, imgCtx, imgWidth, imgWidth);
+  }
+
+  // ---- controls ----
+  function updateStepLabel() { el('stepDisp').textContent = stepEl.value; }
+  function updateSpeedLabel() { el('speedDisp').textContent = speedEl.value + ' step' + (speedEl.value === '1' ? '' : 's') + '/frame'; }
+
+  var playing = false;
+  var rafId = null;
+  function frame() {
+    var speed = parseInt(speedEl.value, 10);
+    var t = parseInt(stepEl.value, 10) + speed;
+    if (t >= T) {
+      t = T;
+      stepEl.value = String(t);
+      updateStepLabel();
+      render();
+      stop();
+      return;
+    }
+    stepEl.value = String(t);
+    updateStepLabel();
+    render();
+    rafId = requestAnimationFrame(frame);
+  }
+  function play() {
+    if (playing) { return; }
+    if (parseInt(stepEl.value, 10) >= T) { stepEl.value = '0'; updateStepLabel(); }
+    playing = true;
+    playBtn.setAttribute('aria-pressed', 'true');
+    rafId = requestAnimationFrame(frame);
+  }
+  function stop() {
+    playing = false;
+    playBtn.setAttribute('aria-pressed', 'false');
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  stepEl.addEventListener('input', function () {
+    stop();
+    updateStepLabel();
+    render();
+  });
+  scheduleEl.addEventListener('change', render);
+  speedEl.addEventListener('input', updateSpeedLabel);
+
+  playBtn.addEventListener('click', play);
+  pauseBtn.addEventListener('click', stop);
+  resetBtn.addEventListener('click', function () {
+    stop();
+    stepEl.value = '0';
+    updateStepLabel();
+    render();
+  });
+  denoiseBtn.addEventListener('click', function () {
+    var pressed = denoiseBtn.getAttribute('aria-pressed') === 'true';
+    denoiseBtn.setAttribute('aria-pressed', String(!pressed));
+    render();
+  });
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) { clearTimeout(resizeTimer); }
+    resizeTimer = setTimeout(function () {
+      fitCanvases();
+      render();
+    }, 120);
+  });
+
+  updateStepLabel();
+  updateSpeedLabel();
+  fitCanvases();
+  loadSampleImage();
+})();
+  </script>
+</body>
+</html>
