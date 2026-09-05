@@ -29,6 +29,8 @@ project:
     - file: multimodal-agents.ipynb
     - file: ethics.ipynb
     - file: futures.ipynb
+    - file: tools.md
+    - file: gallery.md
 
 site:
   template: book-theme
