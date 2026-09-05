@@ -1,11 +1,13 @@
 # Project title
 
-**Makers.** Names (or a pseudonym if you prefer).
+**Makers.** Names (or a pseudonym if you prefer). In a group, say what each person contributed.
+**Format.** Performance or installation.
 **Modalities.** At least two, for example text + image.
 **Tools.** Name, model, version or date, for each.
+**Technical needs.** Space, power, sound, screen or projector, network, and how long you need to set up.
 
 ## The work
-Embed or link the artefact. One paragraph on what a visitor is looking at.
+Embed or link the artefact. One paragraph on what a visitor is looking at, or was looking at, in the room.
 
 ## The brief
 Who it is for and what it had to do.

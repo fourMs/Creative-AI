@@ -11,6 +11,7 @@ The book has been written using [Jupyter Book v2](https://next.jupyterbook.org/)
 - **Format:** 45-minute lecture + 90-minute lab per week
 - **Workload:** ~6 hours of self-study per week
 - **Prerequisites:** None. Curiosity, a laptop, and an email address are enough.
+- **Assessment:** the semester project is the exam, performed or installed at *The Synthetic Gallery* in the exam period and graded A to F; the weekly log and the other activities are obligatory and assessed pass or fail.
 
 The course introduces the field of *Creative AI*, showing how generative models work, how they are used in writing, image-making, music, video, code, design, and games, and how to reflect critically on their use as tools, collaborators, and cultural artefacts.
 
