@@ -63,6 +63,8 @@ Examples of strong projects from prior offerings:
 - *A 40-second music video for an original song the student wrote*, generated stems with re-recorded vocals on top and a hand-edited storyboard, screened with a live introduction and the song played through the room. The reflection compared early Bob Dylan music videos with the new affordances of cheap motion.
 - *A redesign of the visual identity for a Norwegian charity*, moodboards and vector marks generated and then rebuilt by hand into a system, installed as a printed wall with the maker walking visitors through every prompt and editorial decision.
 - *A short interactive piece in p5.js* where the visitor types a memory and a generated soundscape plays back, installed on a laptop with headphones for the length of the event. The reflection focused on what the AI got wrong, and why those errors became part of the piece.
+- *A recorded dialogue between two synthetic voices arguing opposite sides of the student's ethics essay*, scripted by the maker and presented as a reading with the transcript printed beside it. The reflection asked what a synthesised voice does to an argument a listener is being asked to trust.
+- *A small web piece in which a visitor types a sentence and watches a tokeniser split it*, installed on a laptop with a printed sheet of Norwegian and English examples beside it. The reflection compared the piece with the explanations of language models it was built to replace.
 
 What makes these projects strong is not the polish but the fit between brief, tool, and reflection. A modest project with a clear, honest brief beats a flashy project with no spine.
 

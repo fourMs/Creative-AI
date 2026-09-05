@@ -18,8 +18,14 @@ Alignment training (RLHF)
 Anarchive
 : A computational memory that holds no fixed documents but continuously reorganises cultural traces into new generative forms, a term used by Pierre Cassou-Noguès and Gwenola Wagon. Chapter 3 uses it for the latent space of a trained model, where provenance is unstable and meaning is relational rather than documentary.
 
+Attention
+: The mechanism in a transformer that lets every element of a sequence look at every other element. It is what allows a model to relate a word at the end of a paragraph to one at the beginning.
+
 Audio–video and auditory–visual
 : Audio and video name data, the recorded, transmitted, or generated signal; auditory and visual name perception and processing, whether in a person or in a machine. A film is an audio–video artefact, and watching it is auditory–visual. The book keeps the two apart rather than folding them into a single word that means both.
+
+Autoencoder
+: A pair of networks trained together, one compressing an input into a short list of numbers and the other rebuilding the input from it. The short list is a latent representation, and a variational autoencoder shapes that space so that moving through it produces plausible new outputs.
 
 Autoregressive model
 : A model that predicts the next element of a sequence given the previous ones, factorising a distribution over sequences into a chain of small predictions. It powers chat models and a good deal of audio and image generation.

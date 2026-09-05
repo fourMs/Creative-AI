@@ -43,6 +43,8 @@ The book also ships with its own small apps: single-page, self-contained tools b
 
 **Open alternative.** [Stable Diffusion](https://stability.ai/), run through [ComfyUI](https://www.comfy.org/) or [InvokeAI](https://invoke.com/), is an open-weight image model you can host yourself.
 
+**Free and adjustable.** A hosted Stable Diffusion demo, run as a browser page on a model-hosting site, exposes the seed, the guidance value, and the step count with no account and no installation.
+
 </details>
 
 <details>
@@ -86,6 +88,17 @@ The book also ships with its own small apps: single-page, self-contained tools b
 - [Adobe Aero](https://www.adobe.com/products/aero.html): a phone AR viewer for placing a generated 3D asset in the room in front of you
 
 **Open alternative.** [Nerfstudio](https://docs.nerf.studio/) is an open-source toolkit for building and viewing your own Gaussian splats.
+
+</details>
+
+<details>
+<summary>Agents and assistants</summary>
+
+- Terminal and editor coding agents that plan, edit files, run code, and report a trace
+- Research or deep-research modes inside a commercial chat assistant, which run the same loop over search results
+- Browser-using agents, which act on live websites and need the narrowest permissions of the three
+
+**Open alternative.** An agent framework run locally against an open-weight model, which prints its own trace and calls only the tools you define.
 
 </details>
 
