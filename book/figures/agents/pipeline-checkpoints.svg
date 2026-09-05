@@ -8,17 +8,27 @@
     .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
     .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
     .back { fill: none; stroke: #e8556d; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#a2); }
+  
+    .accent { fill: #e8556d; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #e7e5e4; }
+      .bg.head { fill: #d8b4fe; }
+      .arrow { stroke: #e7e5e4; }
+      .mk { fill: #e7e5e4; }
+      .accent { fill: #ff8fa3; }
+    }
   </style>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+      <path class="mk" d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
     </marker>
     <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
     </marker>
   </defs>
 
-  <text class="head" x="40" y="36">A creative pipeline an agent can run</text>
+  <text class="head bg" x="40" y="36">A creative pipeline an agent can run</text>
 
   <rect class="step" x="40"  y="60" width="120" height="46"/>
   <text class="label" x="100" y="88" text-anchor="middle">1 Story</text>
@@ -51,6 +61,6 @@
   <text class="small" x="645" y="214" text-anchor="middle">after step 1, before the taste is inherited</text>
 
   <path class="back" d="M 420 106 L 420 130 L 260 130 L 260 106"/>
-  <text class="small" x="690" y="140" text-anchor="end" style="fill:#e8556d">a contradicting shot sends the brief back</text>
-  <text class="small" x="285" y="266" text-anchor="middle">Checkpoints belong before anything irreversible, anything public, and any choice of taste.</text>
+  <text class="small accent" x="690" y="140" text-anchor="end">a contradicting shot sends the brief back</text>
+  <text class="small bg" x="285" y="266" text-anchor="middle">Checkpoints belong before anything irreversible, anything public, and any choice of taste.</text>
 </svg>

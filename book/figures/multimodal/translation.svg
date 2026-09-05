@@ -10,10 +10,20 @@
     .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
     .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
     .compare { fill: none; stroke: #e8556d; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#a2); marker-start: url(#a2s); }
+  
+    .accent { fill: #e8556d; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #e7e5e4; }
+      .bg.head { fill: #d8b4fe; }
+      .arrow { stroke: #e7e5e4; }
+      .mk { fill: #e7e5e4; }
+      .accent { fill: #ff8fa3; }
+    }
   </style>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+      <path class="mk" d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
     </marker>
     <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
@@ -23,7 +33,7 @@
     </marker>
   </defs>
 
-  <text class="head" x="40" y="34">Carrying a work across a boundary between data types</text>
+  <text class="head bg" x="40" y="34">Carrying a work across a boundary between data types</text>
 
   <rect class="box" x="40" y="60" width="170" height="60"/>
   <text class="label" x="125" y="88" text-anchor="middle">Your own artefact</text>
@@ -38,11 +48,11 @@
   <text class="small" x="665" y="108" text-anchor="middle">a sound, say</text>
 
   <path class="arrow" d="M 210 90 L 290 90"/>
-  <text class="small" x="250" y="80" text-anchor="middle">describe</text>
+  <text class="small bg" x="250" y="80" text-anchor="middle">describe</text>
   <path class="arrow" d="M 490 90 L 570 90"/>
-  <text class="small" x="530" y="80" text-anchor="middle">brief</text>
+  <text class="small bg" x="530" y="80" text-anchor="middle">brief</text>
 
   <path class="compare" d="M 125 120 L 125 190 L 665 190 L 665 120"/>
-  <text class="small" x="395" y="212" text-anchor="middle" style="fill:#e8556d">put them side by side</text>
-  <text class="small" x="400" y="252" text-anchor="middle">What survives the crossing is legible to a stranger, and what does not is either a failure or the part that is yours.</text>
+  <text class="small accent" x="395" y="212" text-anchor="middle">put them side by side</text>
+  <text class="small bg" x="400" y="252" text-anchor="middle">What survives the crossing is legible to a stranger, and what does not is either a failure or the part that is yours.</text>
 </svg>

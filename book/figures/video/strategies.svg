@@ -9,16 +9,24 @@
     .small { font: 500 12px Helvetica, Arial, sans-serif; fill: #444; }
     .arrow { fill: none; stroke: #1f2545; stroke-width: 1.5; marker-end: url(#a); }
     .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
+  
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #e7e5e4; }
+      .bg.head { fill: #d8b4fe; }
+      .arrow { stroke: #e7e5e4; }
+      .fill { stroke: #a8a29e; }
+      .mk { fill: #e7e5e4; }
+    }
   </style>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+      <path class="mk" d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
     </marker>
   </defs>
 
-  <text class="head" x="40" y="30">Three ways to handle the time axis, and what each one gets wrong</text>
+  <text class="head bg" x="40" y="30">Three ways to handle the time axis, and what each one gets wrong</text>
 
-  <text class="label" x="40" y="66">Frame by frame, with attention across frames</text>
+  <text class="label bg" x="40" y="66">Frame by frame, with attention across frames</text>
   <g>
     <rect class="frame" x="40"  y="78" width="52" height="38"/>
     <rect class="frame" x="112" y="78" width="52" height="38"/>
@@ -30,9 +38,9 @@
   <path class="arrow" d="M 164 97 L 184 97"/>
   <path class="arrow" d="M 236 97 L 256 97"/>
   <path class="arrow" d="M 308 97 L 328 97"/>
-  <text class="small" x="420" y="102">cheap, and it drifts in the direction of travel</text>
+  <text class="small bg" x="420" y="102">cheap, and it drifts in the direction of travel</text>
 
-  <text class="label" x="40" y="158">Space-time diffusion</text>
+  <text class="label bg" x="40" y="158">Space-time diffusion</text>
   <g>
     <rect class="frame" x="40"  y="170" width="52" height="38"/>
     <rect class="frame" x="112" y="170" width="52" height="38"/>
@@ -41,9 +49,9 @@
     <rect class="frame" x="328" y="170" width="52" height="38"/>
   </g>
   <rect class="block" x="30" y="166" width="360" height="52"/>
-  <text class="small" x="420" y="194">consistent throughout, and the clip length is capped hard</text>
+  <text class="small bg" x="420" y="194">consistent throughout, and the clip length is capped hard</text>
 
-  <text class="label" x="40" y="250">Keyframes, then interpolation</text>
+  <text class="label bg" x="40" y="250">Keyframes, then interpolation</text>
   <g>
     <rect class="key"  x="40"  y="262" width="52" height="38"/>
     <rect class="fill" x="112" y="262" width="52" height="38"/>
@@ -51,5 +59,5 @@
     <rect class="key"  x="256" y="262" width="52" height="38"/>
     <rect class="fill" x="328" y="262" width="52" height="38"/>
   </g>
-  <text class="small" x="420" y="286">long and cheap, and the motion between the keyframes slides</text>
+  <text class="small bg" x="420" y="286">long and cheap, and the motion between the keyframes slides</text>
 </svg>

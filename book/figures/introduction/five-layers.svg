@@ -7,6 +7,12 @@
     .small { font: 500 13px Helvetica, Arial, sans-serif; fill: #444; }
     .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
     .axis { fill: none; stroke: #8a8598; stroke-width: 2; marker-end: url(#a3); }
+  
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #e7e5e4; }
+      .bg.head { fill: #d8b4fe; }
+      .axis { stroke: #a8a29e; }
+    }
   </style>
   <defs>
     <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -14,7 +20,7 @@
     </marker>
   </defs>
 
-  <text class="head" x="120" y="34">A claim is easier to judge once you know which layer it is about</text>
+  <text class="head bg" x="120" y="34">A claim is easier to judge once you know which layer it is about</text>
 
   <rect class="top" x="120" y="52" width="620" height="46"/>
   <text class="label" x="150" y="81">Culture</text>
@@ -37,5 +43,5 @@
   <text class="small" x="290" y="297">what went into it, from whom, with what consent</text>
 
   <path class="axis" d="M 90 300 L 90 60"/>
-  <text class="small" x="76" y="200" text-anchor="middle" transform="rotate(-90 76 200)">from the material to the world</text>
+  <text class="small bg" x="76" y="200" text-anchor="middle" transform="rotate(-90 76 200)">from the material to the world</text>
 </svg>

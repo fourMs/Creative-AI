@@ -8,6 +8,14 @@
     .small { font: 500 12px Helvetica, Arial, sans-serif; fill: #444; }
     .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
     .arrow { fill: none; stroke: #e8556d; stroke-width: 2; marker-end: url(#a2); }
+  
+    .accent { fill: #e8556d; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #e7e5e4; }
+      .panel { stroke: #a8a29e; }
+      .accent { fill: #ff8fa3; }
+    }
   </style>
   <defs>
     <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -42,6 +50,6 @@
   <text class="small" x="615" y="234" text-anchor="middle">a surface to collide with, cut, and deform</text>
 
   <path class="arrow" d="M 350 130 L 450 130"/>
-  <text class="small" x="400" y="120" text-anchor="middle" style="fill:#e8556d">lossy</text>
-  <text class="small" x="400" y="278" text-anchor="middle">If the destination is a viewer, a splat is excellent. If it is a game engine, budget for the conversion.</text>
+  <text class="small accent" x="400" y="120" text-anchor="middle">lossy</text>
+  <text class="small bg" x="400" y="278" text-anchor="middle">If the destination is a viewer, a splat is excellent. If it is a game engine, budget for the conversion.</text>
 </svg>

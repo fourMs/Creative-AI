@@ -10,17 +10,28 @@
     .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
     .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
     .back { fill: none; stroke: #e8556d; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#a2); }
+  
+    .accent { fill: #e8556d; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #e7e5e4; }
+      .bg.head { fill: #d8b4fe; }
+      .arrow { stroke: #e7e5e4; }
+      .mk { fill: #e7e5e4; }
+      .accent { fill: #ff8fa3; }
+      .bar { fill: #a855f7; }
+    }
   </style>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+      <path class="mk" d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
     </marker>
     <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
     </marker>
   </defs>
 
-  <text class="head" x="40" y="34">The prompt, split into tokens</text>
+  <text class="head bg" x="40" y="34">The prompt, split into tokens</text>
   <rect class="tok" x="40"  y="52" width="66" height="40"/>
   <text class="label" x="73"  y="78" text-anchor="middle">The</text>
   <rect class="tok" x="116" y="52" width="86" height="40"/>
@@ -34,24 +45,24 @@
   <rect class="tok" x="428" y="52" width="46" height="40"/>
   <text class="label" x="451" y="78" text-anchor="middle">is</text>
   <rect class="slot" x="484" y="52" width="60" height="40"/>
-  <text class="small" x="514" y="78" text-anchor="middle">next</text>
+  <text class="small bg" x="514" y="78" text-anchor="middle">next</text>
 
   <path class="arrow" d="M 544 72 L 610 72"/>
-  <text class="small" x="700" y="66" text-anchor="middle">a probability for</text>
-  <text class="small" x="700" y="84" text-anchor="middle">every token</text>
+  <text class="small bg" x="700" y="66" text-anchor="middle">a probability for</text>
+  <text class="small bg" x="700" y="84" text-anchor="middle">every token</text>
 
-  <text class="head" x="40" y="146">The distribution over the next token</text>
+  <text class="head bg" x="40" y="146">The distribution over the next token</text>
   <rect class="bar-hi" x="40"  y="160" width="300" height="26"/>
-  <text class="label" x="356" y="179">Oslo</text>
+  <text class="label bg" x="356" y="179">Oslo</text>
   <rect class="bar" x="40" y="196" width="90" height="26"/>
-  <text class="label" x="146" y="215">Bergen</text>
+  <text class="label bg" x="146" y="215">Bergen</text>
   <rect class="bar" x="40" y="232" width="40" height="26"/>
-  <text class="label" x="96" y="251">a</text>
+  <text class="label bg" x="96" y="251">a</text>
   <rect class="bar" x="40" y="268" width="8" height="26"/>
-  <text class="label" x="64" y="287">purple</text>
+  <text class="label bg" x="64" y="287">purple</text>
 
   <path class="back" d="M 400 180 L 600 180 L 600 300 L 514 300 L 514 100"/>
-  <text class="small" x="690" y="240" style="fill:#e8556d">the chosen token is</text>
-  <text class="small" x="690" y="258" style="fill:#e8556d">appended, and the</text>
-  <text class="small" x="690" y="276" style="fill:#e8556d">model runs again</text>
+  <text class="small accent" x="690" y="240">the chosen token is</text>
+  <text class="small accent" x="690" y="258">appended, and the</text>
+  <text class="small accent" x="690" y="276">model runs again</text>
 </svg>

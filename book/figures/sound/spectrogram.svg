@@ -4,6 +4,11 @@
     .axis { stroke: #333; stroke-width: 2; }
     .tick-label { font: 500 12px Helvetica, Arial, sans-serif; fill: #333; }
     .label { font: 700 14px Helvetica, Arial, sans-serif; fill: #1f2545; }
+  
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #e7e5e4; }
+      .axis { stroke: #e7e5e4; }
+    }
   </style>
   <defs>
     <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
@@ -48,8 +53,8 @@
   </g>
   <line class="axis" x1="60" y1="40" x2="60" y2="310"/>
   <line class="axis" x1="60" y1="310" x2="650" y2="310"/>
-  <text class="tick-label" x="50" y="55" text-anchor="end">high</text>
-  <text class="tick-label" x="50" y="310" text-anchor="end">low</text>
-  <text class="label" transform="rotate(-90)" x="-175" y="25" text-anchor="middle">frequency</text>
-  <text class="label" x="350" y="345" text-anchor="middle">time ’</text>
+  <text class="tick-label bg" x="50" y="55" text-anchor="end">high</text>
+  <text class="tick-label bg" x="50" y="310" text-anchor="end">low</text>
+  <text class="label bg" transform="rotate(-90)" x="-175" y="25" text-anchor="middle">frequency</text>
+  <text class="label bg" x="350" y="345" text-anchor="middle">time &#8594;</text>
 </svg>

@@ -10,22 +10,33 @@
     .small { font: 500 12px Helvetica, Arial, sans-serif; fill: #444; }
     .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
     .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
+  
+    .muted { fill: #8a8598; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #e7e5e4; }
+      .bg.head { fill: #d8b4fe; }
+      .arrow { stroke: #e7e5e4; }
+      .gone { stroke: #a8a29e; }
+      .mk { fill: #e7e5e4; }
+      .muted { fill: #a8a29e; }
+    }
   </style>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+      <path class="mk" d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
     </marker>
   </defs>
 
-  <text class="faint" x="40" y="34">Outside the window</text>
+  <text class="faint bg" x="40" y="34">Outside the window</text>
   <rect class="gone" x="40" y="46" width="150" height="34"/>
   <text class="faint" x="115" y="68" text-anchor="middle">earlier turn</text>
   <rect class="gone" x="40" y="90" width="150" height="34"/>
   <text class="faint" x="115" y="112" text-anchor="middle">earlier turn</text>
-  <text class="small" x="115" y="146" text-anchor="middle" style="fill:#8a8598">not forgotten:</text>
-  <text class="small" x="115" y="164" text-anchor="middle" style="fill:#8a8598">never there</text>
+  <text class="small muted" x="115" y="146" text-anchor="middle">not forgotten:</text>
+  <text class="small muted" x="115" y="164" text-anchor="middle">never there</text>
 
-  <text class="head" x="230" y="34">The context window</text>
+  <text class="head bg" x="230" y="34">The context window</text>
   <rect class="win" x="230" y="46" width="330" height="230"/>
   <rect class="turn" x="250" y="66" width="290" height="34"/>
   <text class="label" x="395" y="88" text-anchor="middle">system instructions</text>
@@ -40,5 +51,5 @@
   <rect class="out" x="610" y="130" width="150" height="60"/>
   <text class="label" x="685" y="166" text-anchor="middle">next reply</text>
   <path class="arrow" d="M 560 160 L 610 160"/>
-  <text class="small" x="400" y="304" text-anchor="middle">An instruction that matters is restated near the end, where it competes with less.</text>
+  <text class="small bg" x="400" y="304" text-anchor="middle">An instruction that matters is restated near the end, where it competes with less.</text>
 </svg>

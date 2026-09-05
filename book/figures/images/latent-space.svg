@@ -10,19 +10,29 @@
     .head { font: 700 15px Helvetica, Arial, sans-serif; fill: #5a2a7a; }
     .arrow { fill: none; stroke: #1f2545; stroke-width: 2; marker-end: url(#a); }
     .loop { fill: none; stroke: #e8556d; stroke-width: 2; stroke-dasharray: 6 5; marker-end: url(#a2); }
+  
+    .accent { fill: #e8556d; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #e7e5e4; }
+      .bg.head { fill: #d8b4fe; }
+      .arrow { stroke: #e7e5e4; }
+      .mk { fill: #e7e5e4; }
+      .accent { fill: #ff8fa3; }
+    }
   </style>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
+      <path class="mk" d="M 0 0 L 10 5 L 0 10 z" fill="#1f2545"/>
     </marker>
     <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8556d"/>
     </marker>
   </defs>
 
-  <text class="head" x="40" y="34">Pixel space</text>
-  <text class="head" x="330" y="34">Latent space</text>
-  <text class="head" x="650" y="34">Pixel space</text>
+  <text class="head bg" x="40" y="34">Pixel space</text>
+  <text class="head bg" x="330" y="34">Latent space</text>
+  <text class="head bg" x="650" y="34">Pixel space</text>
 
   <rect class="big" x="40" y="58" width="110" height="110"/>
   <g fill="none" stroke="#5a2a7a" stroke-width="2">
@@ -30,7 +40,7 @@
     <path d="M 46 160 L 82 112 L 112 160 Z"/>
     <path d="M 96 160 L 122 126 L 144 160 Z"/>
   </g>
-  <text class="small" x="95" y="190" text-anchor="middle">millions of numbers</text>
+  <text class="small bg" x="95" y="190" text-anchor="middle">millions of numbers</text>
 
   <rect class="box" x="180" y="92" width="100" height="42"/>
   <text class="label" x="230" y="118" text-anchor="middle">encoder</text>
@@ -41,8 +51,8 @@
   <rect class="lat" x="454" y="90" width="46" height="46"/>
   <path class="arrow" d="M 280 113 L 330 113"/>
   <path class="loop" d="M 477 136 L 477 174 L 353 174 L 353 136"/>
-  <text class="small" x="415" y="196" text-anchor="middle" style="fill:#e8556d">denoise, step by step, under the prompt</text>
-  <text class="small" x="415" y="70" text-anchor="middle">thousands of numbers</text>
+  <text class="small accent" x="415" y="196" text-anchor="middle">denoise, step by step, under the prompt</text>
+  <text class="small bg" x="415" y="70" text-anchor="middle">thousands of numbers</text>
 
   <rect class="box" x="530" y="92" width="100" height="42"/>
   <text class="label" x="580" y="118" text-anchor="middle">decoder</text>
@@ -54,8 +64,8 @@
     <path d="M 666 160 L 702 112 L 732 160 Z"/>
     <path d="M 716 160 L 742 126 L 764 160 Z"/>
   </g>
-  <text class="small" x="715" y="190" text-anchor="middle">rendered once, at the end</text>
+  <text class="small bg" x="715" y="190" text-anchor="middle">rendered once, at the end</text>
   <path class="arrow" d="M 630 113 L 660 113"/>
 
-  <text class="small" x="400" y="256" text-anchor="middle">The expensive loop runs on the small representation, which is why these models fit on a laptop.</text>
+  <text class="small bg" x="400" y="256" text-anchor="middle">The expensive loop runs on the small representation, which is why these models fit on a laptop.</text>
 </svg>

@@ -65,7 +65,7 @@
 </head>
 <body>
   <h1>Translation sketchpad</h1>
-  <p class="intro">This sketchpad turns a drawn line into sound, and a sung line back into a drawn line, using one shared representation: a contour of pitch and loudness over time. No machine learning model is involved; the mapping runs on fixed rules, written out below, so every step is visible. Everything runs in this browser. Nothing you draw, sing, or record is uploaded anywhere.</p>
+  <p class="intro">This sketchpad translates between three data types, a line, a sound, and a text, through one shared contour of pitch and loudness over time. No machine learning model is involved; the mapping runs on fixed rules, written out below, so every step is visible. Everything runs in this browser. Nothing you draw, sing, or record is uploaded anywhere.</p>
 
   <fieldset>
     <legend>Draw</legend>
@@ -85,7 +85,7 @@
     <div class="row">
       <button type="button" id="clearBtn">Clear</button>
     </div>
-    <p class="hint">Draw a line from left to right with a mouse, a trackpad, or a finger. Height sets pitch across two octaves, from C3 at the bottom to C5 at the top; drawing speed sets loudness. Choosing a scale snaps the pitch to its notes as you draw, so the chromatic scale gives the smoothest glide and the pentatonic scale gives the widest steps. Drawing needs a pointer; every other control here, including recording your voice, works from the keyboard. The description above is built from a few written rules about the shape of the line; a real captioning model would learn such patterns from examples instead of following rules written by a person.</p>
+    <p class="hint">Draw a line from left to right with a mouse, a trackpad, or a finger. Height sets pitch across two octaves, from C3 at the bottom to C5 at the top; drawing speed sets loudness. Choosing a scale snaps the pitch to its notes as you draw, so the chromatic scale gives the smoothest glide and the pentatonic scale gives the widest steps. Starting a new line replaces the old one. Drawing needs a pointer; every other control here, including recording your voice, works from the keyboard. The description above is built from a few written rules about the shape of the line; a real captioning model would learn such patterns from examples instead of following rules written by a person.</p>
   </fieldset>
 
   <fieldset>
@@ -131,7 +131,7 @@
 
   <details>
     <summary>How it works</summary>
-    <p>The shared representation behind every translation in this app is a contour: an array of pitch and loudness values, sampled fifty times for every second of playback. A drawn line becomes a contour by reading, at each sample position along its width, the pitch that its height maps to (quantised to the chosen scale) and the loudness recorded from how fast the pointer was moving when it passed that point. A recording becomes a contour by splitting the audio into overlapping 2048-sample frames, roughly forty-six milliseconds each, and running autocorrelation on every frame: the frame is compared against time-shifted copies of itself, the shift that matches best gives the pitch, and a frame is only called "voiced" and given a pitch when that match is strong enough to clear a confidence threshold. The root-mean-square level of each frame gives its loudness. Playing a contour back sends its pitch and loudness arrays straight to a single oscillator's frequency and gain, so the sound never has to first become anything else. The text description is built from three simple rules: whether the pitch rises, falls, or holds across each third of the contour, and which third is loudest.</p>
+    <p>The shared representation behind every translation in this app is a contour: an array of pitch and loudness values, sampled fifty times for every second of playback. A drawn line becomes a contour by reading, at each sample position along its width, the pitch that its height maps to (quantised to the chosen scale) and the loudness recorded from how fast the pointer was moving when it passed that point. A recording becomes a contour by splitting the audio into overlapping 2048-sample frames, roughly forty-six milliseconds each, and running autocorrelation on every frame: the frame is compared against time-shifted copies of itself, the shift that matches best gives the pitch, and a frame is only called "voiced" and given a pitch when that match is strong enough to clear a confidence threshold. The root-mean-square level of each frame gives its loudness. Playing a contour back sends its pitch and loudness arrays straight to a single oscillator's frequency and gain, so the sound never has to first become anything else. The text description is built from three simple rules: whether the pitch rises, falls, or holds across each third of the contour, and which third is loudest. The pitch tracker is a plain autocorrelation with no correction for octave errors, so it can report a pitch exactly one octave from the true one; this is the main reason the difference score can mislead.</p>
     <p>This app bundles no data of its own and calls no external service.</p>
   </details>
 
@@ -210,9 +210,13 @@
   var recordedDurationSeconds = 0;
   var lastSource = null;         // 'drawn' or 'recorded': which contour the description describes
   var isRecording = false;
+  var pendingPermission = false; // true from a mic click until getUserMedia resolves or rejects
   var preRecordPlaying = false;  // true while "Sing what you drew" is playing back before it records
   var isPlaying = false;
-  var currentPlayback = null;    // {osc, gainNode, startTime, duration, which}
+  var currentPlayback = null;    // {osc, gainNode, startTime, duration, which, token}
+  var playToken = 0;             // bumped whenever a playback is superseded or cancelled, so a
+                                  // pending onEnded callback (for example, the "now record"
+                                  // step of Sing what you drew) can tell it was cancelled
 
   // ============================================================
   // Audio engine. No AudioContext is created until a user gesture
@@ -248,6 +252,7 @@
 
   function stopPlayback() {
     if (!currentPlayback) { return; }
+    playToken++; // invalidate any onEnded callback still pending on the playback being stopped
     var prevWhich = currentPlayback.which;
     var now = actx.currentTime;
     try {
@@ -270,6 +275,8 @@
       return;
     }
     stopPlayback();
+    playToken++;
+    var myToken = playToken;
     var n = Math.max(2, freqs.length);
     var freqCurve = new Float32Array(n);
     var gainCurve = new Float32Array(n);
@@ -295,11 +302,16 @@
     osc.start(startTime);
     osc.stop(startTime + dur + 0.05);
     isPlaying = true;
-    currentPlayback = { osc: osc, gainNode: gainNode, startTime: startTime, duration: dur, which: which };
+    currentPlayback = { osc: osc, gainNode: gainNode, startTime: startTime, duration: dur, which: which, token: myToken };
     setPlayButtonState(which, true);
     startPlayheadLoop();
     osc.onended = function () {
-      var wasCurrent = currentPlayback && currentPlayback.osc === osc;
+      // wasCurrent is false when this playback was cancelled (Stop, Clear, or a new
+      // playContour call) before it finished naturally: stopPlayback bumps playToken
+      // and clears currentPlayback synchronously, so a cancelled playback's onEnded
+      // callback below is never invoked, even though the oscillator still fires this
+      // event a little later.
+      var wasCurrent = currentPlayback && currentPlayback.token === myToken;
       if (wasCurrent) {
         isPlaying = false;
         currentPlayback = null;
@@ -310,7 +322,7 @@
         if (fresh) { playContour(fresh, waveformSelect.value, 'drawn'); return; }
       }
       drawScene();
-      if (onEnded) { onEnded(); }
+      if (wasCurrent && onEnded) { onEnded(); }
     };
   }
 
@@ -385,6 +397,7 @@
     rawStroke = [];
     lastSource = 'drawn';
     updateButtonsEnabled();
+    updateDescription();
     refreshComparison();
     setStatus('Line drawn. Press Play to hear it.');
     drawScene();
@@ -432,8 +445,15 @@
       setStatus('This browser does not support microphone recording.');
       return;
     }
+    // Guard the gap between this call and getUserMedia resolving: without it, a
+    // second click (or the automated "sing what you drew" flow racing a manual
+    // click) could start a second recorder sharing recordChunks with the first,
+    // and leak the first recorder's microphone stream.
+    pendingPermission = true;
+    updateButtonsEnabled();
     ensureAudio();
     navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function (stream) {
+      pendingPermission = false;
       micStream = stream;
       recordChunks = [];
       var mime = pickMimeType();
@@ -452,6 +472,7 @@
       autoStopTimer = setTimeout(function () { stopRecording(); }, MAX_RECORD_SECONDS * 1000);
       updateButtonsEnabled();
     }).catch(function (err) {
+      pendingPermission = false;
       setStatus('Microphone permission was not granted (' + (err && err.name ? err.name : 'error') + ').');
       preRecordPlaying = false;
       updateButtonsEnabled();
@@ -666,12 +687,16 @@
   // Buttons: enabling and wiring.
   // ============================================================
   function updateButtonsEnabled() {
-    var busy = preRecordPlaying || isRecording;
+    var busy = preRecordPlaying || isRecording || pendingPermission;
     playDrawnBtn.disabled = !drawnStroke || busy;
     singBtn.disabled = !drawnStroke || busy;
     playRecordedBtn.disabled = !recordedContour || busy;
     playAudioBtn.disabled = !recordedBuffer || busy;
-    micBtn.disabled = preRecordPlaying;
+    micBtn.disabled = preRecordPlaying || pendingPermission;
+    // Clear is disabled only during the pre-play half of "Sing what you drew": if it
+    // were allowed there, clearing would cancel that playback and, before this fix,
+    // could still let the recording it was about to trigger start regardless.
+    clearBtn.disabled = preRecordPlaying;
   }
 
   playDrawnBtn.addEventListener('click', function () {
@@ -713,7 +738,10 @@
   });
 
   micBtn.addEventListener('click', function () {
-    if (isRecording) { stopRecording(); } else { stopPlayback(); startRecording(); }
+    if (isRecording) { stopRecording(); return; }
+    if (pendingPermission) { return; }
+    stopPlayback();
+    startRecording();
   });
 
   singBtn.addEventListener('click', function () {
