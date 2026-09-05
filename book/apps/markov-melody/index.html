@@ -90,10 +90,11 @@
       <div>
         <label for="order">Model order</label>
         <select id="order">
-          <option value="1">1 (last note only)</option>
-          <option value="2" selected>2</option>
+          <option value="1" selected>1 (last note only)</option>
+          <option value="2">2</option>
           <option value="3">3 (last three notes)</option>
         </select>
+        <p class="hint">Higher orders copy longer stretches of the melody; with a short melody most contexts have only one continuation, so temperature has less to act on. Start at order 1 to hear the knob, then raise the order to hear copying.</p>
       </div>
       <div>
         <label for="length">Length to generate <span class="vals" id="lengthDisp"></span></label>
@@ -171,6 +172,7 @@
   // ---- state ----
   var recorded = [];   // [{midi, dur}], played by the user or loaded
   var generated = [];  // [{midi, dur}], produced by Generate
+  var recordedVersion = 0; // bumped whenever `recorded` changes, to invalidate the n-gram table cache
 
   // ============================================================
   // Audio engine. No sound is produced, and no AudioContext exists,
@@ -257,6 +259,8 @@
     recorded.push({ midi: midi, dur: durClass });
     if (recorded.length > MAX_RECORDED) { recorded.shift(); }
     generated = [];
+    recordedVersion++;
+    markLayoutDirty();
     updateStats();
     drawRoll(null);
   }
@@ -443,8 +447,20 @@
     return probs[probs.length - 1][0];
   }
 
-  function generateContinuation(tokens, order, temperature, seed, length) {
-    var tables = buildTables(tokens, order);
+  // ---- n-gram table cache: rebuilding the counts is the only non-trivial
+  // cost here, so keep the last (recorded melody, order) pair's tables
+  // around and only rebuild when either one actually changed ----
+  var tableCache = { version: -1, order: null, tables: null };
+  function getTables(tokens, order) {
+    if (tableCache.version !== recordedVersion || tableCache.order !== order) {
+      tableCache.tables = buildTables(tokens, order);
+      tableCache.version = recordedVersion;
+      tableCache.order = order;
+    }
+    return tableCache.tables;
+  }
+
+  function generateContinuation(tables, tokens, order, temperature, seed, length) {
     var rng = makeLCG(seed);
     var context = tokens.slice(Math.max(0, tokens.length - order));
     var out = [], i, counts, probs, tok;
@@ -469,8 +485,10 @@
     var length = parseInt(lengthEl.value, 10);
     var seed = parseInt(seedEl.value, 10) || 0;
     var tokens = recorded.map(encodeNote);
-    var outTokens = generateContinuation(tokens, order, temperature, seed, length);
+    var tables = getTables(tokens, order);
+    var outTokens = generateContinuation(tables, tokens, order, temperature, seed, length);
     generated = outTokens.map(decodeToken);
+    markLayoutDirty();
     updateStats();
     drawRoll(null);
   }
@@ -546,7 +564,14 @@
     a: 60, w: 61, s: 62, e: 63, d: 64, f: 65, t: 66, g: 67, y: 68, h: 69, u: 70, j: 71, k: 72,
     o: 74, l: 76, ';': 79, p: 81
   };
+  function isFormTarget(target) {
+    if (!target) { return false; }
+    if (target.isContentEditable) { return true; }
+    var tag = target.tagName;
+    return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
+  }
   document.addEventListener('keydown', function (e) {
+    if (isFormTarget(e.target)) { return; }
     if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) { return; }
     var m = KEY_MAP[e.key.toLowerCase()];
     if (m !== undefined) { e.preventDefault(); noteDown(m); }
@@ -562,6 +587,17 @@
   // ============================================================
   var ROLL_ASPECT = 220 / 720;
   var rollSize = { w: 720, h: 220 };
+
+  // ---- cached background: the note rectangles only change when the
+  // recorded or generated melody, the tempo, or the canvas size changes, so
+  // they are drawn once into an offscreen canvas; every animation frame of
+  // the playhead then costs one drawImage plus one line, not a rebuild of
+  // the note layout ----
+  var bgCanvas = document.createElement('canvas');
+  var bgCtx = bgCanvas.getContext('2d');
+  var layout = null;       // { mL, mT, ph, total, pxPerSec }, or null if nothing to draw
+  var layoutDirty = true;
+  function markLayoutDirty() { layoutDirty = true; }
 
   function fitCanvas(cnv, cctx, aspect) {
     var dpr = window.devicePixelRatio || 1;
@@ -587,20 +623,29 @@
     el('swatchGenerated').style.background = th.generated;
   }
 
-  function drawRoll(playheadTime) {
+  // ---- rebuild the offscreen background: called only when layoutDirty is
+  // set (melody, tempo, or canvas size changed), never once per animation
+  // frame ----
+  function rebuildBackground() {
     var th = theme();
     var w = rollSize.w, h = rollSize.h;
-    c2d.fillStyle = th.bg;
-    c2d.fillRect(0, 0, w, h);
-    paintSwatches();
+    var dpr = window.devicePixelRatio || 1;
+    if (bgCanvas.width !== canvas.width || bgCanvas.height !== canvas.height) {
+      bgCanvas.width = canvas.width;
+      bgCanvas.height = canvas.height;
+    }
+    bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    bgCtx.fillStyle = th.bg;
+    bgCtx.fillRect(0, 0, w, h);
 
     var all = recorded.map(function (n) { return { midi: n.midi, dur: n.dur, kind: 'recorded' }; })
       .concat(generated.map(function (n) { return { midi: n.midi, dur: n.dur, kind: 'generated' }; }));
 
     if (all.length === 0) {
-      c2d.fillStyle = th.text;
-      c2d.font = '13px system-ui, sans-serif';
-      c2d.fillText('Play notes, or load the example, to see the piano roll.', 10, h / 2);
+      bgCtx.fillStyle = th.text;
+      bgCtx.font = '13px system-ui, sans-serif';
+      bgCtx.fillText('Play notes, or load the example, to see the piano roll.', 10, h / 2);
+      layout = null;
       return;
     }
 
@@ -629,23 +674,44 @@
 
     for (i = 0; i < positioned.length; i++) {
       var note = positioned[i];
-      c2d.fillStyle = note.kind === 'recorded' ? th.recorded : th.generated;
+      bgCtx.fillStyle = note.kind === 'recorded' ? th.recorded : th.generated;
       var x = xPix(note.start);
       var width = Math.max(2, note.dur * pxPerSec - 1);
-      c2d.fillRect(x, yPix(note.midi) + 1, width, Math.max(2, rowH - 2));
+      bgCtx.fillRect(x, yPix(note.midi) + 1, width, Math.max(2, rowH - 2));
     }
 
-    c2d.fillStyle = th.text;
-    c2d.font = '11px system-ui, sans-serif';
-    c2d.fillText(midiToName(maxMidi), 4, mT + 10);
-    c2d.fillText(midiToName(minMidi), 4, mT + ph - 3);
+    bgCtx.fillStyle = th.text;
+    bgCtx.font = '11px system-ui, sans-serif';
+    bgCtx.fillText(midiToName(maxMidi), 4, mT + 10);
+    bgCtx.fillText(midiToName(minMidi), 4, mT + ph - 3);
 
-    if (playheadTime !== null && playheadTime !== undefined) {
+    layout = { mL: mL, mT: mT, ph: ph, total: total, pxPerSec: pxPerSec };
+  }
+
+  // ---- composite the cached background plus the playhead line; this is
+  // the only work done on every animation frame during playback ----
+  function drawRoll(playheadTime) {
+    paintSwatches();
+    if (layoutDirty) {
+      rebuildBackground();
+      layoutDirty = false;
+    }
+    var dpr = window.devicePixelRatio || 1;
+    c2d.save();
+    c2d.setTransform(1, 0, 0, 1, 0, 0);
+    c2d.clearRect(0, 0, canvas.width, canvas.height);
+    c2d.drawImage(bgCanvas, 0, 0);
+    c2d.restore();
+    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    if (layout && playheadTime !== null && playheadTime !== undefined) {
+      var th = theme();
+      var x = layout.mL + Math.min(playheadTime, layout.total) * layout.pxPerSec;
       c2d.strokeStyle = th.playhead;
       c2d.lineWidth = 1.5;
       c2d.beginPath();
-      c2d.moveTo(xPix(playheadTime), mT);
-      c2d.lineTo(xPix(playheadTime), mT + ph);
+      c2d.moveTo(x, layout.mT);
+      c2d.lineTo(x, layout.mT + layout.ph);
       c2d.stroke();
     }
   }
@@ -671,6 +737,8 @@
   function loadExample() {
     recorded = EXAMPLE_MELODY.map(function (pair) { return { midi: pair[0], dur: pair[1] }; });
     generated = [];
+    recordedVersion++;
+    markLayoutDirty();
     updateStats();
     drawRoll(null);
   }
@@ -679,6 +747,8 @@
     stopPlayback();
     recorded = [];
     generated = [];
+    recordedVersion++;
+    markLayoutDirty();
     updateStats();
     drawRoll(null);
   }
@@ -693,16 +763,22 @@
   });
   lengthEl.addEventListener('input', updateLabels);
   temperatureEl.addEventListener('input', updateLabels);
-  tempoEl.addEventListener('input', function () { updateLabels(); drawRoll(null); });
+  tempoEl.addEventListener('input', function () { updateLabels(); markLayoutDirty(); drawRoll(null); });
 
   var resizeTimer = null;
   window.addEventListener('resize', function () {
     if (resizeTimer) { clearTimeout(resizeTimer); }
     resizeTimer = setTimeout(function () {
       rollSize = fitCanvas(canvas, c2d, ROLL_ASPECT);
+      markLayoutDirty();
       drawRoll(null);
     }, 120);
   });
+
+  var themeQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  if (themeQuery && themeQuery.addEventListener) {
+    themeQuery.addEventListener('change', function () { markLayoutDirty(); drawRoll(null); });
+  }
 
   updateLabels();
   rollSize = fitCanvas(canvas, c2d, ROLL_ASPECT);
