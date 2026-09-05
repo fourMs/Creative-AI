@@ -2,7 +2,7 @@
 
 **Makers.** Names (or a pseudonym if you prefer). In a group, say what each person contributed.
 **Format.** Performance or installation.
-**Modalities.** At least two, for example text + image.
+**Data types.** At least two, for example text + image.
 **Tools.** Name, model, version or date, for each.
 **Technical needs.** Space, power, sound, screen or projector, network, and how long you need to set up.
 

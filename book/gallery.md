@@ -38,7 +38,7 @@ Solo or in groups of two to three. In a group, the reflection names what each pe
 
 ## Technical requirements
 
-- The work must use at least two different AI modalities, for example text and image, image and video, audio and code, or 3D and text. This is the technical bar of the course.
+- The work must use at least two different data types, for example text and image, image and video, audio and code, or 3D and text. This is the technical bar of the course.
 - All prompts, generations, and decisions must be logged and submitted with the work.
 - The work and reflection must explicitly acknowledge which AI tools were used, with versions or dates.
 

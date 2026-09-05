@@ -81,11 +81,11 @@ ControlNet
 Convolutional network
 : A network architecture that slides small parameter patches across an image, the dominant approach to computer vision for most of the 2010s.
 
-Cross-modal translation
-: Carrying a piece of work from one medium into another through a paragraph that describes it, then editing that paragraph and regenerating. It is a working method for using a multimodal model productively rather than only for critique.
-
 Data
 : What went into a generative system: which material, gathered from whom, with what consent and whose labour. It is the first of the book's five layers, alongside model, interface, practice, and culture.
+
+Data type
+: This book's term for a kind of data a model takes in or puts out: text, image, audio, video, 3D geometry, motion data. The field calls the same thing a modality, and a model that takes several data types is a multimodal model.
 
 Data workers
 : People, often in low-wage countries, who label images, rank model outputs, and write fine-tuning examples. They are the reason a model behaves the way it does, and some carry the psychological cost of moderating violent or abusive material.
@@ -226,7 +226,7 @@ MIDI
 : A long-standing protocol that carries symbolic musical information, such as which note started, how hard, and what a controller was set to, rather than sound itself. A generative model that produces MIDI writes a score for something else to play, while one that produces audio writes the sound.
 
 Modality
-: In this book, a kind of data a model takes in or puts out: text, image, audio, video, 3D geometry, motion data. Psychology uses the same word for a sense, and where this book means perception it says sensory modality, or names the sense as auditory, visual, or tactile.
+: The field's word for a kind of data a model takes in or puts out, and the word behind multimodal. This book says data type instead, because psychology has long used modality for a human sense, and the two meanings are easy to confuse. Where this book means perception it says sense or sensory modality, or names the sense as auditory, visual, or tactile.
 
 Model
 : The trained artefact: a network plus one specific set of parameter values, frozen in a file and published under a family name, a version, and often a size. A model maps an input to an output, and it has no interface, no memory of you, and no data policy of its own.
@@ -238,7 +238,7 @@ Motion and movement
 : Movement is the experienced phenomenon, the body travelling through space as felt and perceived. Motion is the measurable version, the physical displacement a sensor records.
 
 Multimodal and multisensory
-: Multimodal describes models and data that combine several kinds of data, such as text with images or audio with video. People are multisensory rather than multimodal, since they combine senses rather than data types. Cross-modal correspondences, the reliable matches people make across the senses, keep their established name.
+: Multimodal is the field's name for models and data that take several data types, such as text with images or audio with video. People are multisensory rather than multimodal, since they combine senses rather than data types. Cross-modal correspondences, the reliable matches people make across the senses, keep their established name.
 
 Music question–answering (MQA)
 : A machine-learning task in which a system answers questions about a piece of music. Systems that work from audio alone miss what a performance shows, which is why datasets pair audio–video recordings with questions written against both.
@@ -371,6 +371,9 @@ Transformer
 
 Version (of a model)
 : The label that fixes which trained artefact a claim is about, since a family name is reused across retrainings. A claim about a model's behaviour carries a version or a date, because the same commercial name in March and in October need not name the same model.
+
+Translation between data types
+: Carrying a piece of work from one data type into another through a paragraph that describes it, then editing that paragraph and regenerating. It is a working method for using a multimodal model productively rather than only for critique, and the field often calls it cross-modal translation.
 
 Videogram and motiongram
 : A videogram is a single still image built by collapsing a video's frame-to-frame pixels into a strip, with one axis as time and the other as space. A motiongram does the same with frame-to-frame differences rather than the original pixels, so that movement shows up as visible bands.
