@@ -349,7 +349,7 @@
       var dataLen = segLen - 2;
 
       if (markerByte === 0xE1) { // APP1: Exif or XMP
-        if (bytesMatchAscii(view, dataStart, 'Exif  ')) {
+        if (bytesMatchAscii(view, dataStart, 'Exif\u0000\u0000')) {
           var tiff = parseTIFF(view, dataStart + 6);
           if (tiff) { result.exif = tiff; }
         } else if (bytesMatchAscii(view, dataStart, XMP_HEADER)) {
@@ -399,8 +399,12 @@
         break;
       }
       if (type === 'IHDR') {
-        result.width = view.getUint32(dataStart);
-        result.height = view.getUint32(dataStart + 4);
+        if (length >= 8) {
+          result.width = view.getUint32(dataStart);
+          result.height = view.getUint32(dataStart + 4);
+        } else {
+          result.errors.push('IHDR chunk is too short to contain width and height.');
+        }
       } else if (type === 'tEXt') {
         var nul = findNul(view, dataStart, dataStart + length);
         var keyword = latin1String(view, dataStart, nul - dataStart);
@@ -470,7 +474,7 @@
         result.height = hField & 0x3FFF;
       } else if (fourcc === 'EXIF') {
         var tiffBase = dataStart;
-        if (bytesMatchAscii(view, dataStart, 'Exif  ')) { tiffBase = dataStart + 6; }
+        if (bytesMatchAscii(view, dataStart, 'Exif\u0000\u0000')) { tiffBase = dataStart + 6; }
         var tiff = parseTIFF(view, tiffBase);
         if (tiff) { result.exif = tiff; }
       } else if (fourcc === 'XMP ') {
