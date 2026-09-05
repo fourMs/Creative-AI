@@ -8,7 +8,7 @@ The book has been written using [Jupyter Book v2](https://next.jupyterbook.org/)
 
 - **Level:** Bachelor (open to all UiO students)
 - **Duration:** 12 teaching weeks
-- **Format:** 1 lecture hour and 2 practice hours per week
+- **Format:** 45-minute lecture + 90-minute lab per week
 - **Workload:** ~6 hours of self-study per week
 - **Prerequisites:** None. Curiosity, a laptop, and an email address are enough.
 
