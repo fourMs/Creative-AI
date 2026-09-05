@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sensor-to-sound mapper</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel);
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+    select {
+      width: 100%; padding: 6px 8px; margin: 2px 0 4px; font-size: 0.9rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .stats { font-size: 1rem; margin: 10px 0; font-variant-numeric: tabular-nums; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    .meter { margin: 6px 0; }
+    .meter-label {
+      display: flex; justify-content: space-between; font-size: 0.85rem;
+      color: var(--fg); margin-bottom: 2px; font-variant-numeric: tabular-nums;
+    }
+    .meter-label .meter-name { font-weight: 600; }
+    .meter-track {
+      position: relative; height: 10px; border-radius: 5px; background: var(--bg);
+      border: 1px solid var(--border); overflow: hidden;
+    }
+    .meter-fill {
+      position: absolute; top: 0; bottom: 0; left: 50%; width: 0;
+      background: var(--accent); transform: translateX(0);
+    }
+    .meter-fill.unipolar { left: 0; }
+    .meter.unavailable { opacity: 0.4; }
+    .meter-group-label {
+      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--muted); margin: 10px 0 4px;
+    }
+    .meter-group-label:first-child { margin-top: 0; }
+    .table-wrap { overflow-x: auto; margin: 8px 0; }
+    table { border-collapse: collapse; width: 100%; min-width: 620px; }
+    th, td { padding: 6px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+    th { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+    td .vals { display: block; font-size: 0.8rem; margin: 0; }
+    td input[type="range"] { width: 120px; }
+    table[hidden], .table-buttons-row { }
+    details {
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 12px; background: var(--panel); margin: 14px 0 0;
+    }
+    summary { font-weight: 600; cursor: pointer; }
+    details p { margin: 8px 0 0; }
+  </style>
+</head>
+<body>
+  <h1>Sensor-to-sound mapper</h1>
+  <p class="intro">This app lets you design your own action&ndash;sound mapping: you choose which sensor axis drives which sound parameter, then play with the result. On a phone, the axes come from its motion sensors; on a laptop, they come from the mouse or trackpad. Everything runs in this page. No sensor reading or sound is recorded, stored, or sent anywhere; it only ever drives the sound you hear while the page is open.</p>
+
+  <fieldset>
+    <legend>Sensors</legend>
+    <div class="row">
+      <button type="button" id="enableMotionBtn">Enable motion sensors</button>
+    </div>
+    <p class="hint" id="sensorHint">On a laptop, move the mouse or a trackpad pointer over this page to drive the pointer axes below; no button is needed for those. On a phone or tablet, press &ldquo;Enable motion sensors&rdquo; to add the acceleration and rotation axes; the browser will ask permission first.</p>
+    <div id="meters"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Sound</legend>
+    <div class="row">
+      <button type="button" id="soundToggle" aria-pressed="false">Turn sound on</button>
+    </div>
+    <label for="volume">Master volume <span class="vals" id="volumeDisp"></span></label>
+    <input type="range" id="volume" min="0" max="100" step="1" value="60" aria-describedby="volumeDisp"/>
+  </fieldset>
+
+  <fieldset>
+    <legend>Mapping</legend>
+    <p class="hint">Each row below sends one sensor axis to one sound parameter. Choose the source axis, set the input range that the axis is expected to move within, invert the direction if you want, and smooth out jitter.</p>
+    <div class="row">
+      <button type="button" id="randomiseBtn">Randomise mapping</button>
+      <button type="button" id="resetMappingBtn">Reset to a sensible mapping</button>
+      <button type="button" id="hideTableBtn" aria-pressed="false">Hide the table</button>
+    </div>
+    <div class="table-wrap">
+      <table id="mappingTable">
+        <caption class="sr-only">One row per sound parameter, with its source axis and calibration</caption>
+        <thead>
+          <tr>
+            <th scope="col">Parameter</th>
+            <th scope="col">Source axis</th>
+            <th scope="col">Input minimum</th>
+            <th scope="col">Input maximum</th>
+            <th scope="col">Invert</th>
+            <th scope="col">Smoothing</th>
+          </tr>
+        </thead>
+        <tbody id="mappingBody"></tbody>
+      </table>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Learnability experiment</legend>
+    <p class="hint">Task: make the sound go up, then get brighter. Design your own mapping above, run the task and note the time, then press &ldquo;Randomise mapping&rdquo; and try the same task again without looking at the table.</p>
+    <div class="row">
+      <button type="button" id="taskBtn" aria-pressed="false">Start task</button>
+      <span class="stats" id="taskTimer">Time: 0.0 s</span>
+    </div>
+  </fieldset>
+
+  <div class="stats" id="status" aria-live="polite">Move the mouse, or enable motion sensors, then turn the sound on to begin.</div>
+
+  <p class="hint">A mapping that sends one axis straight to one parameter is a direct mapping; a mapping that mixes several axes into one parameter, or first passes the reading through some maths, is indirect and harder to feel by ear. A one-to-one mapping, where the same action always moves the same parameter by the same amount, is learnable because practice has something consistent to improve; a many-to-many mapping, where several axes cross-affect several parameters at once, gives the body nothing stable to aim at. This mapping table is the interface layer of the five layers this book uses (data, model, interface, practice and culture): it sits between the raw sensor readings and the practice of learning to play them.</p>
+
+  <details>
+    <summary>How it works</summary>
+    <p>Every animation frame, the app reads the current value of each available axis: acceleration and rotation rate from the phone&rsquo;s motion sensors, or pointer position and speed from the mouse or trackpad. For each sound parameter, the axis chosen in the mapping table is rescaled from the input minimum and maximum you set to a range from 0 to 1, inverted if you asked for that, then smoothed so that a jump in the raw reading arrives as a gradual change rather than a jump in sound. That smoothed value drives an oscillator&rsquo;s pitch, a filter&rsquo;s cutoff frequency for brightness, and the speed of a pulsing gain for tempo. The learnability task compares your own mapping against a randomised one by timing how long each takes to complete. This app bundles no data files, so there is no licence to name, and it makes no network requests.</p>
+  </details>
+
+  <script>
+(function () {
+  'use strict';
+
+  // ============================================================
+  // Axis definitions: the raw sensor and pointer axes the app can read.
+  // `min`/`max` are the axis's own typical physical range, used as the
+  // default bounds for the calibration sliders in the mapping table.
+  // ============================================================
+  var AXES = [
+    { key: 'pointerX', label: 'Pointer X (left–right)', group: 'Pointer', min: -1, max: 1, unit: '', unipolar: false },
+    { key: 'pointerY', label: 'Pointer Y (up–down)', group: 'Pointer', min: -1, max: 1, unit: '', unipolar: false },
+    { key: 'pointerSpeed', label: 'Pointer speed', group: 'Pointer', min: 0, max: 3000, unit: 'px/s', unipolar: true },
+    { key: 'accelX', label: 'Acceleration X', group: 'Motion (phone)', min: -20, max: 20, unit: 'm/s²', unipolar: false },
+    { key: 'accelY', label: 'Acceleration Y', group: 'Motion (phone)', min: -20, max: 20, unit: 'm/s²', unipolar: false },
+    { key: 'accelZ', label: 'Acceleration Z', group: 'Motion (phone)', min: -20, max: 20, unit: 'm/s²', unipolar: false },
+    { key: 'rotAlpha', label: 'Rotation rate α', group: 'Motion (phone)', min: -360, max: 360, unit: '°/s', unipolar: false },
+    { key: 'rotBeta', label: 'Rotation rate β', group: 'Motion (phone)', min: -360, max: 360, unit: '°/s', unipolar: false },
+    { key: 'rotGamma', label: 'Rotation rate γ', group: 'Motion (phone)', min: -360, max: 360, unit: '°/s', unipolar: false }
+  ];
+  function axisByKey(key) {
+    var i;
+    for (i = 0; i < AXES.length; i++) { if (AXES[i].key === key) { return AXES[i]; } }
+    return null;
+  }
+
+  // ============================================================
+  // Sound parameters: what the mapping table's three rows drive.
+  // ============================================================
+  var PARAMS = [
+    { key: 'pitch', label: 'Pitch', curve: 'exp', outMin: 110, outMax: 880, outUnit: 'Hz' },
+    { key: 'brightness', label: 'Brightness', curve: 'exp', outMin: 200, outMax: 8000, outUnit: 'Hz cutoff' },
+    { key: 'tempo', label: 'Tempo', curve: 'linear', outMin: 1, outMax: 8, outUnit: 'pulses/s' }
+  ];
+
+  // ============================================================
+  // Live state.
+  // ============================================================
+  var rawAxes = {};    // current raw reading per axis key, or null if never seen
+  var lastSeen = {};   // performance.now() timestamp of the last reading, per axis key
+  var i;
+  for (i = 0; i < AXES.length; i++) { rawAxes[AXES[i].key] = null; lastSeen[AXES[i].key] = 0; }
+
+  var mapping = {};     // per-parameter mapping row: { axis, min, max, invert, smoothing }
+  var smoothedNorm = {}; // per-parameter smoothed 0..1 value, after axis, range, invert and smoothing
+  for (i = 0; i < PARAMS.length; i++) { smoothedNorm[PARAMS[i].key] = 0.5; }
+
+  var motionAvailable = false; // true once at least one devicemotion event has arrived
+  var pointerAvailable = false; // true once at least one pointer move has arrived
+
+  // ---- seeded-free PRNG helper (Math.random is fine here; nothing needs to be reproducible) ----
+  function randRange(min, max) { return min + Math.random() * (max - min); }
+  function pickAxisKey() { return AXES[Math.floor(Math.random() * AXES.length)].key; }
+
+  // ============================================================
+  // Pointer tracking (mouse or trackpad). Works identically on a laptop
+  // and, via touch-generated pointer events, on a phone with no motion
+  // sensors granted.
+  // ============================================================
+  var lastPointer = null;
+  document.addEventListener('pointermove', function (e) {
+    var nowPerf = performance.now();
+    rawAxes.pointerX = (e.clientX / window.innerWidth) * 2 - 1;
+    rawAxes.pointerY = (e.clientY / window.innerHeight) * 2 - 1;
+    lastSeen.pointerX = nowPerf; lastSeen.pointerY = nowPerf;
+    if (lastPointer) {
+      var dt = nowPerf - lastPointer.t;
+      if (dt > 0 && dt < 250) {
+        var dx = e.clientX - lastPointer.x, dy = e.clientY - lastPointer.y;
+        rawAxes.pointerSpeed = Math.sqrt(dx * dx + dy * dy) / dt * 1000;
+        lastSeen.pointerSpeed = nowPerf;
+      }
+    }
+    lastPointer = { x: e.clientX, y: e.clientY, t: nowPerf };
+    pointerAvailable = true;
+  });
+
+  // ============================================================
+  // Device motion (phone). iOS requires DeviceMotionEvent.requestPermission()
+  // called from a user gesture; other browsers that support the event fire
+  // it once a listener is attached, with no separate permission step.
+  // ============================================================
+  var el = function (id) { return document.getElementById(id); };
+  var enableMotionBtn = el('enableMotionBtn'), sensorHintEl = el('sensorHint');
+
+  function onDeviceMotion(e) {
+    var nowPerf = performance.now();
+    var acc = (e.acceleration && e.acceleration.x !== null && e.acceleration.x !== undefined)
+      ? e.acceleration : e.accelerationIncludingGravity;
+    if (acc && acc.x !== null && acc.x !== undefined) {
+      rawAxes.accelX = acc.x; rawAxes.accelY = acc.y; rawAxes.accelZ = acc.z;
+      lastSeen.accelX = nowPerf; lastSeen.accelY = nowPerf; lastSeen.accelZ = nowPerf;
+      motionAvailable = true;
+    }
+    var rot = e.rotationRate;
+    if (rot && rot.alpha !== null && rot.alpha !== undefined) {
+      rawAxes.rotAlpha = rot.alpha; rawAxes.rotBeta = rot.beta; rawAxes.rotGamma = rot.gamma;
+      lastSeen.rotAlpha = nowPerf; lastSeen.rotBeta = nowPerf; lastSeen.rotGamma = nowPerf;
+      motionAvailable = true;
+    }
+  }
+
+  function startListeningForMotion() {
+    window.addEventListener('devicemotion', onDeviceMotion);
+    setStatus('Listening for motion sensor data.');
+    setTimeout(function () {
+      if (!motionAvailable) {
+        sensorHintEl.textContent = 'No motion sensor data has arrived. This device may not have one, or may report it only while held. The pointer axes above still work with a mouse, trackpad, or a finger dragged across the screen.';
+      }
+    }, 2500);
+  }
+
+  enableMotionBtn.addEventListener('click', function () {
+    enableMotionBtn.disabled = true;
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      DeviceMotionEvent.requestPermission().then(function (resp) {
+        if (resp === 'granted') {
+          enableMotionBtn.textContent = 'Motion sensors on';
+          startListeningForMotion();
+        } else {
+          enableMotionBtn.disabled = false;
+          enableMotionBtn.textContent = 'Enable motion sensors';
+          setStatus('Motion sensor permission was not granted. Use the mouse or trackpad axes instead.');
+        }
+      }).catch(function () {
+        enableMotionBtn.disabled = false;
+        enableMotionBtn.textContent = 'Enable motion sensors';
+        setStatus('Motion sensor permission request failed. Use the mouse or trackpad axes instead.');
+      });
+    } else if ('DeviceMotionEvent' in window) {
+      enableMotionBtn.textContent = 'Motion sensors on';
+      startListeningForMotion();
+    } else {
+      enableMotionBtn.disabled = false;
+      setStatus('This browser reports no motion sensor support. Use the mouse or trackpad axes instead.');
+    }
+  });
+
+  // ============================================================
+  // Meter panel: one bar per axis, built once, redrawn every frame.
+  // ============================================================
+  var metersEl = el('meters');
+  var meterFillEls = {}, meterValEls = {}, meterRowEls = {};
+  (function buildMeters() {
+    var lastGroup = null, i, axis, groupLabel, row, labelRow, name, val, track, fill;
+    for (i = 0; i < AXES.length; i++) {
+      axis = AXES[i];
+      if (axis.group !== lastGroup) {
+        groupLabel = document.createElement('div');
+        groupLabel.className = 'meter-group-label';
+        groupLabel.textContent = axis.group;
+        metersEl.appendChild(groupLabel);
+        lastGroup = axis.group;
+      }
+      row = document.createElement('div');
+      row.className = 'meter unavailable';
+      labelRow = document.createElement('div');
+      labelRow.className = 'meter-label';
+      name = document.createElement('span');
+      name.className = 'meter-name';
+      name.textContent = axis.label;
+      val = document.createElement('span');
+      val.className = 'meter-value';
+      val.textContent = 'no data';
+      labelRow.appendChild(name);
+      labelRow.appendChild(val);
+      track = document.createElement('div');
+      track.className = 'meter-track';
+      track.setAttribute('aria-hidden', 'true');
+      fill = document.createElement('div');
+      fill.className = 'meter-fill' + (axis.unipolar ? ' unipolar' : '');
+      track.appendChild(fill);
+      row.appendChild(labelRow);
+      row.appendChild(track);
+      metersEl.appendChild(row);
+      meterFillEls[axis.key] = fill;
+      meterValEls[axis.key] = val;
+      meterRowEls[axis.key] = row;
+    }
+  })();
+
+  function renderMeters() {
+    var i, axis, raw, frac, fresh;
+    var nowPerf = performance.now();
+    for (i = 0; i < AXES.length; i++) {
+      axis = AXES[i];
+      raw = rawAxes[axis.key];
+      fresh = raw !== null && (nowPerf - lastSeen[axis.key]) < 4000;
+      meterRowEls[axis.key].classList.toggle('unavailable', !fresh);
+      if (!fresh) {
+        meterValEls[axis.key].textContent = 'no data';
+        meterFillEls[axis.key].style.width = '0%';
+        continue;
+      }
+      frac = Math.max(0, Math.min(1, (raw - axis.min) / (axis.max - axis.min)));
+      meterValEls[axis.key].textContent = raw.toFixed(axis.unit === '' ? 2 : 0) + (axis.unit ? ' ' + axis.unit : '');
+      if (axis.unipolar) {
+        meterFillEls[axis.key].style.width = (frac * 100) + '%';
+      } else {
+        var signedPct = (frac - 0.5) * 100; // -50..50
+        meterFillEls[axis.key].style.width = Math.abs(signedPct) + '%';
+        meterFillEls[axis.key].style.left = signedPct >= 0 ? '50%' : (50 + signedPct) + '%';
+      }
+    }
+  }
+
+  // ============================================================
+  // Mapping table: one row per sound parameter.
+  // ============================================================
+  var mappingBody = el('mappingBody');
+
+  function defaultRowForAxis(axisKey, invert, smoothing) {
+    var axis = axisByKey(axisKey);
+    return { axis: axisKey, min: axis ? axis.min : 0, max: axis ? axis.max : 1, invert: !!invert, smoothing: smoothing === undefined ? 30 : smoothing };
+  }
+
+  function sensibleMapping() {
+    // Tilt to pitch, speed to brightness, shake to tempo, in the spirit of
+    // the brief; falls back to pointer axes when no motion data has arrived.
+    var tiltAxis = motionAvailable ? 'accelX' : 'pointerX';
+    var shakeAxis = motionAvailable ? 'rotBeta' : 'pointerY';
+    var m = {};
+    m.pitch = defaultRowForAxis(tiltAxis, false, 25);
+    m.brightness = defaultRowForAxis('pointerSpeed', false, 40);
+    m.tempo = defaultRowForAxis(shakeAxis, false, 15);
+    return m;
+  }
+
+  function randomMapping() {
+    var m = {}, i, p, axisKey;
+    for (i = 0; i < PARAMS.length; i++) {
+      p = PARAMS[i];
+      axisKey = pickAxisKey();
+      m[p.key] = defaultRowForAxis(axisKey, Math.random() < 0.5, Math.round(randRange(0, 80)));
+    }
+    return m;
+  }
+
+  var rowRefs = {}; // per-param DOM refs for the table row
+
+  function buildMappingRows() {
+    var i, p, tr, td, select, j, opt, none, minInput, maxInput, minDisp, maxDisp, invertInput, smoothInput, smoothDisp;
+    for (i = 0; i < PARAMS.length; i++) {
+      p = PARAMS[i];
+      tr = document.createElement('tr');
+
+      td = document.createElement('td');
+      td.textContent = p.label;
+      td.setAttribute('scope', 'row');
+      tr.appendChild(td);
+
+      td = document.createElement('td');
+      var axisLabel = document.createElement('label');
+      axisLabel.className = 'sr-only';
+      axisLabel.setAttribute('for', 'axis-' + p.key);
+      axisLabel.textContent = 'Source axis for ' + p.label;
+      select = document.createElement('select');
+      select.id = 'axis-' + p.key;
+      none = document.createElement('option');
+      none.value = 'none'; none.textContent = 'None';
+      select.appendChild(none);
+      for (j = 0; j < AXES.length; j++) {
+        opt = document.createElement('option');
+        opt.value = AXES[j].key;
+        opt.textContent = AXES[j].label;
+        select.appendChild(opt);
+      }
+      td.appendChild(axisLabel);
+      td.appendChild(select);
+      tr.appendChild(td);
+
+      td = document.createElement('td');
+      var minLabel = document.createElement('label');
+      minLabel.className = 'sr-only';
+      minLabel.setAttribute('for', 'min-' + p.key);
+      minLabel.textContent = 'Input minimum for ' + p.label;
+      minInput = document.createElement('input');
+      minInput.type = 'range'; minInput.id = 'min-' + p.key;
+      minDisp = document.createElement('span');
+      minDisp.className = 'vals'; minDisp.id = 'minDisp-' + p.key;
+      td.appendChild(minLabel); td.appendChild(minInput); td.appendChild(minDisp);
+      tr.appendChild(td);
+
+      td = document.createElement('td');
+      var maxLabel = document.createElement('label');
+      maxLabel.className = 'sr-only';
+      maxLabel.setAttribute('for', 'max-' + p.key);
+      maxLabel.textContent = 'Input maximum for ' + p.label;
+      maxInput = document.createElement('input');
+      maxInput.type = 'range'; maxInput.id = 'max-' + p.key;
+      maxDisp = document.createElement('span');
+      maxDisp.className = 'vals'; maxDisp.id = 'maxDisp-' + p.key;
+      td.appendChild(maxLabel); td.appendChild(maxInput); td.appendChild(maxDisp);
+      tr.appendChild(td);
+
+      td = document.createElement('td');
+      var invertLabel = document.createElement('label');
+      invertLabel.className = 'sr-only';
+      invertLabel.setAttribute('for', 'invert-' + p.key);
+      invertLabel.textContent = 'Invert ' + p.label;
+      invertInput = document.createElement('input');
+      invertInput.type = 'checkbox'; invertInput.id = 'invert-' + p.key;
+      td.appendChild(invertLabel); td.appendChild(invertInput);
+      tr.appendChild(td);
+
+      td = document.createElement('td');
+      var smoothLabel = document.createElement('label');
+      smoothLabel.className = 'sr-only';
+      smoothLabel.setAttribute('for', 'smooth-' + p.key);
+      smoothLabel.textContent = 'Smoothing for ' + p.label;
+      smoothInput = document.createElement('input');
+      smoothInput.type = 'range'; smoothInput.id = 'smooth-' + p.key;
+      smoothInput.min = '0'; smoothInput.max = '100'; smoothInput.step = '1';
+      smoothDisp = document.createElement('span');
+      smoothDisp.className = 'vals'; smoothDisp.id = 'smoothDisp-' + p.key;
+      td.appendChild(smoothLabel); td.appendChild(smoothInput); td.appendChild(smoothDisp);
+      tr.appendChild(td);
+
+      mappingBody.appendChild(tr);
+      rowRefs[p.key] = {
+        select: select, minInput: minInput, maxInput: maxInput, minDisp: minDisp, maxDisp: maxDisp,
+        invertInput: invertInput, smoothInput: smoothInput, smoothDisp: smoothDisp
+      };
+
+      (function (key) {
+        rowRefs[key].select.addEventListener('change', function () { onAxisChange(key); });
+        rowRefs[key].minInput.addEventListener('input', function () { onRangeChange(key); });
+        rowRefs[key].maxInput.addEventListener('input', function () { onRangeChange(key); });
+        rowRefs[key].invertInput.addEventListener('change', function () {
+          mapping[key].invert = rowRefs[key].invertInput.checked;
+        });
+        rowRefs[key].smoothInput.addEventListener('input', function () {
+          mapping[key].smoothing = parseInt(rowRefs[key].smoothInput.value, 10);
+          rowRefs[key].smoothDisp.textContent = mapping[key].smoothing + ' %';
+        });
+      })(p.key);
+    }
+  }
+
+  function onAxisChange(key) {
+    var axisKey = rowRefs[key].select.value;
+    var axis = axisByKey(axisKey);
+    mapping[key].axis = axisKey;
+    if (axis) {
+      mapping[key].min = axis.min;
+      mapping[key].max = axis.max;
+    }
+    renderMappingRow(key);
+  }
+
+  function onRangeChange(key) {
+    var row = rowRefs[key];
+    var axis = axisByKey(mapping[key].axis) || { min: 0, max: 1 };
+    var span = axis.max - axis.min;
+    var minFrac = parseFloat(row.minInput.value) / 1000;
+    var maxFrac = parseFloat(row.maxInput.value) / 1000;
+    if (maxFrac <= minFrac) { maxFrac = Math.min(1, minFrac + 0.02); row.maxInput.value = String(Math.round(maxFrac * 1000)); }
+    mapping[key].min = axis.min + minFrac * span;
+    mapping[key].max = axis.min + maxFrac * span;
+    row.minDisp.textContent = mapping[key].min.toFixed(1);
+    row.maxDisp.textContent = mapping[key].max.toFixed(1);
+  }
+
+  // The two range inputs for input minimum/maximum are stored as a 0..1000
+  // fraction of the current axis's own min..max span, so the same slider
+  // widget works whether the axis spans -360..360 or 0..1.
+  function renderMappingRow(key) {
+    var row = mapping[key];
+    var refs = rowRefs[key];
+    var axis = axisByKey(row.axis) || { min: 0, max: 1 };
+    var span = (axis.max - axis.min) || 1;
+    refs.select.value = row.axis;
+    refs.minInput.min = '0'; refs.minInput.max = '1000'; refs.minInput.step = '1';
+    refs.maxInput.min = '0'; refs.maxInput.max = '1000'; refs.maxInput.step = '1';
+    refs.minInput.value = String(Math.round(((row.min - axis.min) / span) * 1000));
+    refs.maxInput.value = String(Math.round(((row.max - axis.min) / span) * 1000));
+    refs.minDisp.textContent = row.min.toFixed(1);
+    refs.maxDisp.textContent = row.max.toFixed(1);
+    refs.invertInput.checked = row.invert;
+    refs.smoothInput.value = String(row.smoothing);
+    refs.smoothDisp.textContent = row.smoothing + ' %';
+  }
+
+  function applyMapping(newMapping) {
+    var i;
+    mapping = newMapping;
+    for (i = 0; i < PARAMS.length; i++) { renderMappingRow(PARAMS[i].key); }
+  }
+
+  // ============================================================
+  // Turning raw axis readings into smoothed 0..1 parameter values.
+  // ============================================================
+  function computeRawNorm(row) {
+    if (row.axis === 'none') { return 0.5; }
+    var raw = rawAxes[row.axis];
+    if (raw === null || raw === undefined) { return 0.5; }
+    var span = (row.max - row.min) || 1;
+    var frac = (raw - row.min) / span;
+    frac = Math.max(0, Math.min(1, frac));
+    return row.invert ? 1 - frac : frac;
+  }
+
+  function updateSmoothedNorms() {
+    var i, p, row, rawNorm, alpha;
+    for (i = 0; i < PARAMS.length; i++) {
+      p = PARAMS[i];
+      row = mapping[p.key];
+      rawNorm = computeRawNorm(row);
+      alpha = 1 - (row.smoothing / 100) * 0.97;
+      smoothedNorm[p.key] += alpha * (rawNorm - smoothedNorm[p.key]);
+    }
+  }
+
+  function paramValue(p) {
+    var n = smoothedNorm[p.key];
+    if (p.curve === 'exp') { return p.outMin * Math.pow(p.outMax / p.outMin, n); }
+    return p.outMin + n * (p.outMax - p.outMin);
+  }
+
+  // ============================================================
+  // Audio engine. No AudioContext is created, and no sound starts, until
+  // the "Turn sound on" button is pressed (a user gesture).
+  // ============================================================
+  var ctx = null, osc = null, filterNode = null, lfo = null, lfoDepth = null, pulseGain = null, masterGain = null;
+  var audioOn = false;
+  var soundToggle = el('soundToggle'), volumeEl = el('volume'), volumeDisp = el('volumeDisp');
+
+  function masterVolume() { return parseFloat(volumeEl.value) / 100; }
+
+  function ensureAudio() {
+    if (ctx) { return; }
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = ctx.createGain();
+    masterGain.gain.value = 0;
+    masterGain.connect(ctx.destination);
+
+    pulseGain = ctx.createGain();
+    pulseGain.gain.value = 0.5;
+    pulseGain.connect(masterGain);
+
+    filterNode = ctx.createBiquadFilter();
+    filterNode.type = 'lowpass';
+    filterNode.frequency.value = 2000;
+    filterNode.Q.value = 0.6;
+    filterNode.connect(pulseGain);
+
+    osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = 220;
+    osc.connect(filterNode);
+    osc.start();
+
+    lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 4;
+    lfoDepth = ctx.createGain();
+    lfoDepth.gain.value = 0.5;
+    lfo.connect(lfoDepth);
+    lfoDepth.connect(pulseGain.gain);
+    lfo.start();
+  }
+
+  function rampMasterGain(target) {
+    if (!ctx) { return; }
+    var now = ctx.currentTime;
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+    masterGain.gain.linearRampToValueAtTime(target, now + 0.08);
+  }
+
+  soundToggle.addEventListener('click', function () {
+    audioOn = !audioOn;
+    if (audioOn) {
+      ensureAudio();
+      if (ctx.state === 'suspended') { ctx.resume(); }
+      rampMasterGain(masterVolume());
+    } else {
+      rampMasterGain(0);
+    }
+    soundToggle.setAttribute('aria-pressed', String(audioOn));
+    soundToggle.textContent = audioOn ? 'Turn sound off' : 'Turn sound on';
+    setStatus(audioOn ? 'Sound on.' : 'Sound off.');
+  });
+
+  volumeEl.addEventListener('input', function () {
+    volumeDisp.textContent = volumeEl.value + ' %';
+    if (audioOn) { rampMasterGain(masterVolume()); }
+  });
+
+  function updateAudioParams() {
+    if (!ctx) { return; }
+    var pitchHz = paramValue(PARAMS[0]);
+    var cutoffHz = paramValue(PARAMS[1]);
+    var tempoHz = paramValue(PARAMS[2]);
+    osc.frequency.value = pitchHz;
+    filterNode.frequency.value = cutoffHz;
+    lfo.frequency.value = tempoHz;
+  }
+
+  // ============================================================
+  // Mapping control buttons.
+  // ============================================================
+  el('randomiseBtn').addEventListener('click', function () {
+    applyMapping(randomMapping());
+    setStatus('Mapping randomised.');
+  });
+  el('resetMappingBtn').addEventListener('click', function () {
+    applyMapping(sensibleMapping());
+    setStatus('Mapping reset: tilt (or pointer X) to pitch, speed to brightness, shake (or pointer Y) to tempo.');
+  });
+
+  var hideTableBtn = el('hideTableBtn'), mappingTable = el('mappingTable');
+  hideTableBtn.addEventListener('click', function () {
+    var hidden = !mappingTable.hidden;
+    mappingTable.hidden = hidden;
+    hideTableBtn.setAttribute('aria-pressed', String(hidden));
+    hideTableBtn.textContent = hidden ? 'Show the table' : 'Hide the table';
+  });
+
+  // ============================================================
+  // Learnability experiment: a two-step task, timed.
+  // ============================================================
+  var taskBtn = el('taskBtn'), taskTimerEl = el('taskTimer');
+  var taskRunning = false, taskStage = 0, taskStartTime = 0, pitchBaseline = 0, brightnessBaseline = 0;
+  var RISE_THRESHOLD = 0.25;
+
+  function startTask() {
+    taskRunning = true;
+    taskStage = 1;
+    taskStartTime = performance.now();
+    pitchBaseline = smoothedNorm.pitch;
+    taskTimerEl.textContent = 'Time: 0.0 s';
+    taskBtn.setAttribute('aria-pressed', 'true');
+    taskBtn.textContent = 'Cancel task';
+    setStatus('Task started: make the sound go up, then get brighter.');
+  }
+
+  function cancelTask(message) {
+    taskRunning = false;
+    taskStage = 0;
+    taskBtn.setAttribute('aria-pressed', 'false');
+    taskBtn.textContent = 'Start task';
+    setStatus(message);
+  }
+
+  taskBtn.addEventListener('click', function () {
+    if (taskRunning) { cancelTask('Task cancelled.'); } else { startTask(); }
+  });
+
+  function updateTask() {
+    if (!taskRunning) { return; }
+    var elapsedSec = (performance.now() - taskStartTime) / 1000;
+    taskTimerEl.textContent = 'Time: ' + elapsedSec.toFixed(1) + ' s';
+    if (taskStage === 1 && (smoothedNorm.pitch - pitchBaseline) > RISE_THRESHOLD) {
+      taskStage = 2;
+      brightnessBaseline = smoothedNorm.brightness;
+      setStatus('Pitch raised after ' + elapsedSec.toFixed(1) + ' seconds. Now make it brighter.');
+    } else if (taskStage === 2 && (smoothedNorm.brightness - brightnessBaseline) > RISE_THRESHOLD) {
+      taskRunning = false;
+      taskStage = 0;
+      taskBtn.setAttribute('aria-pressed', 'false');
+      taskBtn.textContent = 'Start task';
+      setStatus('Task complete in ' + elapsedSec.toFixed(1) + ' seconds. Try a different mapping and compare the time.');
+    }
+  }
+
+  // ============================================================
+  // Status line and main loop.
+  // ============================================================
+  var statusEl = el('status');
+  function setStatus(msg) { statusEl.textContent = msg; }
+
+  function frame() {
+    // pointer speed decays between pointermove events, so it settles back
+    // towards zero when the pointer stops rather than holding its last peak
+    if (rawAxes.pointerSpeed) { rawAxes.pointerSpeed *= 0.9; }
+    renderMeters();
+    updateSmoothedNorms();
+    updateAudioParams();
+    updateTask();
+    requestAnimationFrame(frame);
+  }
+
+  // ============================================================
+  // Start-up.
+  // ============================================================
+  buildMappingRows();
+  applyMapping(sensibleMapping());
+  volumeDisp.textContent = volumeEl.value + ' %';
+  requestAnimationFrame(frame);
+})();
+  </script>
+</body>
+</html>
