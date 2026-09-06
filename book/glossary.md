@@ -12,6 +12,9 @@ Aesthetic control
 Agent
 : A system given a goal that chooses its own steps, calling tools in a loop of plan, act, and observe until a stopping condition is met.
 
+AI literacy
+: The competencies a non-specialist needs in order to use, evaluate, and live alongside AI systems, including the habit of asking what a claim asserts, what evidence supports it, how it was measured, and what it leaves out. The term comes from Long and Magerko's 2020 framework.
+
 Alignment training (RLHF)
 : Shaping a raw next-token predictor into a system that answers questions, follows instructions, and refuses some requests, using human or model-generated feedback rather than plain next-token prediction.
 
@@ -63,6 +66,9 @@ Closed model
 Co-creation
 : Making creative work together with a generative system. Because such systems mostly behave as executors of instructions rather than as collaborators, co-creation asks a person to shift from craftsperson to creative director.
 
+Collecting society
+: An organisation that registers works, matches a use to an owner, and distributes royalties on behalf of authors and performers. Its work depends on ownership databases that are incomplete and inconsistent across countries.
+
 Combinational, exploratory, and transformational creativity
 : Margaret Boden's three kinds of creativity: combinational puts familiar ideas together in unfamiliar ways, exploratory moves around inside an existing conceptual space, and transformational changes the conceptual space itself so that previously impossible ideas become thinkable.
 
@@ -92,6 +98,9 @@ Data workers
 
 Dataflow programming
 : A style of programming in which boxes process data and the connections drawn between them carry it from one box to the next. Audio-specific graphical languages such as Max/MSP and Pure Data work this way, and building in them is usually called patching.
+
+Decolonisation
+: In the context of AI, the argument that Western and English-language dominance in training data is not a skewed sample to be corrected but a settled assumption about whose knowledge counts as common. It asks who defines the default rather than how to rebalance a dataset.
 
 Demo reel
 : A selected artefact cut from many generation attempts, in which the kept examples are exactly the ones a model happened to get right. It is evidence that a system can sometimes produce a good result, not that it can produce the result you need on demand.
@@ -200,6 +209,9 @@ Latent space
 
 Legibility
 : The degree to which a person in a room can see what a machine is about to do, such as a limb rising before a robot strikes a surface, which is what lets them play or work alongside it.
+
+Life cycle assessment
+: A method for counting the environmental cost of a product or service across its whole life, from the mining and manufacture of hardware through the water and energy used in operation to disposal. It is the wider frame around the energy-per-query figures usually quoted for generative AI.
 
 Live coding
 : Writing and changing a program while it runs, so that the sound or image it produces changes with the text. It is performed with the editor projected for the audience, which makes the process of programming part of the work.
