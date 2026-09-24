@@ -84,6 +84,9 @@ Control signal
 ControlNet
 : A small network trained to inject a spatial signal, such as a pose or an edge map, into a diffusion model's denoiser. Several can be stacked at once to control composition from more than one source.
 
+Convergent and divergent thinking
+: J. P. Guilford's distinction between thinking that narrows down to a single correct answer and thinking that opens out to many possible answers. Divergent thinking tasks, such as listing uses for a brick, are the most common creativity tests, including those now run on language models.
+
 Convolutional network
 : A network architecture that slides small parameter patches across an image, the dominant approach to computer vision for most of the 2010s.
 
@@ -150,6 +153,12 @@ Five layers
 Flow matching
 : A generative method closely related to diffusion but with a simpler training objective, powering several of the strongest image and video models released from 2024 onwards.
 
+Four C model
+: Kaufman and Beghetto's scale of creative achievement in four steps: mini-c, the personally meaningful insight of learning; little-c, everyday creativity; Pro-c, the competent new work of trained professionals; and Big-C, the eminent work that changes a field. Most creative AI use sits at little-c and Pro-c.
+
+Four Ps of creativity
+: Mel Rhodes' sorting of creativity research into four strands: the person, the process, the product, and the press, the last being the environment that acts on the other three.
+
 Foundation model
 : A very large model trained once on broad data and then adapted to many tasks by prompting or fine-tuning.
 
@@ -185,6 +194,9 @@ In-context learning
 
 Inference
 : Using a trained model to produce an output from an input; the parameters do not change.
+
+Innovation
+: In Teresa Amabile's definition, the successful implementation of a creative idea within an organisation. Creativity is the idea and the work; innovation is its uptake, which depends on money, timing, and power as much as on the idea.
 
 Inpainting
 : Regenerating only a masked region of an image while leaving the rest of the pixels alone, using the same denoising process a diffusion model uses to generate from scratch.
@@ -336,6 +348,9 @@ Shot
 Spectrogram
 : A picture of how a sound's energy is distributed across frequency over time. An analysis system reads one, and a generative system writes one before inverting it back to a waveform.
 
+Standard definition of creativity
+: The definition, named by Runco and Jaeger, that creative work must be both original and effective. Neither will do alone: random noise is original, and a perfect copy is effective.
+
 Stem separation
 : Splitting a finished audio mix back into its component parts, such as vocals, drums, and bass, well enough for practical reuse. It is an analysis technique that enables a good deal of remix and post-production work.
 
@@ -347,6 +362,9 @@ Supervision
 
 Sycophancy
 : A model's tendency to agree with or flatter whoever is prompting it rather than to give an accurate or challenging answer, one of the recurring failure modes of language models.
+
+Systems model of creativity
+: Mihaly Csikszentmihalyi's account of creativity as an interaction between a domain of existing works and rules, a field of gatekeepers who decide what enters the domain, and an individual who proposes a change. A work becomes creative when the field accepts it.
 
 Talking head
 : A video of a person, driven from a single photograph or short clip, made to say synthetic speech in that person's likeness. Multilingual versions of the same presenter are a routine feature, and because the technique puts words in an identifiable person's mouth it is a consent and impersonation problem before it is a video problem.
