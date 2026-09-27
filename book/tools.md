@@ -95,8 +95,9 @@ The book also ships with its own small apps: single-page, self-contained tools b
 - [Scenario](https://www.scenario.com/), [Layer](https://www.layer.ai/) — game-art pipelines
 - [Meta Quest Browser](https://www.meta.com/quest/): a headset viewer for exploring Gaussian splats and WebXR scenes in VR
 - [Adobe Aero](https://www.adobe.com/products/aero.html): a phone AR viewer for placing a generated 3D asset in the room in front of you
+- [Grasshopper](https://www.grasshopper3d.com/) — node-based generative design inside the commercial modeller Rhino, the tool architecture and product-design offices use
 
-**Open alternative.** [Nerfstudio](https://docs.nerf.studio/) is an open-source toolkit for building and viewing your own Gaussian splats.
+**Open alternative.** [Nerfstudio](https://docs.nerf.studio/) is an open-source toolkit for building and viewing your own Gaussian splats. [Geometry Nodes](https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/index.html) in Blender and [OpenSCAD](https://openscad.org/) cover the same ground as Grasshopper for free, and their objects are printable by construction. [PrusaSlicer](https://www.prusa3d.com/page/prusaslicer_424/) and [Bambu Studio](https://github.com/bambulab/BambuStudio) are open-source slicers for the printers in the UiO makerspaces named in chapter 8.
 
 </details>
 

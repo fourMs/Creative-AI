@@ -14,7 +14,7 @@ Every project is shown in one of two ways, and you choose which in your proposal
 
 A performance happens in a slot, with you present and an audience watching. Examples are a live set, a reading of an AI-assisted text, a screening with a live element such as narration or a played soundtrack, or a demonstration of an instrument you built. A talk-through of a series with the work projected behind you counts too. You get five minutes, then five minutes of questions.
 
-An installation stands on its own for the length of the event, and the panel and the audience come to you. Examples are a piece the visitor walks through or interacts with, a screen or a projection running on a loop, or a small exhibition of a printed series with you standing beside it. A web piece on a laptop with a visitor at the keyboard counts too. You are present at your installation, and the panel spends about ten minutes with you when they visit.
+An installation stands on its own for the length of the event, and the panel and the audience come to you. Examples are a piece the visitor walks through or interacts with, a screen or a projection running on a loop, or a small exhibition of a printed series with you standing beside it. A 3D-printed object on a plinth beside the screen that generated it counts, and so does a web piece on a laptop with a visitor at the keyboard. You are present at your installation, and the panel spends about ten minutes with you when they visit.
 
 Nothing is ruled out by this. A written project becomes a reading or a printed exhibition; a screen-based project becomes a screening or a looping installation. The point is that the work meets an audience in a room rather than arriving as a file.
 
