@@ -31,7 +31,7 @@ project:
     - file: body.ipynb
     - file: tips-and-tricks.ipynb
     - file: tools.md
-    - file: gallery.md
+    - file: exposition.md
     - file: glossary.md
 
 site:

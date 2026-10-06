@@ -135,6 +135,9 @@ Evolutionary algorithm (genetic algorithm)
 Executor and collaborator
 : Two ways of framing a generative system: as an executor, which takes a command and returns a finished output, or as a collaborator, which participates in an open-ended process. Agents shift the framing from the first towards the second.
 
+Exposition
+: The Research Catalogue's name for a web page that holds a piece of work and the thinking around it together, as embedded media, text, and the links between them. The portfolio exam in this course is handed in as an exposition.
+
 Extended mind
 : The philosophical claim, proposed by Clark and Chalmers, that a cognitive process does not stop at the skin. An external resource that is reliably available, readily used, and trusted the way memory is trusted counts as part of the cognitive system rather than an input to it.
 
