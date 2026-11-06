@@ -37,6 +37,12 @@
     },
     {
       "pattern": "^https://doi\\.org/10\\.5334/tismir"
+    },
+    {
+      "pattern": "^https://eur-lex\\.europa\\.eu/"
+    },
+    {
+      "pattern": "^https://ai\\.nb\\.no/"
     }
   ],
   "httpHeaders": [
