@@ -102,11 +102,15 @@
       background: var(--canvas); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 0.85rem; min-height: 1.4em;
     }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Tokeniser explorer</h1>
-  <p class="intro">Models do not see words. Type in two languages and compare how many tokens each needs; then lower the number of merges and watch the pieces get smaller. Everything runs in this page after the one-time load of the bundled vocabulary: nothing you type leaves your browser.</p>
+  <p class="intro">Models do not see words. Type in two languages and compare how many tokens each needs, then lower the number of merges and watch the pieces get smaller. Nothing you type leaves your browser.</p>
 
   <div class="warn" id="loadError" role="alert"></div>
 
@@ -121,11 +125,11 @@ Biblioteket er åpent til klokka åtte i kveld.</textarea>
     <legend>Vocabulary</legend>
     <label for="mergeLimit">Merges applied <span class="vals" id="mergeLimitDisp"></span></label>
     <input type="range" id="mergeLimit" min="0" max="4000" step="50" value="4000" aria-describedby="mergeLimitDisp"/>
-    <p class="hint">The bundled vocabulary learned 4 000 merge rules from English and Norwegian text. At 4 000, common chunks such as whole short words become single tokens. Drag the slider down and the model is only allowed to use the earliest, most frequent merges, so words break back down into smaller pieces, and at 0 every token is a single raw byte.</p>
+    <p class="hint">At 4 000 merges whole short words are single tokens; at 0 every token is a raw byte.</p>
     <div class="row">
       <button type="button" id="showBytes" aria-pressed="false">Show bytes</button>
     </div>
-    <p class="hint">With "Show bytes" on, click or tab to any token below to see the raw byte values it is made of.</p>
+    <p class="hint">With Show bytes on, click or tab to a token to see its raw bytes.</p>
   </fieldset>
 
   <div class="line-stats" id="lineCounts" aria-live="polite"></div>
@@ -135,7 +139,15 @@ Biblioteket er åpent til klokka åtte i kveld.</textarea>
 
   <div class="bytes-panel" id="bytesPanel" aria-live="polite">Click or focus a token to see its bytes.</div>
 
-  <p class="hint">What to notice: the Norwegian sentence almost always needs more tokens than the English one, because the vocabulary saw far less Norwegian text during training. Letters such as å, æ and ø are two bytes each in UTF-8, so at low merge counts they show up as more than one token.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>The tokeniser is byte-pair encoding. It starts from the raw bytes of the text and applies merge rules in the order they were learnt, each one joining a pair of neighbouring pieces that was frequent in the training text. The bundled vocabulary learnt 4 000 such rules from English and Norwegian text. Dragging the slider down allows only the earliest, most frequent merges, so words break back down into smaller pieces.</p>
+  <h3>Things to try</h3>
+  <p>Compare the two sample sentences: the Norwegian one almost always needs more tokens, because the vocabulary saw far less Norwegian text. Type a word with å, æ or ø and lower the merges: each of those letters is two bytes in UTF-8, so at low merge counts it shows up as more than one token. Try a rare word and a common one of the same length.</p>
+  <h3>Data</h3>
+  <p>The bundled vocabulary, <code>vocab.json</code>, was trained on Project Gutenberg text (public domain) and Wikipedia text (CC-BY-SA 4.0). It is loaded once with the page; the app makes no other network requests.</p>
+  </details>
 
   <script>
 (function () {

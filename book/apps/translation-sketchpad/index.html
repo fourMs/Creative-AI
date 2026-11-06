@@ -61,11 +61,15 @@
     details { margin-top: 14px; }
     details summary { cursor: pointer; font-weight: 600; }
     details p { margin: 8px 0; }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Translation sketchpad</h1>
-  <p class="intro">This sketchpad translates between three data types, a line, a sound, and a text, through one shared contour of pitch and loudness over time. No machine learning model is involved; the mapping runs on fixed rules, written out below, so every step is visible. Everything runs in this browser. Nothing you draw, sing, or record is uploaded anywhere.</p>
+  <p class="intro">This sketchpad translates between a line, a sound and a text through one shared contour of pitch and loudness over time. No machine learning is involved: the rules are fixed and written out below. Nothing you draw, sing or record is uploaded.</p>
 
   <fieldset>
     <legend>Draw</legend>
@@ -85,7 +89,7 @@
     <div class="row">
       <button type="button" id="clearBtn">Clear</button>
     </div>
-    <p class="hint">Draw a line from left to right with a mouse, a trackpad, or a finger. Height sets pitch across two octaves, from C3 at the bottom to C5 at the top; drawing speed sets loudness. Choosing a scale snaps the pitch to its notes as you draw, so the chromatic scale gives the smoothest glide and the pentatonic scale gives the widest steps. Starting a new line replaces the old one. Drawing needs a pointer; every other control here, including recording your voice, works from the keyboard. The description above is built from a few written rules about the shape of the line; a real captioning model would learn such patterns from examples instead of following rules written by a person.</p>
+    <p class="hint">Draw from left to right: height sets pitch over two octaves (C3 to C5), speed sets loudness, and the chosen scale snaps the notes.</p>
   </fieldset>
 
   <fieldset>
@@ -109,7 +113,7 @@
       <button type="button" id="playDrawnBtn" class="primary" aria-pressed="false" disabled>Play</button>
       <button type="button" id="loopBtn" aria-pressed="false">Loop</button>
     </div>
-    <p class="hint">Play sends the drawn line to a single oscillator: its frequency follows the line's height and its gain follows the drawing speed recorded at each point, over the duration set above. A play head moves across the canvas while it sounds. Loop repeats the drawn line until switched off or the line changes.</p>
+    <p class="hint">Play sends the line to a single oscillator over the duration set above; Loop repeats it.</p>
   </fieldset>
 
   <fieldset>
@@ -122,17 +126,21 @@
       <button type="button" id="playRecordedBtn" aria-pressed="false" disabled>Play recorded line</button>
       <button type="button" id="playAudioBtn" disabled>Play my recording</button>
     </div>
-    <p class="hint" id="micHint">Trace with my voice records up to eight seconds and draws a line from the pitch and loudness it hears; press it again to stop early. Sing what you drew plays your drawn line first and then records you singing it back, so both lines end up on the canvas together. Your browser will ask permission before the microphone is used, and the microphone stops as soon as recording ends. The difference score reported below is a crude measure: it does not account for timing offsets, octave errors, or the difference in tone between an oscillator and a voice.</p>
+    <p class="hint" id="micHint">Trace with my voice records up to eight seconds and draws what it hears; Sing what you drew plays your line first and then records you singing it back. The browser asks permission first.</p>
   </fieldset>
 
   <div class="stats" id="status" aria-live="polite">Draw a line to begin, or try tracing with your voice.</div>
 
-  <p class="hint">What to notice: a rising line sounds like a rising pitch and nothing else, since height is the only thing this sketchpad reads from your drawing; drawing quickly makes a loud passage, and drawing slowly makes a quiet one. Sing a simple falling phrase, trace it with your voice, and compare its line with one you draw by hand: the two rarely match exactly, which is the point of the difference score.</p>
-
-  <details>
-    <summary>How it works</summary>
-    <p>The shared representation behind every translation in this app is a contour: an array of pitch and loudness values, sampled fifty times for every second of playback. A drawn line becomes a contour by reading, at each sample position along its width, the pitch that its height maps to (quantised to the chosen scale) and the loudness recorded from how fast the pointer was moving when it passed that point. A recording becomes a contour by splitting the audio into overlapping 2048-sample frames, roughly forty-six milliseconds each, and running autocorrelation on every frame: the frame is compared against time-shifted copies of itself, the shift that matches best gives the pitch, and a frame is only called "voiced" and given a pitch when that match is strong enough to clear a confidence threshold. The root-mean-square level of each frame gives its loudness. Playing a contour back sends its pitch and loudness arrays straight to a single oscillator's frequency and gain, so the sound never has to first become anything else. The text description is built from three simple rules: whether the pitch rises, falls, or holds across each third of the contour, and which third is loudest. The pitch tracker is a plain autocorrelation with no correction for octave errors, so it can report a pitch exactly one octave from the true one; this is the main reason the difference score can mislead.</p>
-    <p>This app bundles no data of its own and calls no external service.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>The shared representation behind every translation is a contour: an array of pitch and loudness values, sampled fifty times for every second of playback. A drawn line becomes a contour by reading, at each position along its width, the pitch its height maps to, quantised to the chosen scale, and the loudness recorded from how fast the pointer moved there. A recording becomes a contour by splitting the audio into overlapping frames of 2 048 samples, about 46 milliseconds each, and running autocorrelation on every frame: the frame is compared with time-shifted copies of itself, the best-matching shift gives the pitch, and a frame is only given a pitch when the match clears a confidence threshold. The root-mean-square level of each frame gives its loudness. Playing a contour back sends its pitch and loudness straight to one oscillator's frequency and gain. The text description is built from three rules: whether the pitch rises, falls or holds across each third of the contour, and which third is loudest. A real captioning model would learn such patterns from examples instead.</p>
+  <h3>Things to try</h3>
+  <p>Draw a rising line: it sounds like a rising pitch and nothing else, since height is all the sketchpad reads. Draw the same shape quickly and slowly and compare the loudness. Sing a simple falling phrase, trace it with your voice, and compare its line with one drawn by hand; the two rarely match, which is the point of the difference score.</p>
+  <h3>Limits</h3>
+  <p>Drawing needs a pointer; every other control, including recording, works from the keyboard. The microphone stops as soon as a recording ends. The pitch tracker is a plain autocorrelation with no correction for octave errors, so it can report a pitch an octave from the true one, and the difference score ignores timing offsets and the difference in tone between an oscillator and a voice. The chromatic scale gives the smoothest glide and the pentatonic the widest steps; starting a new line replaces the old one.</p>
+  <h3>Data</h3>
+  <p>This app bundles no data and calls no external service.</p>
   </details>
 
   <script>

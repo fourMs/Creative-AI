@@ -56,17 +56,21 @@
     canvas { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--canvas); }
     #imgCanvas { max-width: 320px; margin: 0 auto; }
     #curveCanvas { background: var(--canvas); }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Forward diffusion explorer</h1>
-  <p class="intro">Forward diffusion adds noise to a picture in small steps until nothing is left. A real model learns to run this backwards; here you can watch the forward half and see why the schedule matters. Everything runs in your browser: the bundled photo and any picture you load stay on your device and are never uploaded.</p>
+  <p class="intro">Forward diffusion adds noise to a picture in small steps until nothing is left. Drag the step slider or press Play to watch it happen; the bundled photo and any picture you load stay on your device.</p>
 
   <fieldset>
     <legend>Image</legend>
     <label for="fileInput">Load your own image (stays on this device)</label>
     <input type="file" id="fileInput" accept="image/*"/>
-    <p class="hint">Non-square pictures are centre-cropped to a square. Or use the bundled sample image below. Loading a new image resets the step to 0 and generates a fresh noise field.</p>
+    <p class="hint">Non-square pictures are centre-cropped; loading a new image resets the step to 0.</p>
   </fieldset>
 
   <fieldset>
@@ -88,7 +92,7 @@
     <button type="button" id="resetBtn">Reset to step 0</button>
     <button type="button" id="denoiseToggle" aria-pressed="false">Denoise (blur demo)</button>
   </div>
-  <p class="hint">The denoise toggle applies a small box blur to the noised image as a rough illustration of "removing noise". It is not a trained model and does not reconstruct the original picture.</p>
+  <p class="hint">The denoise toggle is a small blur, not a trained model.</p>
 
   <div class="stats" id="stats" aria-live="polite">Step 0. alpha-bar = 1.000. Signal-to-noise ratio: +infinity dB.</div>
 
@@ -103,7 +107,16 @@
     </div>
   </div>
 
-  <p class="hint">What to notice: at step 0 the image is unchanged; by step 1000 it is indistinguishable from static. The cosine schedule keeps more signal in the middle steps than the linear schedule, so a cosine-trained model spends more of its steps on fine detail.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>At each of the 1 000 steps a little of the picture is replaced by a little noise, and the curve alpha-bar(t) shows how much of the original signal survives at step t. The two schedules differ in how that curve falls: the linear schedule loses the signal early, the cosine schedule keeps more of it through the middle steps, so a model trained on it spends more of its steps on fine detail. A real diffusion model learns to run this process backwards; the page only shows the forward half.</p>
+  <p>The denoise toggle applies a small box blur to the noised image as a rough picture of what removing noise means. It is not a trained model and does not reconstruct the original.</p>
+  <h3>Things to try</h3>
+  <p>Step to 200 under each schedule and compare how much of the picture is left. Load a photograph of your own with fine texture and watch which details vanish first. Play at full speed to the end: by step 1 000 the image is indistinguishable from static.</p>
+  <h3>Data</h3>
+  <p>The bundled sample image is a render of the course cover, released under CC-BY-4.0. Any picture you load is read locally and never uploaded.</p>
+  </details>
 
   <script>
 (function () {

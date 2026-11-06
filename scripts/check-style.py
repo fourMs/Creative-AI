@@ -40,9 +40,9 @@ line by line for:
                         because "we" about UiO or the fourMs Lab is
                         allowed and needs human judgement
     exclamation         an exclamation mark in prose
-    em-dash             a sentence with exactly one em dash, outside
-                        Further reading list items and outside a list
-                        item titled with bold, a link, or a citation
+    em-dash             a sentence with exactly one em dash, anywhere;
+                        reading lists and tool lists separate an item
+                        from its description with a colon
 
 Sentence splitting and word counting see a link as its visible text: a
 Markdown link `[text](destination)` is reduced to `text`, and an image,
@@ -52,13 +52,12 @@ as `sound.ipynb` would end a sentence, and a long link would collapse
 into one token. The substitution is done a line at a time, so line
 numbers do not move.
 
-Three things are exempt throughout: the em dash used as the list-item
-separator inside ":::{seealso} Further reading" blocks and inside any
-list item whose title is bold, linked, or cited (the reading-list and
-tool-list convention); quoted or *italicised* example text, for the
-first-person and "audiovisual" rules, so this rulebook can name the
-very word it bans; and all content inside ":::{tip} Explore
-interactively" blocks (the app links), which is skipped entirely.
+Two things are exempt throughout: quoted or *italicised* example text,
+for the first-person and "audiovisual" rules, so this rulebook can name
+the very word it bans; and all content inside ":::{tip} Explore
+interactively" blocks (the app links), which is skipped entirely. The
+em dash has no exemption: since November 2026 the reading lists and
+tool lists use a colon, as the sibling book does.
 
 Exit 0 and print per-file, per-category counts. With --strict, exit 1
 if any category other than lecturer-we has a hit anywhere.
@@ -117,8 +116,9 @@ EXPLORE_TIP_START = ":::{tip} Explore interactively"
 FENCE_END = ":::"
 
 # A list item whose title is a bold span, a Markdown link, or a citation key
-# uses the em dash as a "title — description" separator (the reading-list and
-# tool-list convention), not the mid-sentence drama dash rule 13 warns about.
+# is recognised so that the colon convention of the reading lists can be
+# checked separately if ever needed; it no longer exempts the item from the
+# em-dash rule.
 LIST_MARKER_RE = re.compile(r"^[ \t]*(?:[-*+]|\d+\.)[ \t]+")
 MD_LINK_RE = re.compile(r"\[[^\]]+\]\([^)]+\)")
 CITE_KEY_RE = re.compile(r"\[@[^\]]+\]")
@@ -321,7 +321,7 @@ def check_text(text, allowlist):
             words = sentence.split()
             if len(words) > 40:
                 hits.append((lineno, "long-sentence", sentence[:80]))
-            if sentence.count("—") == 1 and not in_further and not titled_item:
+            if sentence.count("—") == 1:
                 hits.append((lineno, "em-dash", sentence[:80]))
 
         # audiovisual / hyphenated audio-visual / auditory-visual

@@ -128,7 +128,7 @@ STYLE_CLEAN_MD = """# Show, don't tell
 This is a plain sentence with no problems in it at all.
 
 :::{seealso} Further reading
-- **Author, Title (2020)** — a short annotated note about the reading itself.
+- **Author, Title (2020)**: a short annotated note about the reading itself.
 :::
 
 :::{tip} Explore interactively
@@ -164,17 +164,19 @@ def test_style_checker_accepts_clean_fixture():
         assert r.returncode == 0, r.stdout + r.stderr
 
 
-def test_style_checker_bold_titled_list_item_exempt_from_em_dash():
-    # A "- **Title** — description" item outside Further reading is still the
-    # reading-list/tool-list title-dash-description convention, not the
-    # mid-sentence drama dash rule 13 warns about.
+def test_style_checker_titled_list_item_uses_colon_not_em_dash():
+    # Reading lists and tool lists separate "- **Title**" from its description
+    # with a colon; an em dash there is reported like any other lone em dash.
     with tempfile.TemporaryDirectory() as d:
         src = os.path.join(d, "ch.md")
         open(src, "w").write("- **Title** — a description of the linked or cited work.\n")
         r = subprocess.run([PY, os.path.join(ROOT, "scripts", "check-style.py"), "--files", src],
                             capture_output=True, text=True)
+        assert ": em-dash:" in r.stdout, r.stdout
+        open(src, "w").write("- **Title**: a description of the linked or cited work.\n")
+        r = subprocess.run([PY, os.path.join(ROOT, "scripts", "check-style.py"), "--files", src, "--strict"],
+                            capture_output=True, text=True)
         assert r.returncode == 0, r.stdout + r.stderr
-        assert ": em-dash:" not in r.stdout, r.stdout
 
 
 def test_style_checker_italic_example_exempt_from_first_person():

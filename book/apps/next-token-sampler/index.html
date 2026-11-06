@@ -77,11 +77,15 @@
     .bar-track { flex: 1 1 auto; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; height: 14px; overflow: hidden; }
     .bar-fill { height: 100%; background: var(--accent); }
     .bar-pct { width: 48px; flex: 0 0 auto; color: var(--muted); font-variant-numeric: tabular-nums; }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Next-token sampler</h1>
-  <p class="intro">A language model predicts the next token from the ones before it. This tiny model counts word sequences in the text you paste, then samples a continuation from those counts; the temperature and top-k knobs are the same ones you meet in real tools. Everything runs in this page: nothing you type, paste, or generate leaves your browser.</p>
+  <p class="intro">A language model predicts the next token from the ones before it. This tiny model counts word sequences in the text you paste and samples a continuation; temperature and top-k are the knobs you meet in real tools. Nothing you type or generate leaves your browser.</p>
 
   <fieldset>
     <legend>Text</legend>
@@ -109,7 +113,7 @@
         <input type="number" id="seed" value="42" step="1"/>
       </div>
     </div>
-    <p class="hint">Higher orders copy longer stretches of the text; with a short sample most contexts have only one continuation, so temperature and top-k have less to act on. Start at order 1 to see the knobs, then raise the order to see copying.</p>
+    <p class="hint">Higher orders copy longer stretches of the text; start at order 1, then raise it.</p>
     <label for="temperature">Temperature <span class="vals" id="temperatureDisp"></span></label>
     <input type="range" id="temperature" min="0.1" max="2" step="0.1" value="1" aria-describedby="temperatureDisp"/>
     <label for="topk">Top-k <span class="vals" id="topkDisp"></span></label>
@@ -129,7 +133,15 @@
     <div id="barsList"></div>
   </div>
 
-  <p class="hint">What to notice: a low temperature with a short context tends to repeat phrases straight out of the source text; a high temperature with top-k off wanders into word salad; top-k 1 always takes the single most likely word, so the result no longer depends on the seed.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>The model counts, for every context of one, two or three words in the source text, which word came next and how often. At each step it takes the last words, turns the counts into probabilities, and samples one word from them. Temperature reshapes the probabilities before sampling: low values sharpen them towards the most frequent word, high values flatten them. Top-k keeps only the k most likely words and discards the rest. With a short text most contexts have only one continuation, so at a high order the knobs have little to act on and the output copies the source. Show probabilities lists the ten candidates at the last step.</p>
+  <h3>Things to try</h3>
+  <p>Generate at order 1 and temperature 0.3: phrases straight from the source. Raise the temperature to 2.0 with top-k off and read the word salad. Set top-k to 1 and change the seed: the output no longer changes, because the single most likely word always wins. Load the Norwegian sample and compare how quickly it starts to copy.</p>
+  <h3>Data</h3>
+  <p>The bundled samples are the opening of <em>Alice's Adventures in Wonderland</em> (Project Gutenberg, public domain) and of Ibsen's <em>Et dukkehjem</em> (Norwegian Wikisource and Runeberg transcription, public domain). The app makes no network requests.</p>
+  </details>
 
   <script>
 (function () {

@@ -7,8 +7,13 @@ They are copied into the deployed site under `/apps/` by
 
 Conventions: same CSS variables and light/dark palette as the apps in the
 *Sensing Sound and Music* book, system font, max width 780 px, keyboard
-operable, one intro paragraph stating what the app shows and that nothing
-leaves the browser. Bundled data files list their licence here.
+operable. The app is a companion to its chapter, not the chapter: a one- or
+two-sentence intro under the title saying what the app shows and that nothing
+leaves the browser, one-line hints beside the controls, and everything else
+(how it works, things to try, limits, bundled data and its licence) in a closed
+`<details class="more">` block headed "More about this app" at the end of the
+page, as in the sibling book since October 2026. Bundled data files list their
+licence here as well.
 
 | App | Chapter | Bundled data |
 | --- | --- | --- |

@@ -4,7 +4,9 @@
 Usage: python scripts/md2nb.py input.md output.ipynb
 
 Rules: front matter (--- ... ---) is the first cell; each `## ` heading starts
-a new markdown cell; ```{code-cell} python fences become code cells.
+a new markdown cell; ```{code-cell} python fences become code cells. Every code
+cell gets the `hide-input` tag, the book's convention for figure cells; a
+`:tags: a, b` line directly under the fence replaces that default.
 """
 import json, sys
 
@@ -18,8 +20,9 @@ def lines_to_source(text):
 def md_cell(text):
     return {"cell_type": "markdown", "metadata": {"language": "markdown"}, "source": lines_to_source(text)}
 
-def code_cell(text):
-    return {"cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [], "source": lines_to_source(text)}
+def code_cell(text, tags=("hide-input",)):
+    return {"cell_type": "code", "execution_count": None, "metadata": {"tags": list(tags)} if tags else {},
+            "outputs": [], "source": lines_to_source(text)}
 
 def convert(md):
     lines = md.split("\n")
@@ -38,10 +41,12 @@ def convert(md):
         line = lines[i]
         if line.startswith("```{code-cell}"):
             flush()
-            i += 1; code = []
+            i += 1; code = []; tags = ("hide-input",)
+            if i < len(lines) and lines[i].strip().startswith(":tags:"):
+                tags = tuple(t.strip() for t in lines[i].split(":", 2)[2].split(",") if t.strip()); i += 1
             while i < len(lines) and lines[i].strip() != "```":
                 code.append(lines[i]); i += 1
-            cells.append(code_cell("\n".join(code)))
+            cells.append(code_cell("\n".join(code), tags))
             i += 1
             continue
         if line.startswith("## ") and buf:

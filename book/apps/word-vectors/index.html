@@ -81,11 +81,15 @@
       border: 2px solid var(--highlight); border-radius: 50%; pointer-events: none;
     }
     .axis-caption { font-size: 0.85rem; color: var(--muted); margin: 4px 0 0; }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Word-vector explorer</h1>
-  <p class="intro">Before transformers, language models learned a vector for every word. Vectors are how every model in this book represents meaning, and this small English set shows what that captures and what it gets wrong. Everything runs in this page after the one-time load of the bundled vectors: nothing you type leaves your browser.</p>
+  <p class="intro">Before transformers, language models learned a vector for every word, and vectors are still how every model in this book represents meaning. This small English set shows what that captures and what it gets wrong. Nothing you type leaves your browser.</p>
 
   <div class="warn" id="loadError" role="alert"></div>
 
@@ -97,7 +101,7 @@
       <button type="button" id="findBtn" class="primary">Find nearest neighbours</button>
     </div>
     <div class="result-panel" id="neighbourResult" aria-live="polite">Type a word and press "Find nearest neighbours".</div>
-    <p class="hint">The vocabulary holds the 7 000 most frequent words in the training corpus, so rare words, names, and most non-English words will not be found.</p>
+    <p class="hint">The vocabulary holds the 7 000 most frequent words, so rare words, names and most non-English words are not found.</p>
   </fieldset>
 
   <fieldset>
@@ -122,7 +126,7 @@
       <button type="button" id="anaBtn" class="primary">Compute A minus B plus C</button>
     </div>
     <div class="result-panel" id="anaResult" aria-live="polite">Enter three words and press "Compute A minus B plus C".</div>
-    <p class="hint">The five closest words to the result, other than A, B, and C themselves. The classic example is king minus man plus woman, which lands near queen.</p>
+    <p class="hint">The five closest words to the result, other than A, B and C; king minus man plus woman lands near queen.</p>
   </fieldset>
 
   <fieldset>
@@ -142,8 +146,18 @@
       <div class="map-highlight" id="mapHighlight" hidden></div>
     </div>
     <div class="result-panel" id="mapLabel" aria-live="polite">Hover over a point, or focus the map and press the left/right arrow keys, to see its word.</div>
-    <p class="hint">The vertical axis always comes from the fixed random projection. Setting the axis words replaces only the horizontal axis with the direction from the first word to the second, so words further along that direction score higher on whatever the two words differ by. Try man to woman, then look at where nurse and engineer land.</p>
+    <p class="hint">Setting the axis words replaces the horizontal axis with the direction from the first word to the second.</p>
   </fieldset>
+
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>Every word in the vocabulary has a vector of fifty numbers, learnt from how often words occur near each other in a large corpus. Nearest neighbours are the words whose vectors point in the most similar direction. The analogy takes the vector of A, subtracts B, adds C, and lists the words closest to the result. The map projects all 7 000 vectors onto two axes: the vertical axis is a fixed random direction, and the horizontal axis is either random or the direction from one chosen word to another, so that words further along it score higher on whatever the two words differ by.</p>
+  <h3>Things to try</h3>
+  <p>Find the neighbours of oslo, then of jazz, then of a word with two meanings such as bank. Set the axis from man to woman and look at where nurse and engineer land; the vectors have learnt the bias of the corpus along with its meaning. Try an analogy that should work, paris minus france plus norway, and one that should not.</p>
+  <h3>Data</h3>
+  <p>The bundled vectors, <code>vectors.json</code>, are the first 7 000 words of GloVe 6B 50d, released under the PDDL. They are loaded once with the page; the app makes no other network requests.</p>
+  </details>
 
   <script>
 (function () {

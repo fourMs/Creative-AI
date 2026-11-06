@@ -19,7 +19,7 @@ The assignments are not finished when they are approved. Each one comes back as 
 The portfolio holds five things:
 
 1. **The four assignments**, A1, A2, the ethics essay, and A3, each revised after feedback, with a short note on what you changed and why.
-2. **The final piece**, made in weeks 9 to 12, as the centrepiece of the portfolio. Embed the media directly, so that a reader meets the work before reading about it. A live piece, such as a performance or a reading, becomes a recording. An interactive piece is embedded or linked so that a reader can use it. A printed or 3D-printed object is documented with photographs or a short video.
+2. **The final piece**, made in weeks 8 to 10, as the centrepiece of the portfolio. Embed the media directly, so that a reader meets the work before reading about it. A live piece, such as a performance or a reading, becomes a recording. An interactive piece is embedded or linked so that a reader can use it. A printed or 3D-printed object is documented with photographs or a short video.
 3. **The critical reflection**, 1 500 to 2 000 words, covering the whole portfolio, written as a text section of the exposition. It answers the two questions of the course: where the AI surprised you, and where you exerted your own creative will. Point at a specific moment in a specific artefact.
 4. **Provenance**: every tool and model with its version or the date you used it, the human edits, and the consent you obtained for any voice, face, or likeness.
 5. **The full prompt log**, linked or attached. It grows out of the weekly practice log you have been keeping all semester, and it documents how the work in the portfolio was made.
@@ -56,7 +56,7 @@ You can make the final piece alone or in a group of up to three. Grades are indi
 
 ## Accounts and timing
 
-Anyone can register for a basic account on the Research Catalogue at no cost. A basic account can read and comment on expositions, but it cannot create one. To create an exposition you need a full account, which is also free, but which requires sending a proof of identity to the Research Catalogue's support team. The [Research Catalogue guide](https://guide.researchcatalogue.net/) describes the steps. The upgrade takes time, so register and request the upgrade by week 9 at the latest, when you start planning the final piece. UiO is not a portal partner of the Research Catalogue, so the request goes through the platform's own support rather than through the university.
+Anyone can register for a basic account on the Research Catalogue at no cost. A basic account can read and comment on expositions, but it cannot create one. To create an exposition you need a full account, which is also free, but which requires sending a proof of identity to the Research Catalogue's support team. The [Research Catalogue guide](https://guide.researchcatalogue.net/) describes the steps. The upgrade takes time, so register and request the upgrade by week 8 at the latest, when you start planning the final piece. UiO is not a portal partner of the Research Catalogue, so the request goes through the platform's own support rather than through the university.
 
 [Recommendation: have the data protection officer check whether students can be required to send identity documents to the Research Catalogue, and offer a fallback, the same exposition built as a PDF or a static web page submitted in Canvas.]
 
@@ -73,7 +73,7 @@ The PDF is the version that is assessed, because an exposition can still be edit
 
 [Recommendation: assess the PDF copy handed in at the deadline and use the URL for media. Confirm with the study administration how an exam with an external link is delivered in Inspera or Canvas.]
 
-The proposal for the final piece in week 10 and the peer review in week 12 are the two checkpoints on the way there. Neither is graded, and both exist to give you feedback while there is still time to use it.
+The proposal for the final piece in week 9 and the peer review in week 10 are the two checkpoints on the way there. Neither is graded, and both exist to give you feedback while there is still time to use it.
 
 ## What "good" looks like
 

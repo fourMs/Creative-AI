@@ -24,8 +24,11 @@ Anarchive
 Attention
 : The mechanism in a transformer that lets every element of a sequence look at every other element. It is what allows a model to relate a word at the end of a paragraph to one at the beginning.
 
-Audio–video and auditory–visual
-: Audio and video name data, the recorded, transmitted, or generated signal; auditory and visual name perception and processing, whether in a person or in a machine. A film is an audio–video artefact, and watching it is auditory–visual. The book keeps the two apart rather than folding them into a single word that means both.
+Audio–video
+: Audio and video name data: the recorded, transmitted, or generated signal. A film is an audio–video artefact. The perceptual pair is auditory–visual.
+
+Auditory–visual
+: Auditory and visual name perception and processing, whether in a person or in a machine. Watching a film is an auditory–visual experience; the file is audio–video.
 
 Autoencoder
 : A pair of networks trained together, one compressing an input into a short list of numbers and the other rebuilding the input from it. The short list is a latent representation, and a variational autoencoder shapes that space so that moving through it produces plausible new outputs.
@@ -57,6 +60,9 @@ Cellular automaton
 Character reference
 : An image of a subject used to condition generation so that a model matches an existing appearance rather than reconstructing one from words. It is cheap and needs no training, but drifts under large changes of pose or lighting.
 
+Cheap to verify
+: The property that decides what to hand to an agent: a task whose result can be checked quickly and reliably, such as a test passing or a file matching a specification. Work that is expensive to verify stays with the human.
+
 Classifier
 : A model that learns a boundary between categories, such as cat and not-cat, as opposed to a generative model, which learns the whole distribution of plausible examples.
 
@@ -66,11 +72,14 @@ Closed model
 Co-creation
 : Making creative work together with a generative system. Because such systems mostly behave as executors of instructions rather than as collaborators, co-creation asks a person to shift from craftsperson to creative director.
 
+Collaborator
+: A generative system framed as a participant in an open-ended process rather than a machine that executes a command. Agents shift the framing from executor towards collaborator.
+
 Collecting society
 : An organisation that registers works, matches a use to an owner, and distributes royalties on behalf of authors and performers. Its work depends on ownership databases that are incomplete and inconsistent across countries.
 
-Combinational, exploratory, and transformational creativity
-: Margaret Boden's three kinds of creativity: combinational puts familiar ideas together in unfamiliar ways, exploratory moves around inside an existing conceptual space, and transformational changes the conceptual space itself so that previously impossible ideas become thinkable.
+Combinational creativity
+: Margaret Boden's first kind of creativity: putting familiar ideas together in unfamiliar ways.
 
 Conditioning
 : Any input besides noise that steers what a generative model produces, such as a text prompt, a reference image, a mask, or a control signal.
@@ -84,11 +93,14 @@ Control signal
 ControlNet
 : A small network trained to inject a spatial signal, such as a pose or an edge map, into a diffusion model's denoiser. Several can be stacked at once to control composition from more than one source.
 
-Convergent and divergent thinking
-: J. P. Guilford's distinction between thinking that narrows down to a single correct answer and thinking that opens out to many possible answers. Divergent thinking tasks, such as listing uses for a brick, are the most common creativity tests, including those now run on language models.
+Convergent thinking
+: J. P. Guilford's name for thinking that narrows down to a single correct answer.
 
 Convolutional network
 : A network architecture that slides small parameter patches across an image, the dominant approach to computer vision for most of the 2010s.
+
+Coupling
+: The lawful, physically fixed link between an action and the sound it produces in an acoustic instrument. An electronic or digital instrument has a mapping instead.
 
 Data
 : What went into a generative system: which material, gathered from whom, with what consent and whose labour. It is the first of the book's five layers, alongside model, interface, practice, and culture.
@@ -98,9 +110,6 @@ Data type
 
 Data workers
 : People, often in low-wage countries, who label images, rank model outputs, and write fine-tuning examples. They are the reason a model behaves the way it does, and some carry the psychological cost of moderating violent or abusive material.
-
-Dataflow programming
-: A style of programming in which boxes process data and the connections drawn between them carry it from one box to the next. Audio-specific graphical languages such as Max/MSP and Pure Data work this way, and building in them is usually called patching.
 
 Decolonisation
 : In the context of AI, the argument that Western and English-language dominance in training data is not a skewed sample to be corrected but a settled assumption about whose knowledge counts as common. It asks who defines the default rather than how to rebalance a dataset.
@@ -120,11 +129,17 @@ Distillation
 Distribution
 : A way of saying how likely each possible thing is. A generative model implicitly learns a distribution over its training examples and produces new work by sampling from it.
 
+Divergent thinking
+: J. P. Guilford's name for thinking that opens out to many possible answers. Divergent thinking tasks, such as listing uses for a brick, are the most common creativity tests.
+
 Embedding
 : A vector of numbers, learned during training, that stands in for a piece of data such as a voice or a word, placed in a space where similar things sit close together.
 
 Embodiment
 : Having a body in a scene, with a height, a reach, and hands that may or may not be one's own. It turns scale from an aesthetic setting into a bodily fact once a person is standing next to a virtual object.
+
+End-frame conditioning
+: Giving a video model the last frame of a shot as well as the first, so that it has a destination to interpolate towards instead of inventing where the shot goes.
 
 Ethical authorship
 : The question of who is the author when a model trained on millions of other people's work assists a maker. It is also the question of what that maker owes the people whose work trained the model, their audience, and themselves in how they describe the result.
@@ -132,8 +147,14 @@ Ethical authorship
 Evolutionary algorithm (genetic algorithm)
 : A search method that keeps a population of candidate solutions, scores them, and repeatedly makes a new population by copying the better ones with small random changes and recombinations.
 
-Executor and collaborator
-: Two ways of framing a generative system: as an executor, which takes a command and returns a finished output, or as a collaborator, which participates in an open-ended process. Agents shift the framing from the first towards the second.
+Executor
+: A generative system framed as a machine that takes a command and returns a finished output. The opposite framing is the collaborator.
+
+Explain-back
+: The reading check used with a coding assistant: before accepting generated code, explain in your own words what each part does and why. Code you cannot explain back is code you cannot supervise.
+
+Exploratory creativity
+: Margaret Boden's second kind of creativity: moving around inside an existing conceptual space and finding what it already allows.
 
 Exposition
 : The Research Catalogue's name for a web page that holds a piece of work and the thinking around it together, as embedded media, text, and the links between them. The portfolio exam in this course is handed in as an exposition.
@@ -156,14 +177,14 @@ Five layers
 Flow matching
 : A generative method closely related to diffusion but with a simpler training objective, powering several of the strongest image and video models released from 2024 onwards.
 
+Foundation model
+: A very large model trained once on broad data and then adapted to many tasks by prompting or fine-tuning.
+
 Four C model
 : Kaufman and Beghetto's scale of creative achievement in four steps: mini-c, the personally meaningful insight of learning; little-c, everyday creativity; Pro-c, the competent new work of trained professionals; and Big-C, the eminent work that changes a field. Most creative AI use sits at little-c and Pro-c.
 
 Four Ps of creativity
 : Mel Rhodes' sorting of creativity research into four strands: the person, the process, the product, and the press, the last being the environment that acts on the other three.
-
-Foundation model
-: A very large model trained once on broad data and then adapted to many tasks by prompting or fine-tuning.
 
 Gaussian splat
 : A scene represented as a very large number of small three-dimensional Gaussians, each with a position, size, orientation, colour, and opacity, optimised until re-rendering it matches a set of input photographs. It renders fast enough to be interactive, but it is a rendering rather than geometry.
@@ -183,14 +204,17 @@ Ghost memory
 Guidance scale (CFG)
 : A setting, in image and video models, that strengthens the pull of a prompt against the model's own sense of what is plausible. Too high produces rigid, oversaturated results; too low lets the prompt be politely ignored.
 
-H-creativity and P-creativity
-: Margaret Boden's distinction between creativity that is historically novel, new to humanity, and creativity that is only psychologically novel, new to the person who produced it.
+H-creativity
+: Margaret Boden's term for creativity that is historically novel: new to humanity.
 
 Hallucination
 : A fluent, confident output that is false, a direct consequence of training a model to produce plausible rather than true text.
 
 Human-in-the-loop checkpoint
 : A point in an agent's pipeline where it stops and waits for a person, placed where the cost of a wrong decision is high and the cost of asking is low.
+
+Image-to-video
+: Generating a short clip from a still picture that fixes the first frame, so that the composition, palette, and subject are judged before any motion is spent. It usually beats text-to-video because a chosen still removes a whole category of uncertainty.
 
 In-context learning
 : Steering a model's behaviour by writing examples into the prompt rather than by retraining it. It is the mechanism underneath everything marketed as prompt engineering.
@@ -210,6 +234,9 @@ Intentionality
 Interactive evolution
 : An evolutionary loop in which a person, rather than a written fitness function, selects which candidates survive; used to breed images, shapes, and sounds by eye.
 
+Keyframe
+: A frame a video system generates or is given directly, with the motion between keyframes filled in by a lighter model. Keyframe-and-interpolation is one of the three strategies for the time axis.
+
 L-system
 : A rewriting grammar that repeatedly replaces symbols in a string according to a small set of rules, then reads the result as drawing instructions. It is a common way to generate branching forms such as plants.
 
@@ -218,6 +245,9 @@ Large language model (LLM)
 
 Latency
 : The delay between an action and a system's response. Below about ten milliseconds a response feels caused by the action; beyond it, it feels like a reply, which sets the design budget for anything meant to be played in real time.
+
+Latent action
+: In a world model, the compressed representation of what a user or agent does between two frames, learnt from video without labels, so that the model can predict the next frame given an action.
 
 Latent space
 : A compressed space in which a trained model represents its data, where similar things sit close together. Moving through it produces a variation rather than retrieving a stored record.
@@ -240,8 +270,8 @@ Loss
 Lovelace test
 : A test in which a system passes only if it produces an output that its own architects cannot account for, given complete knowledge of its architecture, program, and inputs. It is a demanding bar that most generative systems do not clear.
 
-Mapping and coupling
-: An acoustic instrument has a lawful, physically fixed coupling between an action and the sound it produces. An electronic or digital instrument has a mapping instead, an invented link that must have enough continuity for a small change in action to produce a related change in sound, or it cannot be learned by practice.
+Mapping
+: The invented link between an action and a sound, or between a sensor and a generator, in an electronic or digital system. A mapping needs enough continuity for a small change in action to produce a small change in result, or it cannot be learnt.
 
 Markov chain
 : A rule-based generative method that draws the next event, such as the next note in a melody, from a table of transition probabilities conditioned on the current state.
@@ -261,11 +291,20 @@ Model
 Model card
 : A document a model's creators publish describing what dataset it was trained on, how many parameters it has, what licence it carries, and what limitations they admit to.
 
-Motion and movement
-: Movement is the experienced phenomenon, the body travelling through space as felt and perceived. Motion is the measurable version, the physical displacement a sensor records.
+Motion
+: The measurable version of a body's travel through space: the physical displacement a sensor records. The experienced version is movement.
 
-Multimodal and multisensory
-: Multimodal is the field's name for models and data that take several data types, such as text with images or audio with video. People are multisensory rather than multimodal, since they combine senses rather than data types. Cross-modal correspondences, the reliable matches people make across the senses, keep their established name.
+Motiongram
+: A videogram made from frame-to-frame differences rather than the original pixels, so that movement shows as light against a dark background.
+
+Movement
+: The experienced phenomenon of the body travelling through space, as felt and perceived. The measured version is motion.
+
+Multimodal
+: The field's name for models and data that take several data types, such as text with images or audio with video. People are multisensory rather than multimodal.
+
+Multisensory
+: Combining several senses, as people do, rather than several data types, as models do. Cross-modal correspondences, the systematic links people feel between senses, are a multisensory phenomenon.
 
 Music question–answering (MQA)
 : A machine-learning task in which a system answers questions about a piece of music. Systems that work from audio alone miss what a performance shows, which is why datasets pair audio–video recordings with questions written against both.
@@ -294,14 +333,20 @@ Noisy intermediate-scale quantum (NISQ)
 Open-weight model
 : A model published as files that can be downloaded and run on one's own machine or servers. Open weights are not the same as open source, since the training data and training code are usually withheld even when the parameters are shared.
 
-Opt-in and opt-out
-: Two opposite ways of distributing the burden of consent for training data. Under opt-out every rights holder must find and object to every use; under opt-in every model builder must find and ask every rights holder; either way the burden falls hardest on those with the least capacity to bear it.
+Opt-in
+: A consent regime for training data under which every model builder must find and ask every rights holder before using a work.
+
+Opt-out
+: A consent regime for training data under which every rights holder must find and object to every use. Either way the burden falls hardest on those with the least time and money.
 
 Outpainting
 : Extending an image beyond its original edges by treating the new area as a masked region for a diffusion model to fill.
 
 Overfitting
 : The opposite of generalisation: a model has effectively memorised its training examples and performs poorly on anything else.
+
+P-creativity
+: Margaret Boden's term for creativity that is psychologically novel: new to the person who produced it, whether or not anyone had it before.
 
 Parameters
 : The numbers, often billions of them, inside a model that determine which input produces which output. Training adjusts them to reduce a loss, and inference uses them unchanged.
@@ -399,19 +444,22 @@ Trace
 Training
 : Repeatedly adjusting a model's parameters to reduce a loss measured on batches of data.
 
+Transformational creativity
+: Margaret Boden's third kind of creativity: changing the conceptual space itself so that previously impossible ideas become possible.
+
 Transformer
 : An architecture, introduced in 2017, that lets every element of a sequence look at every other element directly. It became the dominant architecture for language and, soon after, for audio, image, and code.
-
-Version (of a model)
-: The label that fixes which trained artefact a claim is about, since a family name is reused across retrainings. A claim about a model's behaviour carries a version or a date, because the same commercial name in March and in October need not name the same model.
 
 Translation between data types
 : Carrying a piece of work from one data type into another through a paragraph that describes it, then editing that paragraph and regenerating. It is a working method for using a multimodal model productively rather than only for critique, and the field often calls it cross-modal translation.
 
-Videogram and motiongram
-: A videogram is a single still image built by collapsing a video's frame-to-frame pixels into a strip, with one axis as time and the other as space. A motiongram does the same with frame-to-frame differences rather than the original pixels, so that movement shows up as visible bands.
+Version (of a model)
+: The label that fixes which trained artefact a claim is about, since a family name is reused across retrainings. A claim about a model's behaviour carries a version or a date, because the same commercial name in March and in October need not name the same model.
 
-Virtual, augmented, and mixed reality (VR, AR, MR)
+Videogram
+: A single still image built by collapsing a video's frames into a strip, with one axis as time and the other as space.
+
+Virtual, augmented, and mixed reality
 : Virtual reality replaces what a person sees and hears with a computed environment. Augmented reality leaves the world in place and adds graphics registered to it. Mixed reality is augmented content that is also aware of the room, able to hide behind real furniture and rest on real surfaces.
 
 Vocoder

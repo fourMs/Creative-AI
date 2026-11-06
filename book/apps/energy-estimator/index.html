@@ -73,11 +73,15 @@
     }
     .assumptions-wrap { overflow-x: auto; }
     a { color: var(--accent); }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Inference energy estimator</h1>
-  <p class="intro">Estimates of AI's footprint vary by a factor of a thousand depending on assumptions. This calculator makes the assumptions visible so you can argue about them. Nothing you enter here leaves your browser.</p>
+  <p class="intro">Estimates of the footprint of AI vary by a factor of a thousand depending on the assumptions. Change the assumptions here and watch what the total does. Nothing you enter leaves your browser.</p>
 
   <fieldset>
     <legend>Scenario</legend>
@@ -113,7 +117,7 @@
 
   <fieldset>
     <legend>Assumptions</legend>
-    <p class="hint" style="margin-top:0;">Every number below is a default you can overwrite. Sources are given so you can judge, and argue with, each one.</p>
+    <p class="hint" style="margin-top:0;">Every number below is a default you can overwrite; the source column says where it comes from.</p>
     <div class="assumptions-wrap">
       <table class="assumptions">
         <caption>Editable defaults used in the calculation. DOI: <a href="https://doi.org/10.1145/3630106.3658542" target="_blank" rel="noopener">10.1145/3630106.3658542</a> (Luccioni, Jernite &amp; Strubell, 2024, <em>Power Hungry Processing</em>).</caption>
@@ -199,7 +203,15 @@
     <p class="compare" id="compare" aria-live="polite"></p>
   </fieldset>
 
-  <p class="hint">What to notice: the energy total depends only on the per-query watt-hours and the number of queries; the grid preset and water figure change only the CO2e and water outputs, never the energy. Try coal instead of Norway to see how much the same energy use can cost the climate.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>Energy is the watt-hours per query for the chosen task, multiplied by the queries per day and the number of days. Emissions multiply that energy by the carbon intensity of the chosen grid, and water multiplies it by the water use effectiveness. The grid preset and the water figure therefore change only the CO2e and water outputs, never the energy itself. The comparison line translates the result into phone charges and kilometres in an electric car.</p>
+  <h3>Things to try</h3>
+  <p>Keep every other setting and switch the grid from Norway to coal-heavy: the same energy use costs the climate more than twenty times as much. Then compare a month of short text generation with a single day of five-second video clips.</p>
+  <h3>Limits and sources</h3>
+  <p>The per-query defaults for text and image tasks come from Luccioni, Jernite and Strubell (2024), <em>Power Hungry Processing</em>, doi:10.1145/3630106.3658542, and span more than an order of magnitude across models. The high-resolution image and video figures are extrapolations, the grid intensities are approximate 2023 values from public electricity-map data, and operators rarely disclose water use, so 1.8 litres per kilowatt-hour is an illustrative value. The app bundles no data and makes no network requests.</p>
+  </details>
 
   <script>
 (function () {

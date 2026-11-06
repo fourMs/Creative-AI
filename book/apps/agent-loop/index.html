@@ -70,11 +70,15 @@
     }
     #trace div { white-space: pre-wrap; }
     #checkpointPanel[hidden] { display: none; }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Agent loop simulator</h1>
-  <p class="intro">An agent is a loop: plan, act, observe, repeat, until the goal is met or the budget runs out. Step through one and watch what noise and a budget do to it, and where a human checkpoint would have helped. Everything runs in your browser; nothing you do here leaves the page.</p>
+  <p class="intro">An agent is a loop: plan, act, observe, repeat, until the goal is met or the budget runs out. Step through one here and watch what noise, a budget and a human checkpoint do to it. Everything runs in your browser; nothing leaves the page.</p>
 
   <fieldset>
     <legend>World</legend>
@@ -133,7 +137,18 @@
 
   <div id="trace" role="log" aria-live="polite" aria-label="Agent trace"></div>
 
-  <p class="hint">Start is the corner marked St; visit search, draft and render in that order before publish counts. Each step, the agent looks at its four neighbouring cells; the noise slider is the chance that one of those four readings, chosen at random, comes back wrong that step. Cells the agent currently believes are blocked carry a diagonal mark, whether or not they really are: with noise on, watch that mark appear on free cells and disappear again as the agent looks again.</p>
+  <p class="hint">Start is the corner marked St; the agent must visit search, draft and render in that order before publish counts.</p>
+
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>Each step, the agent looks at its four neighbouring cells, decides where to go, moves, and observes the result. The noise slider is the chance that one of those four readings, chosen at random, comes back wrong that step. Cells the agent currently believes are blocked carry a diagonal mark, whether or not they really are: with noise on, the mark appears on free cells and disappears again as the agent looks again. The budget is the maximum number of steps; the trace under the grid lists every plan, action and observation.</p>
+  <p>With the human checkpoint on, the run pauses after every tool use. Approve lets it continue; Redirect sends it to a cell of your choosing, which is what supervision looks like in a real pipeline.</p>
+  <h3>Things to try</h3>
+  <p>Run with noise at 0 and note the steps used. Raise the noise to 0.2 and run again from the same seed: the agent will believe free cells are blocked and take detours. Lower the budget until a run fails, then turn the checkpoint on and see how few redirects rescue it.</p>
+  <h3>Data</h3>
+  <p>This app bundles no data and makes no network requests.</p>
+  </details>
 
   <script>
 (function () {

@@ -68,16 +68,20 @@
     .bkey.down { background: var(--accent); }
     .keyhint { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 0.72rem; color: var(--muted); pointer-events: none; }
     .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Markov melody generator</h1>
-  <p class="intro">The folk-tune generators of the 2010s learned melodies from thousands of tunes. This one learns from the melody you play and continues it; the order and temperature knobs decide how much it copies and how much it wanders. Everything runs in this page: nothing you play, load, or generate leaves your browser.</p>
+  <p class="intro">The folk-tune generators of the 2010s learned melodies from thousands of tunes. This one learns from the melody you play and continues it; order and temperature decide how much it copies and how much it wanders. Nothing you play or generate leaves your browser.</p>
 
   <fieldset>
     <legend>Play a melody</legend>
     <div id="keys" aria-label="Two-octave on-screen keyboard, C4 to B5"></div>
-    <p class="hint">Play with the keys above, or with the computer keyboard: <kbd>a s d f g h j k</kbd> for the white notes C4 to C5, <kbd>w e t y u</kbd> for the black notes in between, and <kbd>o l ; p</kbd> for four extra notes in the octave above. How long you hold a key sets its duration: short, medium, or long.</p>
+    <p class="hint">Play the keys above or the computer keyboard (<kbd>a s d f g h j k</kbd> for C4 to C5, <kbd>w e t y u</kbd> for the black notes, <kbd>o l ; p</kbd> for the octave above); how long you hold a key sets its length.</p>
     <div class="row">
       <button type="button" id="loadExample">Load example</button>
       <button type="button" id="clearBtn">Clear</button>
@@ -94,7 +98,7 @@
           <option value="2">2</option>
           <option value="3">3 (last three notes)</option>
         </select>
-        <p class="hint">Higher orders copy longer stretches of the melody; with a short melody most contexts have only one continuation, so temperature has less to act on. Start at order 1 to hear the knob, then raise the order to hear copying.</p>
+        <p class="hint">Higher orders copy longer stretches; start at order 1, then raise it.</p>
       </div>
       <div>
         <label for="length">Length to generate <span class="vals" id="lengthDisp"></span></label>
@@ -112,7 +116,7 @@
         <button type="button" id="newSeed">New seed</button>
       </div>
     </div>
-    <p class="hint">Higher orders copy longer stretches of what you played; low temperature repeats phrases almost verbatim, high temperature wanders further from them.</p>
+    <p class="hint">Low temperature repeats phrases almost verbatim; high temperature wanders.</p>
     <button type="button" id="generate" class="primary">Generate</button>
   </fieldset>
 
@@ -134,7 +138,15 @@
   </div>
   <canvas id="roll" width="720" height="220" role="img" aria-label="Piano roll of the played and generated melody"></canvas>
 
-  <p class="hint">What to notice: at low temperature and a high order, the generator tends to copy whole phrases back at you, because it has only ever seen one thing follow that exact context; raise the temperature, or lower the order, and it wanders further from what you played.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>The generator counts, for every context of one, two or three notes in what you played, which note came next and how often. To continue, it looks at the last notes, picks the next one from those counts, and repeats. Temperature reshapes the counts before the pick: low temperature favours the most frequent continuation, high temperature flattens the differences. With a short melody most contexts have only ever been followed by one note, so a high order has nothing to choose between and copies whole phrases back at you. The seed makes a generation repeatable.</p>
+  <h3>Things to try</h3>
+  <p>Load the example, generate at order 1 and temperature 1.0, then at order 3: the second run is the example with small variations. Set the temperature to 2.0 at order 1 and listen to it wander. Play a melody with a repeated motif and see whether the generator finds it.</p>
+  <h3>Data</h3>
+  <p>This app bundles no data and makes no network requests.</p>
+  </details>
 
   <script>
 (function () {

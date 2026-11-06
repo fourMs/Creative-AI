@@ -83,11 +83,15 @@
     }
     summary { font-weight: 600; cursor: pointer; }
     details p { margin: 8px 0 0; }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Sensor-to-sound mapper</h1>
-  <p class="intro">This app lets you design your own action&ndash;sound mapping: you choose which sensor axis drives which sound parameter, then play with the result. On a phone, the axes come from its motion sensors; on a laptop, they come from the mouse or trackpad. Everything runs in this page. No sensor reading or sound is recorded, stored, or sent anywhere; it only ever drives the sound you hear while the page is open.</p>
+  <p class="intro">Design your own action&ndash;sound mapping: choose which sensor axis drives which sound parameter, then play it. On a phone the axes come from its motion sensors, on a laptop from the mouse or trackpad. No sensor reading or sound is recorded or sent anywhere.</p>
 
   <fieldset>
     <legend>Sensors</legend>
@@ -109,7 +113,7 @@
 
   <fieldset>
     <legend>Mapping</legend>
-    <p class="hint">Each row below sends one sensor axis to one sound parameter. Choose the source axis, set the input range that the axis is expected to move within, invert the direction if you want, and smooth out jitter. The sensible mapping below stands in for shake with a single rotation rate axis (&beta;), or with the pointer&rsquo;s Y axis on a laptop with no motion sensors.</p>
+    <p class="hint">Each row sends one sensor axis to one sound parameter: choose the axis, set its input range, invert it if you like, and smooth the jitter.</p>
     <div class="row">
       <button type="button" id="randomiseBtn">Randomise mapping</button>
       <button type="button" id="resetMappingBtn">Reset to a sensible mapping</button>
@@ -135,7 +139,7 @@
 
   <fieldset>
     <legend>Learnability experiment</legend>
-    <p class="hint">Task: make the sound go up, then get brighter. &ldquo;Up&rdquo; means raising the pitch noticeably above where it started, and &ldquo;brighter&rdquo; means raising the filter cutoff noticeably above where it started once the pitch has risen; if a parameter starts the stage already near its top, the task asks you to bring it down first so that a rise is still possible. Design your own mapping above, run the task and note the time, then press &ldquo;Randomise mapping&rdquo; and try the same task again without looking at the table.</p>
+    <p class="hint">Task: make the sound go up, then get brighter. Run it with your own mapping and note the time, then press Randomise mapping and try again without looking at the table.</p>
     <div class="row">
       <button type="button" id="taskBtn" aria-pressed="false">Start task</button>
       <span class="stats" id="taskTimer">Time: 0.0 s</span>
@@ -144,11 +148,16 @@
 
   <div class="stats" id="status" aria-live="polite">Move the mouse, or enable motion sensors, then turn the sound on to begin.</div>
 
-  <p class="hint">A mapping that sends one axis straight to one parameter is a direct mapping; a mapping that mixes several axes into one parameter, or first passes the reading through some maths, is indirect and harder to feel by ear. A one-to-one mapping, where the same action always moves the same parameter by the same amount, is learnable because practice has something consistent to improve; a many-to-many mapping, where several axes cross-affect several parameters at once, gives the body nothing stable to aim at. This mapping table is the interface layer of the five layers this book uses (data, model, interface, practice and culture): it sits between the raw sensor readings and the practice of learning to play them.</p>
-
-  <details>
-    <summary>How it works</summary>
-    <p>Every animation frame, the app reads the current value of each available axis: acceleration and rotation rate from the phone&rsquo;s motion sensors, or pointer position and speed from the mouse or trackpad. For each sound parameter, the axis chosen in the mapping table is rescaled from the input minimum and maximum you set to a range from 0 to 1, inverted if you asked for that, then smoothed so that a jump in the raw reading arrives as a gradual change rather than a jump in sound. That smoothed value drives an oscillator&rsquo;s pitch, a filter&rsquo;s cutoff frequency for brightness, and the speed of a pulsing gain for tempo. The learnability task compares your own mapping against a randomised one by timing how long each takes to complete. Shake has no sensor of its own, so the sensible mapping approximates it with a single rotation rate axis (&beta;); on a laptop with no motion sensors, the pointer&rsquo;s Y axis stands in for it instead. This app bundles no data files, so there is no licence to name, and it makes no network requests.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>Every animation frame, the app reads the current value of each available axis: acceleration and rotation rate from the phone's motion sensors, or pointer position and speed from the mouse or trackpad. For each sound parameter, the chosen axis is rescaled from the input minimum and maximum to a range from 0 to 1, inverted if asked, then smoothed so that a jump in the raw reading arrives as a gradual change in the sound. The smoothed value drives an oscillator's pitch, a filter's cutoff for brightness, and the speed of a pulsing gain for tempo. Shake has no sensor of its own, so the sensible mapping stands in for it with a single rotation rate axis (&beta;), or with the pointer's Y axis on a laptop.</p>
+  <h3>The learnability task</h3>
+  <p>Up means raising the pitch noticeably above where it started, and brighter means raising the filter cutoff noticeably once the pitch has risen; if a parameter starts near its top, the task asks you to bring it down first. The task times how long each mapping takes, so that your own mapping can be compared with a randomised one.</p>
+  <h3>Direct and indirect mappings</h3>
+  <p>A mapping that sends one axis straight to one parameter is direct; a mapping that mixes several axes into one parameter, or passes the reading through some maths first, is indirect and harder to feel by ear. A one-to-one mapping, where the same action always moves the same parameter by the same amount, is learnable because practice has something consistent to improve; a many-to-many mapping gives the body nothing stable to aim at. The mapping table is the interface layer of the five layers this book uses: it sits between the raw sensor readings and the practice of learning to play them.</p>
+  <h3>Data</h3>
+  <p>This app bundles no data files and makes no network requests.</p>
   </details>
 
   <script>

@@ -70,18 +70,20 @@
     table.fields th[scope="row"] { width: 34%; white-space: nowrap; }
     tr.highlight td, tr.highlight th { background: var(--ok-bg); color: var(--ok-fg); }
     code { font-size: 0.88em; }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Provenance inspector</h1>
-  <p class="intro">Files carry traces of how they were made, and sometimes a signed provenance manifest. Drop in an image to see what it says about itself, and what it does not. Everything happens in this browser tab: the file is read locally with the FileReader API and is never uploaded anywhere.</p>
-  <p class="hint">This tool only reads and displays what a file already contains, such as EXIF camera fields, PNG text chunks, or a <a href="https://c2pa.org/specifications/specifications/2.1/specs/C2PA_Specification.html" target="_blank" rel="noopener">C2PA</a> manifest's plain-text strings. It does not verify any cryptographic signature, so a "C2PA manifest present" result is a statement about presence, not authenticity.</p>
-
+  <p class="intro">Files carry traces of how they were made, and sometimes a signed provenance manifest. Drop in an image to see what it says about itself, and what it does not. The file is read locally and never uploaded.</p>
   <fieldset>
     <legend>Image file</legend>
     <label for="fileInput">Choose a JPEG, PNG, or WebP file (stays on this device)</label>
     <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp"/>
-    <p class="hint">Nothing is uploaded. Reloading or closing this page discards everything; loading a new file replaces the report below.</p>
+    <p class="hint">Loading a new file replaces the report below; reloading the page discards everything.</p>
   </fieldset>
 
   <div class="fileInfo" id="fileInfo" aria-live="polite"></div>
@@ -90,7 +92,17 @@
 
   <div id="report"></div>
 
-  <p class="hint">What this does not tell you: the absence of camera or generator metadata does not mean a picture is unedited or human-made&#8212;metadata is easy to strip and easy to fake. A present C2PA manifest is not verified here either; treat every result as a clue, not a proof.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>The inspector reads and displays what the file already contains: EXIF camera fields, PNG text chunks, the software tags that generators and editors leave behind, and the plain-text strings of a <a href="https://c2pa.org/specifications/specifications/2.1/specs/C2PA_Specification.html" target="_blank" rel="noopener">C2PA</a> provenance manifest where one is embedded. The verdict line sums up what was found.</p>
+  <h3>Limits</h3>
+  <p>The absence of camera or generator metadata does not mean a picture is unedited or human-made; metadata is easy to strip and easy to fake. A present C2PA manifest is reported but not verified, since the app checks no cryptographic signature, so "manifest present" is a statement about presence, not authenticity. Treat every result as a clue rather than a proof.</p>
+  <h3>Things to try</h3>
+  <p>Inspect a photograph straight from a phone, then the same photograph after it has been through a messaging app, and see what survived. Then inspect an image from a generator that signs its output.</p>
+  <h3>Data</h3>
+  <p>This app bundles no data and makes no network requests.</p>
+  </details>
 
   <script>
 (function () {

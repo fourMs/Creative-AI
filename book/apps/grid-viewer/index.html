@@ -101,11 +101,15 @@
     }
     summary { font-weight: 600; cursor: pointer; }
     details p { margin: 8px 0 0; }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Grid viewer</h1>
-  <p class="intro">This app lays out four to sixteen images that you generated elsewhere into one labelled grid, so that you can compare a controlled experiment, such as different seeds or guidance scales, side by side. Add your images below, name the variable that changes between them, and then save the grid as a picture or copy its captions as a table for your practice log. Everything happens on this device: images are read locally, never uploaded, and the state disappears when you leave the page.</p>
+  <p class="intro">Lay out four to sixteen images you generated elsewhere in one labelled grid, so that a controlled experiment, such as four seeds or four guidance values, can be compared side by side and saved as one picture. The images stay on this device and are never uploaded.</p>
 
   <fieldset>
     <legend>Images</legend>
@@ -128,7 +132,7 @@
     <input type="text" id="variableName" maxlength="60" placeholder="For example, guidance scale"/>
     <label for="constantLine">Constant line (optional)</label>
     <input type="text" id="constantLine" maxlength="120" placeholder="For example, prompt, seed, and steps held constant"/>
-    <p class="hint">Name the variable that you changed between the images, for example &ldquo;guidance scale&rdquo; or &ldquo;prompt wording&rdquo;. Leave the constant line blank if you do not need it, or use it to record what stayed fixed.</p>
+    <p class="hint">Name the variable you changed, for example guidance scale; the constant line records what stayed fixed.</p>
     <div class="canvas-wrap">
       <canvas id="gridCanvas" width="720" height="360" role="img" aria-label="Preview of the labelled image grid"></canvas>
     </div>
@@ -156,11 +160,14 @@
     <p class="hint">Use the slider, the buttons, or the left and right arrow keys to step through the images one at a time and flick between two settings.</p>
   </fieldset>
 
-  <p class="hint">A fair comparison changes one variable at a time and holds everything else fixed, including the seed, unless the seed itself is the variable under test. Write the exact settings for each image in your practice log, so that the comparison can be repeated later.</p>
-
-  <details>
-    <summary>How it works</summary>
-    <p>Each image file that you drop or choose stays in your browser&rsquo;s memory. It is decoded locally and drawn onto a canvas element together with the title, captions, and footer text, without ever being sent anywhere. The Save button turns that canvas into a PNG file and offers it as a direct download. The Markdown button copies a small table of image numbers and captions to your clipboard, ready for pasting into a lab notebook or practice log. This app bundles no data files, so there is no licence to name.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>Each image you drop or choose stays in the browser's memory. It is decoded locally and drawn onto a canvas together with the title, the captions and the constant line. Save turns that canvas into a PNG file; the Markdown button copies a table of image numbers and captions to the clipboard, ready for the practice log. Compare mode shows one cell at a time so that two settings can be flicked between.</p>
+  <h3>A fair comparison</h3>
+  <p>A fair comparison changes one variable at a time and holds everything else fixed, including the seed, unless the seed itself is the variable under test. Write the exact settings for each image in the practice log, so that the comparison can be repeated later.</p>
+  <h3>Data</h3>
+  <p>This app bundles no data files and makes no network requests.</p>
   </details>
 
   <script>

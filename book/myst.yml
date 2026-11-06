@@ -4,7 +4,7 @@ version: 1
 project:
   id: 7d3b6f1c-3c8a-4f2c-9a4d-creative-ai-uio
   title: Creative AI
-  description: "An open undergraduate textbook on Creative AI: generative models, hands-on practice, and critical reflection. Written for a 12-week bachelor-level course at the University of Oslo open to students from all faculties."
+  description: "An open undergraduate textbook on Creative AI: generative models, hands-on practice, and critical reflection. Written for a ten-week bachelor-level course at the University of Oslo open to students from all faculties."
   keywords: [creative AI, generative AI, machine learning, art, design, music, text, image, video, ethics]
   authors:
     - name: Alexander Refsum Jensenius (ed.)
@@ -23,11 +23,9 @@ project:
     - file: language.ipynb
     - file: images.ipynb
     - file: sound.ipynb
-    - file: video.ipynb
     - file: spatial.ipynb
     - file: code.ipynb
     - file: multimodal.ipynb
-    - file: agents.ipynb
     - file: body.ipynb
     - file: tips-and-tricks.ipynb
     - file: tools.md

@@ -56,11 +56,15 @@
     .stats { font-size: 1rem; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
     canvas { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 10px; background: var(--canvas); }
     .legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
-  </style>
+      details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+</style>
 </head>
 <body>
   <h1>Rhythm-bot</h1>
-  <p class="intro">Dr. Squiggles is a robot at RITMO that listens to your rhythm and plays along. This is its browser cousin: tap a beat, and it will lock on and start improvising. Change the tempo and watch it follow, or lose you. Everything runs in this page: nothing you tap or play leaves your browser, and any microphone audio is analysed locally for the timing of onsets only, never recorded or sent anywhere.</p>
+  <p class="intro">Dr. Squiggles is a robot at RITMO that listens to your rhythm and plays along. This is its browser cousin: tap a beat and it locks on and starts improvising. Nothing you tap or play leaves your browser, and microphone audio is analysed locally for onset timing only, never recorded.</p>
 
   <fieldset>
     <legend>Tap a beat</legend>
@@ -98,7 +102,17 @@
     <span class="legend-swatch" id="swatchBot"></span>bot
   </div>
 
-  <p class="hint">What to notice: tap steadily and the bot locks on within about four taps; keep a study pulse and raise Boldness to hear it add off-beats and pickups, always anchored back on your next tap; speed up or slow down gradually and watch Follow strength decide how eagerly it chases you; stop tapping for four beats and it fades out and admits it lost the beat.</p>
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>How it works</h3>
+  <p>Every tap, or every onset the microphone hears, is a time stamp. The bot estimates the interval between recent taps, predicts when the next beat falls, and plays its own sound there. Follow strength sets how fast that estimate chases a change in your tempo; Boldness sets how often it adds an off-beat or two sixteenth-note pickups instead of the plain beat, always anchored back on your next tap. If no tap arrives for four beats it fades out and reports that it lost the beat.</p>
+  <h3>Things to try</h3>
+  <p>Tap steadily and count how many taps it takes to lock on, usually about four. Keep a steady pulse and raise Boldness. Speed up gradually with Follow strength low, then high, and watch the timeline show how eagerly it chases you. Clap into the microphone instead of tapping and see how much the timing jitters.</p>
+  <h3>Limits</h3>
+  <p>Onset timing from a laptop microphone is approximate: it is analysed at screen refresh rate, so it can jitter by a few tens of milliseconds. Tapping is more precise.</p>
+  <h3>Data</h3>
+  <p>This app bundles no data and makes no network requests.</p>
+  </details>
 
   <script>
 (function () {
