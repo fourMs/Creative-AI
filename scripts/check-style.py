@@ -34,7 +34,9 @@ line by line for:
     "audiovisual"       "audiovisual" outside "Audiovisual Rhythms"
                         and cite keys, or the hyphenated forms
                         "audio-visual" / "auditory-visual"
-    first-person        first-person singular "I" in prose
+    first-person        first-person singular "I" in prose, except in
+                        the one signed author's note, the section
+                        that follows the label (author-note)=
     lecturer-we         the lecturer's "we" ("we will", "let us", and
                         the like); report-only, never fails --strict,
                         because "we" about UiO or the fourMs Lab is
@@ -289,9 +291,16 @@ def check_text(text, allowlist):
     text = strip_non_prose(text)
     in_explore = False
     in_further = False
+    note_pending = False     # the (author-note)= label was just seen
+    in_author_note = False   # inside the signed first-person note
 
     for lineno, line in enumerate(text.split("\n"), start=1):
         stripped = line.strip()
+
+        if stripped == "(author-note)=":
+            note_pending = True
+        elif re.match(r"#{1,6} ", stripped):
+            in_author_note, note_pending = note_pending, False
 
         if stripped.startswith(EXPLORE_TIP_START):
             in_explore = True
@@ -351,7 +360,7 @@ def check_text(text, allowlist):
                 hits.append((lineno, "audiovisual", excerpt(line, m.start(), m.end())))
 
         # first-person singular (quoted or *italicised* examples excluded)
-        for m in FIRST_PERSON_RE.finditer(examples_masked):
+        for m in ([] if in_author_note else FIRST_PERSON_RE.finditer(examples_masked)):
             hits.append((lineno, "first-person", excerpt(line, m.start(), m.end())))
 
         # the lecturer's "we" (report-only)

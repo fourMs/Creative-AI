@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<!--
+  This page makes no network requests and stores nothing. The examples, the
+  pointer position and the tilt readings live only in the memory of the page.
+-->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Example mapper</title>
+  <style>
+    :root {
+      --bg: #fdfdfd; --fg: #1c1e21; --muted: #5a6069; --panel: #f1f2f4;
+      --border: #c9ccd1; --accent: #0b6e99; --accent-fg: #ffffff; --canvas: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15171b; --fg: #e6e7e9; --muted: #9aa0a8; --panel: #20242b;
+        --border: #3a3f47; --accent: #4da3c7; --accent-fg: #0d1117; --canvas: #101216;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0 auto; padding: 16px; max-width: 780px;
+      background: var(--bg); color: var(--fg); line-height: 1.45;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    p.intro { margin: 0 0 14px; }
+    .hint { font-size: 0.9rem; color: var(--muted); margin: 10px 0 0; }
+    fieldset {
+      border: 1px solid var(--border); border-radius: 8px;
+      margin: 0 0 12px; padding: 10px 12px; background: var(--panel); min-width: 0;
+    }
+    legend { font-weight: 600; font-size: 0.95rem; padding: 0 6px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin: 8px 0 2px; }
+    .vals { font-weight: normal; color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; margin: 2px 0 4px; accent-color: var(--accent); }
+    select {
+      padding: 6px 8px; font-size: 0.9rem;
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 14px; font-size: 1rem; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+    .row label { margin: 0; }
+    .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 12px; }
+    @media (max-width: 640px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+    #pad {
+      display: block; width: 100%; max-width: 440px; height: auto; aspect-ratio: 1 / 1;
+      margin: 4px auto 0; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--canvas); touch-action: none; cursor: crosshair; user-select: none;
+    }
+    #pad:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .stats { font-size: 1rem; margin: 10px 0; font-variant-numeric: tabular-nums; }
+    .status { font-size: 0.9rem; color: var(--muted); margin: 6px 0 0; min-height: 1.4em; }
+    details.more { margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    details.more summary { cursor: pointer; font-weight: 600; color: inherit; }
+    details.more h3 { font-size: 0.95rem; margin: 14px 0 4px; }
+    details.more p { margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <h1>Example mapper</h1>
+  <p class="intro">Teach the computer a mapping by example instead of writing a rule: place a few sounds on the pad, then press Run and move across it to play what it has learned. Nothing leaves the browser.</p>
+
+  <div class="cols">
+    <fieldset>
+      <legend>Input: the pad</legend>
+      <canvas id="pad" width="600" height="600" tabindex="0" role="application" aria-label="Square pad. Click or drag to place the marker, or use the arrow keys. The marker position is the input."></canvas>
+      <p class="hint">Click or drag to place the marker. Its position is the input: two numbers, x and y.</p>
+      <div class="row">
+        <button type="button" id="tiltBtn" aria-pressed="false">Use tilt</button>
+      </div>
+      <p class="hint" id="tiltHint">On a phone, tilting can move the marker instead of a finger. The browser may ask permission first.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Output: the sound</legend>
+      <div class="row">
+        <button type="button" id="soundBtn" class="primary" aria-pressed="false">Start sound</button>
+      </div>
+      <label for="pitch">Pitch <span class="vals" id="pitchDisp"></span></label>
+      <input type="range" id="pitch" min="0" max="100" step="1" value="50" aria-describedby="pitchDisp"/>
+      <label for="bright">Brightness <span class="vals" id="brightDisp"></span></label>
+      <input type="range" id="bright" min="0" max="100" step="1" value="50" aria-describedby="brightDisp"/>
+      <label for="pulse">Pulse rate <span class="vals" id="pulseDisp"></span></label>
+      <input type="range" id="pulse" min="0" max="100" step="1" value="30" aria-describedby="pulseDisp"/>
+      <p class="hint">Set the three sliders to a sound you like. While Run is on, they move by themselves.</p>
+    </fieldset>
+  </div>
+
+  <fieldset>
+    <legend>Train</legend>
+    <div class="row">
+      <button type="button" id="addBtn" class="primary">Add example</button>
+      <button type="button" id="removeBtn">Remove last</button>
+      <button type="button" id="clearBtn">Clear examples</button>
+    </div>
+    <p class="hint">Add example stores the slider values at the marker and draws a dot there. The E key does the same. Five to ten examples are enough.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Run</legend>
+    <div class="row">
+      <button type="button" id="runBtn" aria-pressed="false">Run</button>
+      <label for="kSel">Neighbours (k)</label>
+      <select id="kSel">
+        <option value="1">1: nearest example only</option>
+        <option value="3" selected>3: blend the three nearest</option>
+        <option value="0">All: blend every example</option>
+      </select>
+    </div>
+    <p class="hint">While Run is on, moving over the pad sets the sliders from your examples. The colours show the learned mapping: hue for pitch, lightness for brightness.</p>
+  </fieldset>
+
+  <div class="stats" id="readout"></div>
+  <div class="status" id="status" aria-live="polite">Place the marker, set the sliders, and add an example.</div>
+
+  <details class="more">
+  <summary>More about this app</summary>
+  <h3>Interactive machine learning</h3>
+  <p>Interactive machine learning builds a mapping by showing instead of telling. You give the computer a handful of examples, and each one pairs an input with the output you want at that input. The computer works out what to do everywhere else. This is supervised learning: every example comes with the right answer, and you are the one who supplies it. The best-known tool of this kind is Wekinator, made by Rebecca Fiebrink, which musicians and artists use to connect sensors to sound.</p>
+  <h3>How it works</h3>
+  <p>Each example stores a place on the pad and the three slider values you chose there. While Run is on, the app measures the distance from the marker to every example and picks the k nearest. This method is called k-nearest neighbours. The output is a weighted average of those neighbours, and a close example counts for much more than a distant one. With k = 1 only the single nearest example counts, so the pad splits into regions with hard edges. With a larger k the examples blend, and the sound glides from one to the next.</p>
+  <p>The colour field is the same calculation done for every cell of a coarse grid. The hue follows the pitch, from blue for low to red for high. The lightness follows the brightness. The pulse rate is not shown in the colours. Each dot has the colour of its own example.</p>
+  <p>The sound is one sawtooth oscillator. Pitch sets its frequency, brightness sets the cutoff of a low-pass filter, and pulse rate sets how fast the loudness swells and fades.</p>
+  <h3>A small and transparent kind of AI</h3>
+  <p>The whole model is the list of examples you gave it. Training takes an instant on a laptop or a phone, and you can see why every output comes out as it does. The large models elsewhere in this book are trained on enormous collections of data in data centres, and their inner workings are hard to inspect. Both kinds learn from examples. They differ in scale, and in who chose the examples.</p>
+  <h3>Things to try</h3>
+  <p>Add only two examples, far apart and with very different sounds. Run with k set to All and move from one to the other. Listen for where the sound changes most.</p>
+  <p>Add two conflicting examples close together: nearly the same place, very different sounds. Move slowly between them, and then far away from both. Notice how a tiny change in the input can now cause a large change in the output.</p>
+  <p>Add five or more examples and compare k = 1 with k = All. Look at the colour field and listen while crossing a border between two regions. Decide which setting you would rather perform with, and why.</p>
+  <p>While Run is on, stop at a place that sounds wrong, correct the sliders by hand, and add an example there. The mapping changes at once. This loop of trying, correcting and trying again is what makes the learning interactive.</p>
+  <h3>Limits</h3>
+  <p>Tilt needs a phone or tablet with motion sensors, and works best with the device held flat in portrait orientation. A laptop usually has no such sensors, so the pointer is the input there. The pad has two input dimensions, where a real sensor setup may have dozens. The examples are gone when the page is closed or reloaded.</p>
+  <h3>Data</h3>
+  <p>This app bundles no data and makes no network requests. The examples, the pointer position and the tilt readings stay in the memory of this page. Nothing leaves the device and nothing is stored.</p>
+  </details>
+
+  <script>
+(function () {
+  'use strict';
+
+  // ============================================================
+  // Output parameters. Sliders and examples hold normalised values
+  // from 0 to 1; `toUnit` turns one into the value the synth uses.
+  // ============================================================
+  var PARAMS = [
+    { id: 'pitch', disp: 'pitchDisp', name: 'pitch', min: 110, max: 880, curve: 'exp', unit: ' Hz', digits: 0 },
+    { id: 'bright', disp: 'brightDisp', name: 'brightness', min: 200, max: 8000, curve: 'exp', unit: ' Hz', digits: 0 },
+    { id: 'pulse', disp: 'pulseDisp', name: 'pulse rate', min: 0.5, max: 12, curve: 'linear', unit: ' per second', digits: 1 }
+  ];
+  function toUnit(p, n) {
+    if (p.curve === 'exp') { return p.min * Math.pow(p.max / p.min, n); }
+    return p.min + n * (p.max - p.min);
+  }
+  function fmt(p, n) { return toUnit(p, n).toFixed(p.digits) + p.unit; }
+
+  // ============================================================
+  // The model: k-nearest-neighbour regression with inverse-distance
+  // weighting. An example is { x, y, out: [pitch, brightness, pulse] },
+  // all numbers from 0 to 1. `k` is 1, 3, ... or 0 for all examples.
+  // Returns an array of three numbers, or null when there are no examples.
+  // ============================================================
+  // >>> knn-begin
+  function knnPredict(examples, x, y, k) {
+    var n = examples.length, i, j, dx, dy, d2, w, use;
+    var list = [], exact = [], out = [0, 0, 0], wsum = 0;
+    if (n === 0) { return null; }
+    for (i = 0; i < n; i++) {
+      dx = examples[i].x - x; dy = examples[i].y - y;
+      d2 = dx * dx + dy * dy;
+      if (d2 < 1e-12) { exact.push(examples[i]); }
+      list.push({ d2: d2, ex: examples[i] });
+    }
+    // Standing exactly on one or more examples: return their plain average.
+    if (exact.length > 0) {
+      for (i = 0; i < exact.length; i++) {
+        for (j = 0; j < 3; j++) { out[j] += exact[i].out[j] / exact.length; }
+      }
+      return out;
+    }
+    list.sort(function (a, b) { return a.d2 - b.d2; });
+    use = (k > 0 && k < n) ? k : n;
+    if (use === 1) { return list[0].ex.out.slice(); }
+    for (i = 0; i < use; i++) {
+      w = 1 / list[i].d2; // weight falls with the square of the distance
+      wsum += w;
+      for (j = 0; j < 3; j++) { out[j] += w * list[i].ex.out[j]; }
+    }
+    for (j = 0; j < 3; j++) { out[j] /= wsum; }
+    return out;
+  }
+  // <<< knn-end
+
+  // ============================================================
+  // State.
+  // ============================================================
+  var el = function (id) { return document.getElementById(id); };
+  var pad = el('pad'), c2d = pad.getContext('2d');
+  var tiltBtn = el('tiltBtn'), tiltHint = el('tiltHint');
+  var soundBtn = el('soundBtn'), addBtn = el('addBtn'), removeBtn = el('removeBtn'), clearBtn = el('clearBtn');
+  var runBtn = el('runBtn'), kSel = el('kSel');
+  var readoutEl = el('readout'), statusEl = el('status');
+  var sliders = [], disps = [], i;
+  for (i = 0; i < PARAMS.length; i++) { sliders.push(el(PARAMS[i].id)); disps.push(el(PARAMS[i].disp)); }
+
+  var examples = [];
+  var input = { x: 0.5, y: 0.5 };  // y runs upwards: 0 at the bottom edge, 1 at the top
+  var running = false;
+  var dragging = false;
+  var dirty = true;                // the pad needs redrawing
+  var fieldStale = true;           // the colour field needs recomputing
+
+  function setStatus(msg) { statusEl.textContent = msg; }
+  function kValue() { return parseInt(kSel.value, 10); }
+  function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+
+  // The current output, as exact numbers from 0 to 1. The sliders have
+  // whole-number steps, so a prediction is kept here at full precision and
+  // the sliders show it rounded.
+  var current = [];
+  function readSliders() {
+    var i;
+    for (i = 0; i < sliders.length; i++) { current[i] = parseFloat(sliders[i].value) / 100; }
+  }
+  function output() { return current.slice(); }
+
+  // ============================================================
+  // Audio: oscillator -> low-pass filter -> pulsing gain -> master gain.
+  // Nothing is created until the Start sound button is pressed.
+  // ============================================================
+  var ctx = null, osc = null, filterNode = null, lfo = null, lfoDepth = null, pulseGain = null, masterGain = null;
+  var audioOn = false;
+  var MASTER_LEVEL = 0.25;
+
+  function ensureAudio() {
+    if (ctx) { return; }
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = ctx.createGain();
+    masterGain.gain.value = 0;
+    masterGain.connect(ctx.destination);
+
+    pulseGain = ctx.createGain();
+    pulseGain.gain.value = 0.5;
+    pulseGain.connect(masterGain);
+
+    filterNode = ctx.createBiquadFilter();
+    filterNode.type = 'lowpass';
+    filterNode.Q.value = 0.8;
+    filterNode.connect(pulseGain);
+
+    osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.connect(filterNode);
+    osc.start();
+
+    // The LFO swings the pulsing gain between 0 and 1 around its 0.5 centre.
+    lfo = ctx.createOscillator();
+    lfo.type = 'sine';
+    lfoDepth = ctx.createGain();
+    lfoDepth.gain.value = 0.5;
+    lfo.connect(lfoDepth);
+    lfoDepth.connect(pulseGain.gain);
+    lfo.start();
+  }
+
+  function updateAudio() {
+    if (!ctx) { return; }
+    var out = output(), now = ctx.currentTime;
+    osc.frequency.setTargetAtTime(toUnit(PARAMS[0], out[0]), now, 0.03);
+    filterNode.frequency.setTargetAtTime(toUnit(PARAMS[1], out[1]), now, 0.03);
+    lfo.frequency.setTargetAtTime(toUnit(PARAMS[2], out[2]), now, 0.03);
+  }
+
+  function rampMaster(target) {
+    var now = ctx.currentTime;
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+    masterGain.gain.linearRampToValueAtTime(target, now + 0.08);
+  }
+
+  soundBtn.addEventListener('click', function () {
+    if (!audioOn && !(window.AudioContext || window.webkitAudioContext)) {
+      setStatus('This browser has no sound support. The sliders and the pad still work.');
+      return;
+    }
+    audioOn = !audioOn;
+    if (audioOn) {
+      ensureAudio();
+      if (ctx.state === 'suspended') { ctx.resume(); }
+      updateAudio();
+      rampMaster(MASTER_LEVEL);
+    } else {
+      rampMaster(0);
+    }
+    soundBtn.setAttribute('aria-pressed', String(audioOn));
+    soundBtn.textContent = audioOn ? 'Stop sound' : 'Start sound';
+    setStatus(audioOn ? 'Sound on.' : 'Sound off.');
+  });
+
+  // ============================================================
+  // Sliders, readout and prediction.
+  // ============================================================
+  function renderOutput() {
+    var out = output(), i;
+    for (i = 0; i < PARAMS.length; i++) { disps[i].textContent = fmt(PARAMS[i], out[i]); }
+    updateAudio();
+    renderReadout();
+  }
+
+  function renderReadout() {
+    var out = output(), n = examples.length;
+    readoutEl.textContent = n + (n === 1 ? ' example' : ' examples') +
+      '. Input: x ' + input.x.toFixed(2) + ', y ' + input.y.toFixed(2) +
+      '. Output: pitch ' + fmt(PARAMS[0], out[0]) +
+      ', brightness ' + fmt(PARAMS[1], out[1]) +
+      ', pulse rate ' + fmt(PARAMS[2], out[2]) + '.';
+  }
+
+  // While running, the model sets the sliders from the current input.
+  function predictNow() {
+    var out, i;
+    if (!running) { return; }
+    out = knnPredict(examples, input.x, input.y, kValue());
+    if (!out) { return; }
+    for (i = 0; i < sliders.length; i++) { current[i] = out[i]; sliders[i].value = String(Math.round(out[i] * 100)); }
+    renderOutput();
+  }
+
+  function setInput(x, y) {
+    input.x = clamp01(x); input.y = clamp01(y);
+    dirty = true;
+    if (running && examples.length > 0) { predictNow(); } else { renderReadout(); }
+  }
+
+  for (i = 0; i < sliders.length; i++) {
+    sliders[i].addEventListener('input', function () { readSliders(); renderOutput(); });
+  }
+
+  // ============================================================
+  // Pad input: pointer (mouse, pen or touch) and arrow keys.
+  // Pressing or dragging always moves the marker. While Run is on, a
+  // mouse also moves it by hovering, so the mapping can be played
+  // without holding a button down.
+  // ============================================================
+  function inputFromEvent(e) {
+    var r = pad.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) { return; }
+    setInput((e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height);
+  }
+  pad.addEventListener('pointerdown', function (e) {
+    dragging = true;
+    try { pad.setPointerCapture(e.pointerId); } catch (err) { /* not capturable: carry on */ }
+    inputFromEvent(e);
+  });
+  pad.addEventListener('pointermove', function (e) {
+    if (dragging || (running && e.pointerType === 'mouse')) { inputFromEvent(e); }
+  });
+  function endDrag() { dragging = false; }
+  pad.addEventListener('pointerup', endDrag);
+  pad.addEventListener('pointercancel', endDrag);
+
+  pad.addEventListener('keydown', function (e) {
+    var step = e.shiftKey ? 0.1 : 0.02, dx = 0, dy = 0;
+    if (e.key === 'ArrowLeft') { dx = -step; }
+    else if (e.key === 'ArrowRight') { dx = step; }
+    else if (e.key === 'ArrowUp') { dy = step; }
+    else if (e.key === 'ArrowDown') { dy = -step; }
+    else { return; }
+    e.preventDefault();
+    setInput(input.x + dx, input.y + dy);
+  });
+
+  // ============================================================
+  // Tilt (phone). iOS requires DeviceOrientationEvent.requestPermission()
+  // called from a user gesture; other browsers fire the event once a
+  // listener is attached. Tilting 40 degrees either way covers the pad.
+  // ============================================================
+  var tiltOn = false, tiltSeen = false;
+  var TILT_RANGE = 80; // degrees across the whole pad
+
+  function onOrientation(e) {
+    if (e.gamma === null || e.gamma === undefined || e.beta === null || e.beta === undefined) { return; }
+    tiltSeen = true;
+    if (dragging) { return; } // a finger on the pad wins over tilt
+    setInput(0.5 + e.gamma / TILT_RANGE, 0.5 - e.beta / TILT_RANGE);
+  }
+
+  function startTilt() {
+    tiltOn = true; tiltSeen = false;
+    window.addEventListener('deviceorientation', onOrientation);
+    tiltBtn.disabled = false;
+    tiltBtn.setAttribute('aria-pressed', 'true');
+    tiltBtn.textContent = 'Stop tilt';
+    tiltHint.textContent = 'Hold the device flat. Tilt it left and right for x, forwards and back for y.';
+    setStatus('Listening for tilt.');
+    setTimeout(function () {
+      if (tiltOn && !tiltSeen) {
+        tiltHint.textContent = 'No tilt data has arrived. This device may have no motion sensors. The pointer still works.';
+      }
+    }, 2500);
+  }
+
+  function stopTilt(message) {
+    tiltOn = false;
+    window.removeEventListener('deviceorientation', onOrientation);
+    tiltBtn.disabled = false;
+    tiltBtn.setAttribute('aria-pressed', 'false');
+    tiltBtn.textContent = 'Use tilt';
+    setStatus(message);
+  }
+
+  tiltBtn.addEventListener('click', function () {
+    if (tiltOn) { stopTilt('Tilt off. The pointer moves the marker.'); return; }
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      tiltBtn.disabled = true;
+      DeviceOrientationEvent.requestPermission().then(function (resp) {
+        if (resp === 'granted') { startTilt(); }
+        else { stopTilt('Tilt permission was not granted. Use the pointer instead.'); }
+      }).catch(function () {
+        stopTilt('The tilt permission request failed. Use the pointer instead.');
+      });
+    } else if ('DeviceOrientationEvent' in window) {
+      startTilt();
+    } else {
+      setStatus('This browser reports no tilt support. Use the pointer instead.');
+    }
+  });
+
+  // ============================================================
+  // Training.
+  // ============================================================
+  function examplesChanged() {
+    fieldStale = true; dirty = true;
+    if (running && examples.length > 0) { predictNow(); } else { renderReadout(); }
+  }
+
+  function addExample() {
+    examples.push({ x: input.x, y: input.y, out: output() });
+    setStatus('Example ' + examples.length + ' added at x ' + input.x.toFixed(2) + ', y ' + input.y.toFixed(2) + '.');
+    examplesChanged();
+  }
+  addBtn.addEventListener('click', addExample);
+
+  removeBtn.addEventListener('click', function () {
+    if (examples.length === 0) { setStatus('There are no examples to remove.'); return; }
+    examples.pop();
+    setStatus('Last example removed.');
+    examplesChanged();
+  });
+
+  clearBtn.addEventListener('click', function () {
+    examples = [];
+    setStatus('All examples cleared.');
+    examplesChanged();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var tag = e.target && e.target.tagName;
+    if (e.key !== 'e' && e.key !== 'E') { return; }
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) { return; }
+    if (tag === 'SELECT' || tag === 'TEXTAREA' || (tag === 'INPUT' && e.target.type !== 'range')) { return; }
+    e.preventDefault();
+    addExample();
+  });
+
+  // ============================================================
+  // Running.
+  // ============================================================
+  runBtn.addEventListener('click', function () {
+    running = !running;
+    runBtn.setAttribute('aria-pressed', String(running));
+    runBtn.textContent = running ? 'Stop running' : 'Run';
+    if (!running) { setStatus('Run is off. The sliders are yours again.'); }
+    else if (examples.length === 0) { setStatus('Run is on, but there are no examples yet. Add one to hear the mapping.'); }
+    else { setStatus('Run is on. Move over the pad to play the mapping.'); predictNow(); }
+    dirty = true;
+  });
+
+  kSel.addEventListener('change', function () {
+    fieldStale = true; dirty = true;
+    predictNow();
+  });
+
+  // ============================================================
+  // Drawing. The colour field is the model evaluated on a coarse grid:
+  // hue from pitch (blue low, red high), lightness from brightness.
+  // ============================================================
+  var GRID = 24;
+  var fieldCanvas = document.createElement('canvas');
+  fieldCanvas.width = GRID; fieldCanvas.height = GRID;
+  var f2d = fieldCanvas.getContext('2d');
+
+  function colourFor(out) {
+    var hue = 240 - 240 * out[0];
+    var light = 30 + 40 * out[1];
+    return 'hsl(' + hue.toFixed(0) + ', 70%, ' + light.toFixed(0) + '%)';
+  }
+
+  function computeField() {
+    var gx, gy, out, k = kValue();
+    for (gy = 0; gy < GRID; gy++) {
+      for (gx = 0; gx < GRID; gx++) {
+        out = knnPredict(examples, (gx + 0.5) / GRID, 1 - (gy + 0.5) / GRID, k);
+        f2d.fillStyle = colourFor(out);
+        f2d.fillRect(gx, gy, 1, 1);
+      }
+    }
+  }
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function draw() {
+    var W = pad.width, H = pad.height, i, ex, px, py;
+    c2d.fillStyle = cssVar('--canvas') || '#ffffff';
+    c2d.fillRect(0, 0, W, H);
+
+    if (examples.length > 0) {
+      if (fieldStale) { computeField(); fieldStale = false; }
+      c2d.imageSmoothingEnabled = false;
+      c2d.drawImage(fieldCanvas, 0, 0, W, H);
+    } else {
+      c2d.fillStyle = cssVar('--muted') || '#5a6069';
+      c2d.font = '22px system-ui, -apple-system, "Segoe UI", sans-serif';
+      c2d.textAlign = 'center'; c2d.textBaseline = 'middle';
+      c2d.fillText('No examples yet', W / 2, H - 30);
+    }
+
+    // examples: a dot in the colour of its own output, numbered in order
+    c2d.font = '600 18px system-ui, -apple-system, "Segoe UI", sans-serif';
+    c2d.textAlign = 'center'; c2d.textBaseline = 'middle';
+    for (i = 0; i < examples.length; i++) {
+      ex = examples[i];
+      px = ex.x * W; py = (1 - ex.y) * H;
+      c2d.beginPath(); c2d.arc(px, py, 15, 0, Math.PI * 2);
+      c2d.fillStyle = colourFor(ex.out); c2d.fill();
+      c2d.lineWidth = 6; c2d.strokeStyle = 'rgba(0, 0, 0, 0.85)'; c2d.stroke();
+      c2d.lineWidth = 2.5; c2d.strokeStyle = '#ffffff'; c2d.stroke();
+      c2d.lineWidth = 3; c2d.strokeStyle = 'rgba(0, 0, 0, 0.85)'; c2d.strokeText(String(i + 1), px, py + 1);
+      c2d.fillStyle = '#ffffff'; c2d.fillText(String(i + 1), px, py + 1);
+    }
+
+    // marker: a crosshair ring at the current input
+    px = input.x * W; py = (1 - input.y) * H;
+    function markerPath() {
+      c2d.beginPath();
+      c2d.arc(px, py, 22, 0, Math.PI * 2);
+      c2d.moveTo(px - 32, py); c2d.lineTo(px - 10, py);
+      c2d.moveTo(px + 10, py); c2d.lineTo(px + 32, py);
+      c2d.moveTo(px, py - 32); c2d.lineTo(px, py - 10);
+      c2d.moveTo(px, py + 10); c2d.lineTo(px, py + 32);
+    }
+    markerPath(); c2d.lineWidth = 6; c2d.strokeStyle = 'rgba(0, 0, 0, 0.85)'; c2d.stroke();
+    markerPath(); c2d.lineWidth = 2.5; c2d.strokeStyle = '#ffffff'; c2d.stroke();
+  }
+
+  function frame() {
+    if (dirty) { dirty = false; draw(); }
+    requestAnimationFrame(frame);
+  }
+
+  // Redraw when the system switches between light and dark.
+  var themeQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+  if (themeQuery) {
+    if (themeQuery.addEventListener) { themeQuery.addEventListener('change', function () { dirty = true; }); }
+    else if (themeQuery.addListener) { themeQuery.addListener(function () { dirty = true; }); }
+  }
+
+  // ============================================================
+  // Start-up.
+  // ============================================================
+  readSliders();
+  renderOutput();
+  draw();
+  requestAnimationFrame(frame);
+})();
+  </script>
+</body>
+</html>

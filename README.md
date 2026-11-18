@@ -19,4 +19,4 @@ See the [wiki](https://github.com/fourMs/Creative-AI/wiki) for build instruction
 
 Written and taught at [RITMO](https://www.uio.no/ritmo/english/) and the [fourMs Lab](https://www.uio.no/ritmo/english/research/labs/fourms/), University of Oslo, as part of the [MishMash](https://mishmash.no/) project. The textbook is released as Open Education under the [Creative Commons Attribution 4.0 (CC-BY-4.0)](https://creativecommons.org/licenses/by/4.0/) licence, except where otherwise noted.
 
-Substantial portions of the prose have been co-written with large language models and then revised by humans. Where AI tools have produced figures, sketches, or examples used in the book, this is indicated locally.
+Most of the prose was first drafted by coding agents from the author's notes and instructions, and then read, cut, and revised by him. The agents also wrote the figure code, the web apps, and the checking scripts. The [overview](https://fourms.github.io/Creative-AI/#author-note) of the book gives the full account, with numbers from the commit history.

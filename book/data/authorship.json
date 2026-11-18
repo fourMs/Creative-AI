@@ -1,0 +1,11 @@
+{
+ "measured": "2026-11-18",
+ "first_commit": "2026-05-14",
+ "commits": 155,
+ "commits_with_agent": 149,
+ "by_agent": {
+  "Claude": 141,
+  "Cursor": 8
+ },
+ "apps": 17
+}

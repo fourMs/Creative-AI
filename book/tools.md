@@ -21,7 +21,7 @@ Chapter [2](how-it-works.ipynb#three-questions) asks three questions of any syst
 
 ## Apps made for this book
 
-The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. The sixteen below are ready to use.
+The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. The seventeen below are ready to use.
 
 - [Training loop playground](https://fourms.github.io/Creative-AI/apps/training-loop/): watch a tiny model's loss fall step by step as it trains.
 - [Next-token sampler](https://fourms.github.io/Creative-AI/apps/next-token-sampler/): compare greedy, temperature, and top-p sampling on the same next-token distribution.
@@ -39,6 +39,7 @@ The book also ships with its own small apps: single-page, self-contained tools b
 - [Splat viewer](https://fourms.github.io/Creative-AI/apps/splat-viewer/): load a Gaussian splat capture and orbit it, with a control that thins the splats so you can see how little geometry is actually there.
 - [Translation sketchpad](https://fourms.github.io/Creative-AI/apps/translation-sketchpad/): draw a line and hear it as pitch and loudness, then sing or play into the microphone and see the contour drawn back, with a rule-based text description as a third data type.
 - [Sensor-to-sound mapper](https://fourms.github.io/Creative-AI/apps/sensor-mapper/): connect a phone or laptop sensor to a sound parameter, and compare a mapping you can learn with one you cannot.
+- [Example mapper](https://fourms.github.io/Creative-AI/apps/example-mapper/): train a mapping from position to sound with a handful of your own examples, and see how nearest neighbours fill in the space between them.
 
 ## Tool categories
 

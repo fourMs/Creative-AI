@@ -177,6 +177,9 @@ Fitness function
 Five layers
 : The book's framework for separating what kind of question a claim about a generative system is asking: data, model, interface, practice, and culture.
 
+Flocking
+: A rule-based method in which each member of a group follows a few local rules, such as keeping apart from close neighbours, matching their heading, and moving towards their centre. The motion of the whole flock is written nowhere and arises from the rules.
+
 Flow matching
 : A generative method closely related to diffusion but with a simpler training objective, powering several of the strongest image and video models released from 2024 onwards.
 
@@ -213,6 +216,9 @@ H-creativity
 Hallucination
 : A fluent, confident output that is false, a direct consequence of training a model to produce plausible rather than true text.
 
+Hidden Markov model
+: A model that treats what it observes, such as sound or motion, as produced by a sequence of states it cannot observe, and works out the most probable sequence. It carried speech recognition for decades and is still used to follow a score or a gesture in real time.
+
 Human-in-the-loop checkpoint
 : A point in an agent's pipeline where it stops and waits for a person, placed where the cost of a wrong decision is high and the cost of asking is low.
 
@@ -236,6 +242,9 @@ Intentionality
 
 Interactive evolution
 : An evolutionary loop in which a person, rather than a written fitness function, selects which candidates survive; used to breed images, shapes, and sounds by eye.
+
+Interactive machine learning
+: Training a small model from a handful of examples that a person gives, listening to the result, and adding or changing examples until the behaviour is right. A mapping is shaped by demonstration and not written.
 
 Keyframe
 : A frame a video system generates or is given directly, with the motion between keyframes filled in by a lighter model. Keyframe-and-interpolation is one of the three strategies for the time axis.
@@ -318,6 +327,9 @@ Music question–answering (MQA)
 Musicking
 : Christopher Small's term for music as something people do together rather than as a work to be contemplated. A musicking robot is judged on the same terms, not on an inner musical understanding but on whether a human partner can perceive it, and play with it, as a partner.
 
+Nearest neighbours
+: A learned method that answers a new input by looking up the stored examples closest to it and combining their outputs. It trains in an instant, since training is only storing the examples.
+
 Negative prompt
 : Text describing what a maker does not want in a generated image, used to suppress recurring failure modes such as blurring or extra fingers. It is often more powerful than expected, and not supported by every tool.
 
@@ -369,6 +381,9 @@ Photogrammetry
 Place illusion and plausibility illusion
 : Two components of presence in a virtual environment. Place illusion is the feeling of being there, produced by the display responding correctly to how a person moves. Plausibility illusion is the feeling that events are really happening, produced by things responding credibly to the person and to each other.
 
+Planning
+: Finding a sequence of steps that reaches a goal. In classical AI it is done by search over the allowed moves; in an agent built on a language model it is done by the same next-token prediction as everything else.
+
 Presence
 : The sensation of being in the place a virtual reality system is showing, decomposed into a place illusion and a plausibility illusion. The strongest evidence for it is behavioural, such as people flinching or keeping away from a virtual edge, rather than what they report believing.
 
@@ -395,6 +410,9 @@ Recurrent network
 
 Recursive subdivision
 : Repeatedly splitting a shape, such as a rectangle, into smaller pieces according to a rule, until a stopping condition is reached. It is a classic technique for generating layouts and textures procedurally.
+
+Reinforcement learning
+: Learning in which nobody supplies examples of the right answer. A system acts, receives a reward, and adjusts its behaviour to earn more of it over many attempts.
 
 Rule-based system
 : A generative or reasoning system whose behaviour is written out by hand as explicit rules, grammars, or constraints rather than learned from data.
