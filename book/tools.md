@@ -9,6 +9,16 @@ Across the semester you will meet many tools. The list below is not exhaustive, 
 
 Everything listed here is a tool rather than a model. Every tool wraps one or more models and adds an interface, a system prompt, safety filters, a data policy, and a price. The model behind a tool can change without the name changing. The entries below therefore name only the tool, while your practice log names both, with the model's version or the date. Chapter [2](how-it-works.ipynb#models-and-tools) sets out the difference.
 
+## Three questions for every tool
+
+Chapter [2](how-it-works.ipynb#three-questions) asks three questions of any system. The table sorts examples from this page by the answers. Try both ends of each during the course.
+
+| Question | One end | The other end |
+| --- | --- | --- |
+| Who can inspect it? | Open: an open-weight model in Ollama or LM Studio, Stable Diffusion, AudioCraft, OpenCode, Blender | Closed: the commercial chat assistants, Midjourney, Suno, GitHub Copilot |
+| Where does it run? | Local: LM Studio, Ollama, ComfyUI, RAVE, the apps made for this book | Server-based: every tool you reach through a website, and the UiO AI service |
+| Does it answer while you act? | Real-time: RAVE, Magenta RealTime, live coding in Glicol and Strudel | Offline: text-to-song, text-to-video and text-to-3D tools |
+
 ## Apps made for this book
 
 The book also ships with its own small apps: single-page, self-contained tools built to make one idea in a chapter concrete. They run in your browser, need no account, and send no data anywhere. The sixteen below are ready to use.
@@ -82,7 +92,7 @@ The book also ships with its own small apps: single-page, self-contained tools b
 - [Glicol](https://glicol.org/): a graph-oriented live coding language for sound, free in the browser with no account
 - [Strudel](https://strudel.cc/): TidalCycles patterns in the browser, free with no account
 
-**Open alternative.** [OpenCode](https://opencode.ai/) or [Aider](https://aider.chat/) run the same loop in a terminal against an open-weight model served locally by [Ollama](https://ollama.com/); [Hugging Face Spaces](https://huggingface.co/spaces) lets you run open models in the browser without a subscription.
+**Open alternative.** [OpenCode](https://opencode.ai/) or [Aider](https://aider.chat/) run the same loop in a terminal against an open-weight model served locally by [Ollama](https://ollama.com/) or by a server your university runs; [Hugging Face Spaces](https://huggingface.co/spaces) lets you run open models in the browser without a subscription.
 
 </details>
 

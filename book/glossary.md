@@ -264,6 +264,9 @@ Life cycle assessment
 Live coding
 : Writing and changing a program while it runs, so that the sound or image it produces changes with the text. It is performed with the editor projected for the audience, which makes the process of programming part of the work.
 
+Local model
+: A model that runs on your own laptop or phone. Nothing typed into it leaves the machine and it works without a network, but it can be no larger than the machine's memory allows. It is contrasted with a server-based model.
+
 LoRA
 : A small set of extra weights trained on a handful of images of a subject and layered on top of a frozen open-weight model, so that the subject becomes a word the model knows. It is standard practice for keeping a character consistent across many images.
 
@@ -333,6 +336,12 @@ Noise field
 Noisy intermediate-scale quantum (NISQ)
 : John Preskill's name for the current era of quantum hardware, in which devices are small and noisy and run without error correction because it would consume most of the qubits they have.
 
+Offline
+: Not done in real time: a request is made, the system works for seconds or minutes, and a finished result comes back to be judged afterwards. The word is used as in film and audio production and says nothing about the network.
+
+Open source
+: Software whose code anyone may read, change, and share. An open-source tool can wrap a closed model, and open weights are not open source unless the training code and data are shared as well.
+
 Open-weight model
 : A model published as files that can be downloaded and run on one's own machine or servers. Open weights are not the same as open source, since the training data and training code are usually withheld even when the parameters are shared.
 
@@ -375,6 +384,9 @@ Provenance
 Quantum machine learning
 : A research area proposing to run parts of a learning or sampling algorithm on quantum hardware. As of 2026 it has shown no demonstrated advantage for training or running generative models.
 
+Real-time
+: Responding within milliseconds, so that a person can steer a system while it runs, as with an instrument. It is contrasted with offline.
+
 Reasoning model
 : A model trained to spend extra computation on intermediate steps before answering, of the kind wired into the tool-using loops that carry out agentic tasks over many steps.
 
@@ -392,6 +404,9 @@ Sampler
 
 Seed
 : The random number that generates a diffusion model's starting noise. The same prompt with the same seed in the same model gives the same result every time, which is what makes controlled comparison possible.
+
+Server-based model
+: A model that runs in a data centre and is reached over the network. It is usually larger and more capable than a local model, and it is paid for in money, in energy, and in whatever the provider's data policy permits.
 
 Shot
 : The honest unit of video generation in the mid-2020s, since almost every system produces a single continuous take rather than a scene or a film. Cuts between shots are assembled afterwards in an editor.

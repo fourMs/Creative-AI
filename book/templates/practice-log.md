@@ -2,7 +2,7 @@
 
 **Brief.** One sentence on what you set out to do this week.
 
-**Tools.** Name, model, version or date, for each tool used.
+**Tools.** Name, model, version or date, for each tool used, and the three answers for each: open or closed, local or server-based, real-time or offline.
 
 ## Explore
 Three or four sentences: what you varied, what you compared, what surprised you.
