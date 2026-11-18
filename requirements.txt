@@ -1,5 +1,5 @@
 jupyter-book
-mystmd
+mystmd==1.6.0
 matplotlib
 numpy
 pandas

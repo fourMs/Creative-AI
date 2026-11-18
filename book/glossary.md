@@ -72,6 +72,9 @@ Closed model
 Co-creation
 : Making creative work together with a generative system. Because such systems mostly behave as executors of instructions rather than as collaborators, co-creation asks a person to shift from craftsperson to creative director.
 
+Coding assistant
+: A tool that writes, explains, or changes code from a description in plain language. Its patterns of use run from completing a single line to an agentic run that edits several files, and the more it adds unreviewed, the more reading it asks of you.
+
 Collaborator
 : A generative system framed as a participant in an open-ended process rather than a machine that executes a command. Agents shift the framing from executor towards collaborator.
 
@@ -443,6 +446,9 @@ Trace
 
 Training
 : Repeatedly adjusting a model's parameters to reduce a loss measured on batches of data.
+
+Training data
+: The examples a model's parameters were adjusted on. A trained generator left to itself produces a typical sample of its training data, so what went in, and on whose terms, shapes everything that comes out.
 
 Transformational creativity
 : Margaret Boden's third kind of creativity: changing the conceptual space itself so that previously impossible ideas become possible.

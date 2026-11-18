@@ -13,6 +13,10 @@ on:
   push:
     branches:
       - main
+  # A weekly build catches drift in the toolchain within days.
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
 
 # BASE_URL must point at the sub-path GitHub Pages serves the site from.
 # For a project page at https://<owner>.github.io/<repo>/ this is /<repo>.
@@ -60,6 +64,9 @@ jobs:
 
       - name: Check chapter template, citations, and figures
         run: python scripts/check-chapters.py
+
+      - name: Check captions and glossary use
+        run: python scripts/book_metrics.py --check
 
       - name: Check prose style (report-only)
         run: python scripts/check-style.py || true

@@ -12,6 +12,14 @@ LIX (sentence length plus the share of words over six letters, the measure used 
 Scandinavian schools) and the Flesch reading ease and Flesch-Kincaid grade (which need
 syllables, estimated by vowel groups, so treat them as rough). Content density counts
 glossary headwords, citations, figures, exercises, apps, and dropdowns per chapter.
+
+Citations are counted in both syntaxes ({cite}`key` and [@key]). A figure is a code cell that
+draws with matplotlib (the committed notebooks carry no outputs; CI executes them) or an image
+or mermaid directive. Glossary headwords are looked for in the full text of the chapters and
+pages, also under --core, since a term may be used only in a dropdown.
+
+With --check the script exits 1 when a figure cell is not followed by an italic *Figure:* caption
+or when a glossary headword is used in no chapter or page.
 """
 import json
 import re
@@ -23,18 +31,37 @@ CHAPTERS = ["intro", "introduction", "how-it-works", "co-creation-and-ethics", "
             "spatial", "code", "multimodal", "body", "tips-and-tricks"]
 
 
+PAGES = ["tools.md", "exposition.md"]   # searched for glossary terms, not measured
+
 CORE = "--core" in sys.argv   # main-flow prose only: no dropdowns, exercises, summaries, questions, or reading boxes
 
 
-def prose(nb):
+def src(cell):
+    return "".join(cell["source"]) if isinstance(cell["source"], list) else cell["source"]
+
+
+def is_figure_cell(cell):
+    return cell["cell_type"] == "code" and re.search(r"\bplt\.|\.savefig\(|display\(", src(cell)) is not None
+
+
+def uncaptioned(nb):
+    """Indices of figure cells whose next cell does not open with an italic *Figure:* caption."""
+    cells = nb["cells"]
+    return [i for i, c in enumerate(cells) if is_figure_cell(c)
+            and not (i + 1 < len(cells) and cells[i + 1]["cell_type"] == "markdown"
+                     and re.match(r"\s*\*Figure[:.]", src(cells[i + 1])))]
+
+
+def prose(nb, core=None):
     """The readable text of a notebook's markdown cells, with markup removed."""
+    core = CORE if core is None else core
     out = []
     for cell in nb["cells"]:
         if cell["cell_type"] != "markdown":
             continue
         s = "".join(cell["source"]) if isinstance(cell["source"], list) else cell["source"]
         s = re.sub(r"^---\n.*?\n---\n", "", s, flags=re.S)                      # front matter
-        if CORE:
+        if core:
             s = re.sub(r":::\{note\}[^\n]*\n:class: dropdown\n.*?\n:::", "", s, flags=re.S)
             s = re.sub(r"```\{exercise\}.*?```", "", s, flags=re.S)
             s = re.sub(r"```\{admonition\}[^\n]*\n(:class: [^\n]*\n)?.*?```", "", s, flags=re.S)
@@ -42,6 +69,7 @@ def prose(nb):
         s = re.sub(r"```\{(image|mermaid)\}.*?```|```mermaid.*?```", "", s, flags=re.S)
         s = re.sub(r"<iframe.*?</iframe>|<[^>]+>", "", s, flags=re.S)
         s = re.sub(r"\{cite:?[pt]?\}`[^`]+`", "", s)
+        s = re.sub(r"\s*\[-?@[^\]]+\]", "", s)                                   # [@key; @key]
         s = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", s)                          # keep link text
         s = re.sub(r"^(```\{[^\n]*|:::\{[^\n]*|:::|```|:class:[^\n]*|:label:[^\n]*|:alt:[^\n]*|:width:[^\n]*)$", "", s, flags=re.M)
         s = re.sub(r"^#+ ", "", s, flags=re.M)
@@ -82,19 +110,32 @@ def glossary_terms():
     return [m.group(1).strip() for m in re.finditer(r"^(\S[^\n]*)\n: ", body, re.M)]
 
 
+def forms(t):
+    """The spellings a headword may take in running text."""
+    m = re.match(r"(.*?)\s*\(([^)]+)\)$", t)                                      # "XR (extended reality)"
+    out = [m.group(1), m.group(2)] if m else [t]
+    parts = re.split(r",\s*(?:and\s+)?|\s+and\s+", out[0])                       # "Virtual, augmented, and mixed reality"
+    if len(parts) > 2:
+        tail = parts[-1].split()[-1]
+        out += [q if " " in q else f"{q} {tail}" for q in parts]
+    return out
+
+
+def found(t, low):
+    return any(re.search(r"\b" + re.escape(f.lower()).replace("\\-", "[-\u2013 ]").replace("\\ ", "[-\u2013 ]") + r"(?:s|es)?\b", low)
+               or (f.lower().endswith("y") and re.search(r"\b" + re.escape(f.lower()[:-1]) + r"ies\b", low)) for f in forms(t))
+
+
 def content(nb, raw_text, terms):
     cells = nb["cells"]
     md = [("".join(c["source"]) if isinstance(c["source"], list) else c["source"]) for c in cells if c["cell_type"] == "markdown"]
     joined = "\n".join(md)
-    code_figs = sum(1 for c in cells if c["cell_type"] == "code" and any(o.get("output_type") == "display_data" for o in c.get("outputs", [])))
+    code_figs = sum(1 for c in cells if is_figure_cell(c))
     low = raw_text.lower()
-    def forms(t):
-        m = re.match(r"(.*?)\s*\(([^)]+)\)$", t)                                  # "Heart rate variability (HRV)"
-        return [m.group(1), m.group(2)] if m else [t]
-    present = [t for t in terms if any(re.search(r"\b" + re.escape(f.lower()).replace("\\-", "[-\u2013 ]").replace("\\ ", "[-\u2013 ]") + r"s?\b", low) for f in forms(t))]
-    return dict(cites=len(re.findall(r"\{cite:?[pt]?\}", joined)), figures=code_figs + joined.count("```{image}") + joined.count("```{mermaid}") + joined.count("```mermaid"),
+    present = [t for t in terms if found(t, low)]
+    return dict(cites=len(re.findall(r"\{cite:?[pt]?\}", joined)) + sum(len(re.findall(r"@[\w:-]+", m)) for m in re.findall(r"\[-?@[^\]]+\]", joined)), figures=code_figs + joined.count("```{image}") + joined.count("```{mermaid}") + joined.count("```mermaid"),
                 exercises=joined.count("{exercise}"), apps=len(set(re.findall(r"apps/([a-z0-9-]+)/", joined))),
-                dropdowns=joined.count(":class: dropdown"), questions=len(re.findall(r"^\d+\. ", joined[joined.find("{admonition} Questions"):] if "{admonition} Questions" in joined else "", re.M)),
+                dropdowns=joined.count(":class: dropdown"), uncaptioned=len(uncaptioned(nb)), questions=len(re.findall(r"^\d+\. ", joined[joined.find("{admonition} Questions"):] if "{admonition} Questions" in joined else "", re.M)),
                 terms=present)
 
 
@@ -107,7 +148,7 @@ def main():
         text = prose(nb)
         all_text.append(text)
         r = readability(text)
-        c = content(nb, text, terms)
+        c = content(nb, prose(nb, core=False), terms)
         new_terms = [t for t in c["terms"] if t not in seen]
         seen.update(c["terms"])
         words = len(re.findall(r"[A-Za-z][A-Za-z'’-]*|\d[\d.,%]*", text))
@@ -116,17 +157,23 @@ def main():
     total = "\n".join(all_text)
     tw = len(re.findall(r"[A-Za-z][A-Za-z'’-]*|\d[\d.,%]*", total))
     tr = readability(total)
-    head = f"{'chapter':20s} {'words':>6s} {'min':>4s} {'sent':>5s} {'long%':>5s} {'LIX':>4s} {'Flesch':>6s} {'grade':>5s} | {'cites':>5s} {'figs':>4s} {'exer':>4s} {'apps':>4s} {'drop':>4s} {'Q':>2s} | {'terms':>5s} {'new':>4s} {'/1k':>4s}"
+    head = f"{'chapter':20s} {'words':>6s} {'min':>4s} {'sent':>5s} {'long%':>5s} {'LIX':>4s} {'Flesch':>6s} {'grade':>5s} | {'cites':>5s} {'figs':>4s} {'exer':>4s} {'apps':>4s} {'drop':>4s} {'Q':>2s} {'nocap':>5s} | {'terms':>5s} {'new':>4s} {'/1k':>4s}"
     print(head); print("-" * len(head))
     for r in rows:
         print(f"{r['chapter']:20s} {r['words']:6d} {r['minutes']:4.0f} {r['mean_sentence']:5.1f} {r['long_share']:5.1f} {r['lix']:4.0f} {r['flesch']:6.0f} {r['grade']:5.1f} | "
-              f"{r['cites']:5d} {r['figures']:4d} {r['exercises']:4d} {r['apps']:4d} {r['dropdowns']:4d} {r['questions']:2d} | {r['terms_used']:5d} {r['terms_new']:4d} {r['terms_per_k']:4.0f}")
+              f"{r['cites']:5d} {r['figures']:4d} {r['exercises']:4d} {r['apps']:4d} {r['dropdowns']:4d} {r['questions']:2d} {r['uncaptioned']:5d} | {r['terms_used']:5d} {r['terms_new']:4d} {r['terms_per_k']:4.0f}")
     print("-" * len(head))
     print(f"{'whole book':20s} {tw:6d} {tw / 230:4.0f} {tr['mean_sentence']:5.1f} {tr['long_share']:5.1f} {tr['lix']:4.0f} {tr['flesch']:6.0f} {tr['grade']:5.1f} | "
-          f"{sum(r['cites'] for r in rows):5d} {sum(r['figures'] for r in rows):4d} {sum(r['exercises'] for r in rows):4d} {sum(r['apps'] for r in rows):4d} {sum(r['dropdowns'] for r in rows):4d} {sum(r['questions'] for r in rows):2d} | {len(seen):5d} {'':4s} {'':4s}")
-    print(f"\nglossary: {len(terms)} terms, {len(seen)} of them found in a chapter, {len(terms) - len(seen)} not found: {', '.join(t for t in terms if t not in seen)[:400]}")
+          f"{sum(r['cites'] for r in rows):5d} {sum(r['figures'] for r in rows):4d} {sum(r['exercises'] for r in rows):4d} {sum(r['apps'] for r in rows):4d} {sum(r['dropdowns'] for r in rows):4d} {sum(r['questions'] for r in rows):2d} {sum(r['uncaptioned'] for r in rows):5d} | {len(seen):5d} {'':4s} {'':4s}")
+    pages = "\n".join((BOOK / f).read_text(encoding="utf-8") for f in PAGES).lower()
+    unused = [t for t in terms if t not in seen and not found(t, pages)]
+    nocap = sum(r["uncaptioned"] for r in rows)
+    print(f"\nglossary: {len(terms)} terms, {len(terms) - len(unused)} of them found in a chapter or page, {len(unused)} not found: {', '.join(unused)[:400]}")
+    print(f"figures: {sum(r['figures'] for r in rows)} figure cells and directives, {nocap} without a caption")
     if "--json" in sys.argv:
         print(json.dumps(rows, indent=1))
+    if "--check" in sys.argv and (unused or nocap):
+        sys.exit("FAIL: " + "; ".join(x for x in (f"{len(unused)} glossary terms unused" if unused else "", f"{nocap} figures without a caption" if nocap else "") if x))
 
 
 if __name__ == "__main__":

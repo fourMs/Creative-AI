@@ -13,6 +13,9 @@ fi
 echo "Checking chapter template, citations, and figures..."
 python scripts/check-chapters.py
 
+echo "Checking captions and glossary use..."
+python scripts/book_metrics.py --check > /dev/null
+
 echo "Checking prose style (report-only; see scripts/check-style.py)..."
 python scripts/check-style.py || true
 

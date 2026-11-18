@@ -40,6 +40,10 @@ line by line for:
                         because "we" about UiO or the fourMs Lab is
                         allowed and needs human judgement
     exclamation         an exclamation mark in prose
+    forward-promise     a promise that a later or earlier passage will
+                        deliver ("as we will see", "later in this
+                        chapter", "the next section shows"), which
+                        breaks when sections move
     em-dash             a sentence with exactly one em dash, anywhere;
                         reading lists and tool lists separate an item
                         from its description with a colon
@@ -142,7 +146,16 @@ ITALIC_RE = re.compile(r"(?<!\*)\*(?!\*)([^*\n]*?)(?<!\*)\*(?!\*)")
 CATEGORIES = [
     "contraction", "bold-in-sentence", "paragraph-opener", "long-sentence",
     "audiovisual", "first-person", "lecturer-we", "exclamation", "em-dash",
+    "forward-promise",
 ]
+
+PROMISE_RE = re.compile(
+    r"\bas we (?:will|shall|saw|have seen)\b|\bas (?:we )?(?:shown|seen|discussed|noted) (?:above|below|earlier)\b"
+    r"|\b(?:later|earlier) in th(?:is|e) (?:chapter|book|section)\b"
+    r"|\bthe (?:next|previous|following) (?:section|chapter) (?:shows|showed|explains|explained|covers|covered|returns)\b"
+    r"|\bwe (?:will )?return to\b",
+    re.I,
+)
 
 
 def blank_front_matter(text):
@@ -345,6 +358,10 @@ def check_text(text, allowlist):
         m = WE_RE.search(line)
         if m:
             hits.append((lineno, "lecturer-we", excerpt(line, m.start(), m.end())))
+
+        # forward and backward promises between passages
+        for m in PROMISE_RE.finditer(line):
+            hits.append((lineno, "forward-promise", excerpt(line, m.start(), m.end())))
 
         # exclamation marks in prose (excluding the "!" of a Markdown image ![alt](...))
         for m in re.finditer(r"!(?!\[)", line):

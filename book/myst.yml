@@ -33,7 +33,8 @@ project:
     - file: glossary.md
 
 site:
-  template: book-theme
+  # Pinned to the theme release that matches mystmd 1.6.0; upgrade mystmd and the theme together.
+  template: https://github.com/jupyter-book/myst-theme/releases/download/myst-to-react%401.4.1/book-theme.zip
   options:
     favicon: figures/cover/favicon.png
     logo: figures/cover/creative-ai-strip.svg
